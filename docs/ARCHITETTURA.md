@@ -8,7 +8,7 @@ La prima versione funzionante esiste e gira sul PC di chi la ospita. Per partire
 
 | Pezzo | v0.1 (oggi) | Obiettivo (sezioni 2-5) |
 |---|---|---|
-| Applicazione | Node.js puro, nessun pacchetto esterno | Da rivalutare: restare così o passare a Next.js |
+| Applicazione | Node.js puro (portatile, nella cartella del progetto), nessun pacchetto esterno | Da rivalutare: restare così o passare a Next.js |
 | Database | SQLite, un file in `data/portale.db` | PostgreSQL |
 | Archivio file | Cartella locale `data/storage/`, tetto configurabile (100 GB) | OneDrive / SharePoint |
 | Login | Nome utente e password gestiti dal portale | Account Microsoft (Entra ID) |

@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# Node.js portatile (si scarica a parte, non va su GitHub)
+/node-v*/
+
 # Dipendenze e build
 node_modules/
 .next/

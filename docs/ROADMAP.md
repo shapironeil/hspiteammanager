@@ -20,7 +20,8 @@
 - [x] Programmi scaricabili con guida all'uso
 - [x] File: caricamento, invio a colleghi, archivio locale con tetto di spazio
 - [x] Annunci, log attività, errori e segnalazioni, pannello Sistema
-- [x] `avvia.bat` e `aggiorna.bat`
+- [x] `avvia.bat` e `aggiorna.bat` (aggiornamento automatico, Node.js portatile nella cartella del progetto)
+- [ ] Primo test di aggiornamento con `aggiorna.bat`: a video deve comparire la versione 0.1.1
 - [ ] Prova sul PC Windows e con i primi colleghi in rete locale
 - [ ] Logo e sfondo HSPI nella cartella `branding/`
 - [ ] Portafoglio software e servizi (licenze, scadenze, referenti)

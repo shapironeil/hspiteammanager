@@ -6,7 +6,8 @@ Regola di fondo della v1: **meno dipendenze possibile**. Il portale gira con il 
 
 ```
 HSPI Team Manager
-├── Node.js 22.13 o successivo      obbligatorio (consigliata la versione LTS)
+├── Node.js 22.13 o successivo      obbligatorio; versione portatile nella cartella
+│   │                                node-v22.22.2-win-x64 dentro il progetto
 │   ├── node:http                    server web            (incluso in Node)
 │   ├── node:sqlite                  database              (incluso in Node)
 │   ├── node:crypto                  password e sessioni   (incluso in Node)
@@ -14,6 +15,8 @@ HSPI Team Manager
 ├── Git per Windows                  facoltativo: rende più solido aggiorna.bat
 └── Browser moderno                  Edge, Chrome o Firefox
 ```
+
+**Node.js non si installa: si usa la versione portatile.** `avvia.bat` cerca `node.exe` in quest'ordine: cartella `node-v…-win-x64` dentro il progetto, stessa cartella un livello sopra, Node.js installato nel sistema. La cartella portatile non va su GitHub (è esclusa in `.gitignore`) e `aggiorna.bat` non la tocca.
 
 Pacchetti npm: **nessuno**. Librerie front-end esterne: **nessuna** (niente CDN, il portale funziona anche senza internet).
 
@@ -56,7 +59,8 @@ app/public/index.html
 ```
 hspiteammanager/
 ├── avvia.bat            avvia il portale e apre il browser
-├── aggiorna.bat         scarica l'ultima versione da GitHub, poi propone l'avvio
+├── aggiorna.bat         scarica l'ultima versione da GitHub e avvia il portale
+├── node-v22.22.2-win-x64/   Node.js portatile, MAI su GitHub
 ├── app/                 codice del portale (server + interfaccia)
 ├── branding/            logo, sfondo, favicon personalizzati
 ├── docs/                documentazione

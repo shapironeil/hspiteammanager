@@ -10,7 +10,7 @@ const ROLES = ['dipendente', 'manager', 'hacker'];
 const ROLE_LABELS = { dipendente: 'Dipendente', manager: 'Manager', hacker: 'Hacker' };
 
 module.exports = {
-  VERSION: '0.1.0',
+  VERSION: '0.1.1',
   ROOT,
   DATA_DIR,
   DB_FILE: path.join(DATA_DIR, 'portale.db'),

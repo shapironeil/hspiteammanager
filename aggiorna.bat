@@ -3,9 +3,10 @@ setlocal EnableExtensions
 title HSPI Team Manager - aggiorna
 
 rem ============================================================
-rem  Aggiorna i file del progetto all'ultima versione su GitHub,
-rem  poi propone di avviare il portale.
-rem  La cartella "data" (database e file caricati) non viene toccata.
+rem  Aggiorna i file del progetto all'ultima versione su GitHub
+rem  e avvia subito il portale, senza fare domande.
+rem  Non vengono toccati: la cartella "data" (database e file
+rem  caricati), la cartella di Node.js e le immagini in "branding".
 rem
 rem  NOTA TECNICA: tutto il lavoro sta in un unico blocco tra
 rem  parentesi, cosi' lo script resta in memoria anche se
@@ -38,10 +39,7 @@ if not errorlevel 1 if exist "%ROOT%.git" set "USEGIT=1"
         rmdir /s /q "%TMPDIR%" >nul 2>nul
     )
     echo.
-    echo  Aggiornamento completato.
-    echo.
-    choice /c SN /m "  Avvio il portale adesso"
-    if errorlevel 2 exit /b 0
+    echo  Aggiornamento completato. Avvio il portale...
     call "%ROOT%avvia.bat"
     exit /b 0
 )
