@@ -1,0 +1,3 @@
+# File che facevano parte del portale e che le versioni nuove non usano piu'.
+# aggiorna.bat li toglie dalla cartella di lavoro. Elenco generato dalla cronologia del progetto.
+app/README.md

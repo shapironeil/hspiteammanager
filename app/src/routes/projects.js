@@ -150,11 +150,11 @@ route('GET', '/api/projects/:id/files', {}, (ctx) => {
   const folders = [];
   const files = [];
   for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-    if (e.name.startsWith('.') || e.name.endsWith('.part')) continue;
+    if (e.name.startsWith('.') || e.name.endsWith('.part') || e.name.endsWith('.nuovo')) continue;
     if (e.isDirectory()) folders.push(e.name);
     else if (e.isFile()) {
       const st = fs.statSync(path.join(at.full, e.name));
-      files.push({ name: e.name, size: st.size, modifiedAt: st.mtime.toISOString() });
+      files.push({ name: e.name, size: st.size, modifiedAt: st.mtime.toISOString(), viewable: Object.hasOwn(VIEW, path.extname(e.name).toLowerCase()) });
     }
   }
   ctx.json(200, { path: at.rel, folders, files });
@@ -170,16 +170,68 @@ route('GET', '/api/projects/:id/download', {}, (ctx) => {
   storage.sendPath(ctx.res, at.full, path.basename(at.full));
 });
 
+// Tipi che si possono guardare direttamente nel browser. Gli altri si scaricano.
+const VIEW = {
+  '.pdf': 'application/pdf', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp',
+  '.txt': 'text/plain; charset=utf-8', '.md': 'text/plain; charset=utf-8', '.json': 'text/plain; charset=utf-8',
+  '.csv': 'text/plain; charset=utf-8', '.log': 'text/plain; charset=utf-8',
+  '.html': 'text/html; charset=utf-8', '.htm': 'text/html; charset=utf-8',
+};
+
+route('GET', '/api/projects/:id/view', {}, (ctx) => {
+  const p = find(ctx);
+  const at = inside(p, ctx.query.get('path'));
+  const type = VIEW[path.extname(at.full).toLowerCase()];
+  if (!type) throw new HttpError(415, 'Questo tipo di file non si puo\' vedere in anteprima: scaricalo.');
+  let stat;
+  try { stat = fs.statSync(at.full); } catch { stat = null; }
+  if (!stat || !stat.isFile()) throw new HttpError(404, 'File non trovato.');
+  db.log(ctx, 'progetto.file-aperto', `${p.name}: ${at.rel}`);
+  ctx.res.writeHead(200, {
+    'Content-Type': type, 'Content-Length': stat.size, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
+    // Un documento HTML viene mostrato "in gabbia": niente script, niente accesso al portale.
+    'Content-Security-Policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:",
+    'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(path.basename(at.full))}`,
+  });
+  fs.createReadStream(at.full).pipe(ctx.res);
+});
+
+route('POST', '/api/projects/:id/folders', {}, async (ctx) => {
+  const p = find(ctx);
+  const b = await ctx.body();
+  const name = storage.cleanName(b.name);
+  if (name.startsWith('.')) throw new HttpError(400, 'Il nome non puo\' iniziare con un punto.');
+  const dir = inside(p, b.path);
+  const target = path.join(dir.full, name);
+  if (fs.existsSync(target)) throw new HttpError(409, 'Esiste già una cartella o un file con questo nome.');
+  fs.mkdirSync(target, { recursive: true });
+  db.log(ctx, 'progetto.cartella-creata', `${p.name}: ${dir.rel ? dir.rel + '/' : ''}${name}`);
+  ctx.json(201, { ok: true });
+});
+
+// Carica un file. Se esiste gia' e si chiede di sostituirlo (overwrite=1), la versione precedente
+// non va persa: viene spostata nella cartella nascosta ".storico" del progetto, con data e ora.
 route('PUT', '/api/projects/:id/files', {}, async (ctx) => {
   const p = find(ctx);
   const name = storage.cleanName(ctx.query.get('name'));
+  if (name.startsWith('.')) throw new HttpError(400, 'Il nome non puo\' iniziare con un punto.');
   const dir = inside(p, ctx.query.get('path'));
   fs.mkdirSync(dir.full, { recursive: true });
   const target = path.join(dir.full, name);
-  if (fs.existsSync(target)) throw new HttpError(409, 'Esiste già un file con questo nome in questa cartella.');
-  await storage.saveToPath(ctx.req, target);
-  db.log(ctx, 'progetto.file-caricato', `${p.name}: ${dir.rel ? dir.rel + '/' : ''}${name}`);
-  ctx.json(201, { ok: true });
+  const exists = fs.existsSync(target);
+  if (exists && ctx.query.get('overwrite') !== '1') throw new HttpError(409, 'Esiste già un file con questo nome in questa cartella.');
+  if (exists && !fs.statSync(target).isFile()) throw new HttpError(409, 'Esiste già una cartella con questo nome.');
+  const incoming = target + '.nuovo';
+  await storage.saveToPath(ctx.req, incoming);
+  if (exists) {
+    const stamp = db.now().replace(/[:.]/g, '-');
+    const keep = path.join(dir.root, '.storico', ...dir.rel.split('/').filter(Boolean));
+    fs.mkdirSync(keep, { recursive: true });
+    fs.renameSync(target, path.join(keep, `${stamp}__${name}`));
+  }
+  fs.renameSync(incoming, target);
+  db.log(ctx, exists ? 'progetto.file-sostituito' : 'progetto.file-caricato', `${p.name}: ${dir.rel ? dir.rel + '/' : ''}${name}`);
+  ctx.json(201, { ok: true, replaced: exists });
 });
 
 module.exports = { baseDir };

@@ -10,6 +10,33 @@
 /progetti/
 /projects/
 
+# Dentro apptools si carica solo il codice delle app, mai i loro archivi o i documenti.
+/apptools/**/data/
+/apptools/**/dati/
+/apptools/**/archivio/
+/apptools/**/storage/
+/apptools/**/verbali/
+/apptools/**/checkpoint*/
+/apptools/**/storico/
+/apptools/**/output/
+/apptools/**/uploads/
+/apptools/**/backup*/
+/apptools/**/*.docx
+/apptools/**/*.doc
+/apptools/**/*.pdf
+/apptools/**/*.xlsx
+/apptools/**/*.xls
+/apptools/**/*.pptx
+/apptools/**/*.msg
+/apptools/**/*.eml
+/apptools/**/*.zip
+/apptools/**/*.exe
+/apptools/**/*.dll
+/apptools/**/.env
+
+# Promemoria locale di aggiorna.bat
+/.elenco-aggiornamento.json
+
 # Node.js e Git portatili (si scaricano a parte, non vanno su GitHub)
 /node-v*/
 /PortableGit*/

@@ -13,7 +13,9 @@ Portale interno (beta) per il team HSPI: account con ruoli, progetti con le pers
 
 Per caricare su GitHub le tue risorse (loghi, sfondi, web app): doppio clic su **`carica-su-github.bat`**. Mostra l'elenco dei file e chiede conferma; `data/` e `progetti/` non vengono mai caricati.
 
-Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Aggiorna i file e avvia il portale senza fare domande. Database e file caricati (cartella `data/`), Node.js portatile e le tue immagini non vengono toccati.
+Per portare nei progetti i file che stanno altrove (per esempio l'archivio di Verbale Studio): **`sincronizza-una-tantum.bat`**. Copia soltanto, non tocca l'origine. Vedi `docs/INTEGRAZIONE-APP.md`.
+
+Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Scarica i file nuovi, toglie quelli che la nuova versione non usa più e avvia il portale senza fare domande. Database e file caricati (cartella `data/`), Node.js portatile e le tue immagini non vengono toccati.
 
 ## Cosa vede ogni ruolo
 
@@ -35,6 +37,7 @@ Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Aggiorna 
 | File | Contenuto |
 |---|---|
 | `docs/PROGETTI-E-DATI.md` | Come sono trattati i file dei progetti, permessi, decisioni aperte |
+| `docs/INTEGRAZIONE-APP.md` | Archivio unico: importazione una tantum, come le app usano i file dei progetti |
 | `docs/DIPENDENZE.md` | Albero delle dipendenze, struttura delle cartelle, regole per aggiungere cose |
 | `docs/ACCESSO-RETE.md` | Come far entrare i colleghi: stessa Wi-Fi, Tailscale, cosa evitare |
 | `docs/ARCHITETTURA.md` | Architettura, moduli, modello dati, decisioni aperte |

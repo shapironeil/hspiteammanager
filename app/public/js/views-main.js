@@ -60,6 +60,7 @@ function programEditor(p) {
     field('Nome', h('input', { type: 'text', name: 'name', maxlength: '80', value: p ? p.name : '' }), 'Il nome del programma come lo vedranno gli utenti. Esempio: Verbale Studio'),
     field('Versione', h('input', { type: 'text', name: 'version', maxlength: '30', placeholder: 'es. 1.0', value: p ? p.version : '' }), 'Il numero della versione che stai pubblicando, per capire chi ha quella aggiornata. Esempio: 1.2'),
     field('Descrizione breve', h('input', { type: 'text', name: 'description', maxlength: '300', value: p ? p.description : '' }), 'Una frase su cosa fa il programma. Compare nella scheda.'),
+    field('Indirizzo dell\'app (solo se ha un proprio motore)', h('input', { type: 'text', name: 'url', placeholder: 'es. http://localhost:3000', value: p ? p.url : '' }), 'Lascia vuoto per le web app fatte di soli file. Se il programma va avviato con un suo file .bat e poi si apre nel browser, copia qui l\'indirizzo che compare nella barra del browser: il pulsante Apri porterà lì.'),
     field('Guida all\'uso', h('textarea', { class: 'tall', name: 'guide', value: p ? p.guide : '' }), 'La documentazione che gli utenti leggono con il pulsante Guida. Testo semplice: # per i titoli, - per gli elenchi, **grassetto** tra doppi asterischi.'),
     h('div', { class: 'modal-actions' },
       !isNew ? h('button', {
@@ -97,7 +98,8 @@ export async function viewPrograms(el) {
       } catch (err) { status.textContent = ''; toastError(err); }
     });
     // Web app in apptools: si apre in una nuova scheda. File caricato: si scarica.
-    const state = p.openUrl ? h('span', { class: 'chip ok' }, 'Web app')
+    const state = p.url ? h('span', { class: 'chip warn', title: 'Va avviato a parte prima di aprirlo' }, 'Motore proprio')
+      : p.openUrl ? h('span', { class: 'chip ok' }, 'Web app')
       : p.hasFile ? h('span', { class: 'chip ok' }, fmtBytes(p.fileSize))
         : h('span', { class: 'chip warn' }, p.folder ? 'Pagina iniziale non trovata' : 'Non ancora disponibile');
     return h('article', { class: 'program glass' },

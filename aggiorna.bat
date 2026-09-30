@@ -3,8 +3,12 @@ setlocal EnableExtensions
 title HSPI Team Manager - aggiorna
 
 rem ============================================================
-rem  Aggiorna i file del progetto all'ultima versione su GitHub
-rem  e avvia subito il portale, senza fare domande.
+rem  Porta la cartella di lavoro all'ultima versione su GitHub e
+rem  avvia subito il portale, senza fare domande:
+rem    1. scarica i file nuovi e modificati;
+rem    2. toglie i file del portale che la nuova versione non usa
+rem       piu': spostati, rinominati o eliminati;
+rem    3. all'avvio il portale aggiorna da solo il database.
 rem  Non vengono toccati: la cartella "data" (database e file
 rem  caricati), "progetti", Node.js e le tue immagini.
 rem
@@ -26,6 +30,12 @@ if not defined GIT where git >nul 2>nul && set "GIT=git"
 set "USEGIT=0"
 if defined GIT if exist "%ROOT%.git" set "USEGIT=1"
 
+rem --- Node.js: prima quello portatile nella cartella del progetto, poi quello installato
+set "NODE="
+for /d %%D in ("%ROOT%node-v*-win-x64") do if exist "%%D\node.exe" set "NODE=%%D\node.exe"
+if not defined NODE for /d %%D in ("%ROOT%..\node-v*-win-x64") do if exist "%%D\node.exe" set "NODE=%%D\node.exe"
+if not defined NODE where node >nul 2>nul && set "NODE=node"
+
 (
     echo.
     echo  HSPI Team Manager - aggiornamento da GitHub
@@ -41,6 +51,9 @@ if defined GIT if exist "%ROOT%.git" set "USEGIT=1"
         tar -xf "%TMPDIR%\repo.zip" -C "%TMPDIR%" || goto :errore
         robocopy "%TMPDIR%\hspiteammanager-%BRANCH%" "%ROOT%." /E /XD data progetti /NFL /NDL /NJH /NJS >nul
         if errorlevel 8 goto :errore
+        echo  Allineo la cartella di lavoro alla nuova versione...
+        if defined NODE "%NODE%" "%ROOT%scripts\allinea-cartella.js" "%TMPDIR%\hspiteammanager-%BRANCH%"
+        if not defined NODE echo  Node.js non trovato: i vecchi file non piu' usati restano nella cartella.
         rmdir /s /q "%TMPDIR%" >nul 2>nul
     )
     echo.

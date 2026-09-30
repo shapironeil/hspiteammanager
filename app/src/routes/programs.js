@@ -16,9 +16,16 @@ const view = (p) => ({
   hasFile: !!p.file_id, fileName: p.file_name, fileSize: p.file_size, updatedAt: p.updated_at,
   folder: p.folder || null,
   // Web app in apptools: si apre dal portale a questo indirizzo.
-  openUrl: p.folder && apps.entryOf(p.folder) ? `/apps/${p.id}/` : null,
+  // Se il programma ha un proprio motore (un server avviato a parte) si apre al suo indirizzo.
+  url: p.url || '',
+  openUrl: p.url || (p.folder && apps.entryOf(p.folder) ? `/apps/${p.id}/` : null),
 });
 const optional = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
+function cleanUrl(v) {
+  const url = optional(v, 300);
+  if (url && !/^https?:\/\/[^\s]+$/i.test(url)) throw new HttpError(400, 'L\'indirizzo deve iniziare con http:// o https://');
+  return url || null;
+}
 
 route('GET', '/api/programs', {}, (ctx) => {
   apps.sync();
@@ -40,8 +47,8 @@ route('PATCH', '/api/programs/:id', { role: 'manager' }, async (ctx) => {
   const p = findProgram(ctx.params.id);
   const b = await ctx.body();
   const name = cleanText(b.name, 80, 'Nome');
-  db.run('UPDATE programs SET name = ?, description = ?, version = ?, guide = ?, updated_at = ? WHERE id = ?',
-    name, optional(b.description, 300), optional(b.version, 30), optional(b.guide, 50000), db.now(), p.id);
+  db.run('UPDATE programs SET name = ?, description = ?, version = ?, guide = ?, url = ?, updated_at = ? WHERE id = ?',
+    name, optional(b.description, 300), optional(b.version, 30), optional(b.guide, 50000), cleanUrl(b.url), db.now(), p.id);
   db.log(ctx, 'programma.modificato', name);
   ctx.json(200, { ok: true });
 });

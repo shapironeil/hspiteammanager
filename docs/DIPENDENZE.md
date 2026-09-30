@@ -67,6 +67,7 @@ hspiteammanager/
 ├── avvia.bat            avvia il portale solo su questo PC e apre il browser
 ├── avvia-rete.bat       come sopra, ma aperto alla rete locale (serve il firewall)
 ├── aggiorna.bat         scarica l'ultima versione da GitHub e avvia il portale
+├── sincronizza-una-tantum.bat  copia nei progetti i file che stanno altrove (una volta sola)
 ├── carica-su-github.bat carica su GitHub risorse e web app (mai data/ e progetti/)
 ├── apptools/            web app del team, una sottocartella per programma
 ├── progetti/            file di lavoro dei progetti, MAI su GitHub

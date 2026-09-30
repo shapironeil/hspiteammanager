@@ -111,6 +111,10 @@ const MIGRATIONS = [
     PRIMARY KEY (project_id, user_id)
   );
   `,
+  // 4 - programmi con un proprio motore: indirizzo a cui aprirli
+  `
+  ALTER TABLE programs ADD COLUMN url TEXT;
+  `,
 ];
 
 function migrate() {

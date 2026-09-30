@@ -25,6 +25,8 @@
 - [x] Avvio sul PC Windows, solo in locale (v0.1.2: nessuna richiesta del firewall)
 - [x] Logo personalizzato dalla cartella `images/`
 - [x] v0.3: Progetti con membri e link a OneDrive, programmi come web app da `apptools`, tema chiaro/scuro, sfondo statico, guida a popup, `carica-su-github.bat`
+- [x] v0.4: anteprima dei file nei progetti, nuova cartella, sostituzione con storico, importazione una tantum, `aggiorna.bat` che allinea la cartella di lavoro
+- [ ] Adattare Verbale Studio all'archivio unico (serve il suo codice; vedi `INTEGRAZIONE-APP.md`)
 - [ ] Decidere come trattare i file aziendali dei progetti (vedi `PROGETTI-E-DATI.md`)
 - [ ] Decidere come collegare gli altri PC: porta aperta dall'IT, oppure altra strada approvata
 - [ ] Prova con i primi colleghi
