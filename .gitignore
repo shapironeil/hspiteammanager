@@ -1,0 +1,23 @@
+# Segreti e configurazione locale
+.env
+.env.*
+!.env.example
+
+# Dipendenze e build
+node_modules/
+.next/
+dist/
+build/
+
+# Dati locali
+*.sqlite
+*.db
+/storage/
+/uploads/
+
+# Sistema e editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
