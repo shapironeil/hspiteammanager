@@ -1,6 +1,6 @@
 // Avvio dell'interfaccia: accesso e registrazione, sfondi dinamici, menu laterale per ruolo, navigazione.
 import { get, post } from './api.js';
-import { h, icon, form, field, toastError, avatarEl, usernamePreview } from './ui.js';
+import { h, icon, form, field, toast, toastError, avatarEl, usernamePreview } from './ui.js';
 import { viewHome, viewPrograms, viewFiles, viewProfile } from './views-main.js';
 import { viewProjects, resetProjects } from './views-projects.js';
 import { maybeShowTour, showTour } from './tour.js';
@@ -299,9 +299,26 @@ function renderShell() {
     icon(n.icon), h('span', {}, typeof n.label === 'function' ? n.label(app.user) : n.label));
 
   const nav = h('nav', { class: 'nav', 'aria-label': 'Menu principale' });
+  // I gruppi del menu (Organizzazione, Controllo...) si aprono e chiudono cliccando sul titolo.
+  // La scelta resta memorizzata su questo browser.
+  let box = nav;
   for (const n of items) {
-    if (n.group) nav.append(h('div', { class: 'nav-sep' }, n.group));
-    nav.append(link(n));
+    if (n.group) {
+      const key = `hspi.gruppo.${n.group}`;
+      const closed = store(key) === 'chiuso';
+      const body = h('div', { class: 'nav-group' + (closed ? ' closed' : '') });
+      const head = h('button', {
+        class: 'nav-sep', type: 'button', 'aria-expanded': String(!closed), title: `Apri o chiudi ${n.group}`,
+        onclick: () => {
+          const nowClosed = body.classList.toggle('closed');
+          head.setAttribute('aria-expanded', String(!nowClosed));
+          store(key, nowClosed ? 'chiuso' : 'aperto');
+        },
+      }, h('span', {}, n.group), icon('pin'));
+      nav.append(head, body);
+      box = body;
+    }
+    box.append(link(n));
   }
 
   content = h('div', { id: 'view' });
@@ -323,6 +340,15 @@ function renderShell() {
         }, icon('menu')),
         h('a', { href: '#/home', title: 'Home', style: 'line-height:0' }, h('img', { class: 'topbar-logo', src: logoUrl(), alt: app.state.portalName })),
         h('div', { class: 'spacer' }),
+        h('button', {
+          class: 'icon-btn', type: 'button', title: 'Aggiorna i dati di questa schermata', 'aria-label': 'Aggiorna i dati di questa schermata',
+          onclick: async (e) => {
+            const btn = e.currentTarget;
+            btn.classList.add('spin');
+            await navigate(true);
+            setTimeout(() => btn.classList.remove('spin'), 600);
+          },
+        }, icon('refresh')),
         h('button', { class: 'icon-btn', type: 'button', title: 'Guida al portale', 'aria-label': 'Guida al portale', onclick: () => showTour() }, icon('help')),
         themeButton(),
         // Cerchio dell'utente in alto a destra: porta alla schermata del profilo.
@@ -335,23 +361,26 @@ function renderShell() {
   maybeShowTour();
 }
 
-async function navigate() {
+async function navigate(manual) {
   if (!shell || !shell.isConnected) return;
   const id = (location.hash.replace(/^#\//, '') || 'home').split('?')[0];
   const entry = [...NAV, PROFILE].find((n) => n.id === id && app.can(n.min)) || NAV[0];
   shell.classList.remove('menu-open');
   setBackdrop(entry.dynamic ? 'dynamic' : 'static');
   shell.querySelectorAll('.nav-item[data-id]').forEach((a) => a.classList.toggle('active', a.dataset.id === entry.id));
+  // Se la schermata aperta sta in un gruppo chiuso, il gruppo si riapre per mostrare dove ci si trova.
+  const group = shell.querySelector('.nav-item.active')?.closest('.nav-group.closed');
+  if (group) { group.classList.remove('closed'); group.previousElementSibling.setAttribute('aria-expanded', 'true'); }
   try {
     await entry.view(content);
-    window.scrollTo(0, 0);
+    if (manual === true) toast('Dati aggiornati.'); else window.scrollTo(0, 0);
   } catch (err) {
     if (err.status === 401) return boot();
     content.replaceChildren(h('div', { class: 'card glass' }, h('h2', {}, 'Qualcosa non ha funzionato'), h('p', { class: 'muted' }, err.message)));
   }
 }
 export const refresh = () => navigate();
-window.addEventListener('hashchange', navigate);
+window.addEventListener('hashchange', () => navigate());
 
 // Gli errori JavaScript finiscono nella schermata "Errori e bug" dell'Hacker.
 function reportError(message, detail) {

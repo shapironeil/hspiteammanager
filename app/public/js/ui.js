@@ -44,6 +44,7 @@ const ICONS = {
   cloud: 'M7 18a4 4 0 0 1-.6-7.96A6 6 0 0 1 18 9.5a4.25 4.25 0 0 1-.5 8.5z',
   play: 'M8 5v14l11-7z',
   back: 'M15 6l-6 6 6 6',
+  refresh: 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7',
 };
 
 export function icon(name) {

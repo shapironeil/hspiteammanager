@@ -100,7 +100,8 @@ export async function viewLogs(el) {
     oninput: () => { clearTimeout(timer); timer = setTimeout(() => load(search.value.trim()).catch(toastError), 250); },
   });
   el.replaceChildren(
-    pageHead('Log attività', 'Chi ha fatto cosa: accessi, caricamenti, download, modifiche. Ultime 300 voci.'),
+    pageHead('Log attività', 'Chi ha fatto cosa: accessi, caricamenti, download, modifiche. Ultime 300 voci.',
+      h('button', { class: 'btn', type: 'button', onclick: () => load(search.value.trim()).then(() => toast('Log aggiornato.'), toastError) }, icon('refresh'), 'Aggiorna')),
     h('section', { class: 'card glass' },
       h('div', { style: 'max-width:420px;margin-bottom:12px' }, search),
       h('div', { class: 'table-wrap' }, h('table', {},
