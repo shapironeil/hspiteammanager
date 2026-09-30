@@ -1,7 +1,7 @@
 // Schermate visibili a tutti: Home, Programmi, File, Profilo.
 import { get, post, patch, del, upload } from './api.js';
-import { h, icon, modal, confirmDialog, form, field, toast, toastError, fmtBytes, fmtDate, pageHead, meter, markdown } from './ui.js';
-import { app, refresh, boot } from './app.js';
+import { h, icon, modal, confirmDialog, form, field, toast, toastError, fmtBytes, fmtDate, pageHead, meter, markdown, avatarEl } from './ui.js';
+import { app, refresh, boot, roleText } from './app.js';
 
 // ---- Home ------------------------------------------------------------------
 export async function viewHome(el) {
@@ -14,7 +14,7 @@ export async function viewHome(el) {
     tile('I miei file', d.myFiles, 'caricati da te', '#/file'),
     tile('File ricevuti', d.received, 'dai colleghi', '#/file'),
   ];
-  if (d.team) tiles.push(tile('Persone attive', d.team.active, d.team.neverLogged ? `${d.team.neverLogged} non ancora entrate` : 'tutte hanno fatto accesso', '#/team'));
+  if (d.team) tiles.push(tile('Persone attive', d.team.active, d.team.pending ? `${d.team.pending} in attesa di approvazione` : d.team.neverLogged ? `${d.team.neverLogged} non ancora entrate` : 'tutte hanno fatto accesso', '#/team'));
   if (d.system) {
     tiles.push(tile('Problemi aperti', d.system.openIssues, 'errori e segnalazioni', '#/problemi'));
     const t = tile('Spazio usato', fmtBytes(d.system.usedBytes), `su ${fmtBytes(d.system.quotaBytes)}`, '#/sistema');
@@ -24,8 +24,8 @@ export async function viewHome(el) {
 
   const newAnnouncement = () => {
     const m = modal('Nuovo annuncio', form([
-      field('Titolo', h('input', { type: 'text', name: 'title', maxlength: '120' })),
-      field('Testo', h('textarea', { name: 'body', maxlength: '2000' })),
+      field('Titolo', h('input', { type: 'text', name: 'title', maxlength: '120' }), 'Una riga che riassume l\'annuncio. Lo vedono tutti nella Home.'),
+      field('Testo', h('textarea', { name: 'body', maxlength: '2000' }), 'Il messaggio completo, facoltativo. Puoi andare a capo.'),
       h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Pubblica')),
     ], async (v) => { await post('/api/announcements', v); m.close(); toast('Annuncio pubblicato.'); refresh(); }));
   };
@@ -56,10 +56,10 @@ export async function viewHome(el) {
 function programEditor(p) {
   const isNew = !p;
   const m = modal(isNew ? 'Nuovo programma' : `Modifica ${p.name}`, form([
-    field('Nome', h('input', { type: 'text', name: 'name', maxlength: '80', value: p ? p.name : '' })),
-    field('Versione', h('input', { type: 'text', name: 'version', maxlength: '30', placeholder: 'es. 1.0', value: p ? p.version : '' })),
-    field('Descrizione breve', h('input', { type: 'text', name: 'description', maxlength: '300', value: p ? p.description : '' })),
-    field('Guida all\'uso (testo semplice; # per i titoli, - per gli elenchi, **grassetto**)', h('textarea', { class: 'tall', name: 'guide', value: p ? p.guide : '' })),
+    field('Nome', h('input', { type: 'text', name: 'name', maxlength: '80', value: p ? p.name : '' }), 'Il nome del programma come lo vedranno gli utenti. Esempio: Verbale Studio'),
+    field('Versione', h('input', { type: 'text', name: 'version', maxlength: '30', placeholder: 'es. 1.0', value: p ? p.version : '' }), 'Il numero della versione che stai pubblicando, per capire chi ha quella aggiornata. Esempio: 1.2'),
+    field('Descrizione breve', h('input', { type: 'text', name: 'description', maxlength: '300', value: p ? p.description : '' }), 'Una frase su cosa fa il programma. Compare nella scheda.'),
+    field('Guida all\'uso', h('textarea', { class: 'tall', name: 'guide', value: p ? p.guide : '' }), 'La documentazione che gli utenti leggono con il pulsante Guida. Testo semplice: # per i titoli, - per gli elenchi, **grassetto** tra doppi asterischi.'),
     h('div', { class: 'modal-actions' },
       !isNew ? h('button', {
         class: 'btn danger left', type: 'button',
@@ -173,7 +173,7 @@ export async function viewFiles(el) {
   el.replaceChildren(
     pageHead('File', 'Carica un file per te, oppure invialo a un collega o a tutto il team.'),
     h('section', { class: 'card glass' },
-      h('div', { class: 'upload-grid' }, drop, field('Destinatario', to), send),
+      h('div', { class: 'upload-grid' }, drop, field('Destinatario', to, 'Solo per me: il file resta nel tuo archivio. Tutti: lo vede ogni persona del portale. Un nome: lo riceve solo quella persona.'), send),
       progress),
     h('div', { class: 'two-col', style: 'margin-top:18px' },
       section('Ricevuti', files.received, false, 'Nessun file ricevuto.'),
@@ -182,19 +182,55 @@ export async function viewFiles(el) {
 
 // ---- Profilo ---------------------------------------------------------------
 export async function viewProfile(el) {
+  const avatars = await get('/api/avatars');
+  const current = app.user.avatar;
+
+  const pick = (a) => h('button', {
+    class: 'avatar-pick' + (a.url === current ? ' selected' : ''), type: 'button',
+    title: a.requires ? `Riservato: ${app.state.titles[a.requires]}` : 'Scegli questo avatar',
+    'aria-label': a.requires ? `Avatar riservato a ${app.state.titles[a.requires]}` : 'Scegli questo avatar',
+    'aria-pressed': String(a.url === current),
+    onclick: async () => {
+      try { await patch('/api/me', { avatar: a.name }); toast('Avatar aggiornato.'); await boot(); } catch (err) { toastError(err); }
+    },
+  }, h('img', { src: a.url, alt: '', loading: 'lazy' }));
+
+  const free = avatars.filter((a) => !a.requires);
+  const groups = Object.entries(app.state.titles).map(([key, label]) => {
+    const list = avatars.filter((a) => a.requires === key);
+    if (!list.length) return null;
+    const locked = list.every((a) => a.locked);
+    return h('div', { style: 'margin-top:18px' },
+      h('div', { class: 'row', style: 'margin-bottom:10px' }, h('h3', {}, label),
+        h('span', { class: 'chip ' + (locked ? 'warn' : 'ok') }, locked ? 'Bloccati' : 'Sbloccati')),
+      locked
+        ? h('div', { class: 'avatar-grid locked' }, list.map((a) => h('span', { class: 'avatar-pick', title: `Si sblocca con la qualifica ${label}` }, h('img', { src: a.url, alt: '', loading: 'lazy' }))))
+        : h('div', { class: 'avatar-grid' }, list.map(pick)));
+  });
+
   el.replaceChildren(
-    pageHead('Profilo', `${app.user.username} · ${app.state.roles[app.user.role]}`),
-    h('div', { class: 'two-col' },
+    pageHead('Profilo', 'La tua immagine, i tuoi dati e la password.'),
+    h('section', { class: 'card glass' },
+      h('div', { class: 'profile-top' },
+        avatarEl(app.user, 'xl'),
+        h('div', {}, h('h2', {}, app.user.name),
+          h('div', { class: 'muted mono', style: 'margin:4px 0 8px' }, app.user.username),
+          h('span', { class: `chip ${app.user.role}` }, roleText(app.user)))),
+      h('div', { class: 'card-head' }, h('h3', {}, 'Scegli il tuo avatar')),
+      free.length ? h('div', { class: 'avatar-grid' }, free.map(pick)) : h('div', { class: 'empty' }, 'Nessun avatar disponibile nella cartella "avatar".'),
+      groups,
+      h('p', { class: 'small muted', style: 'margin-top:16px' }, 'Gli avatar con l\'anello colorato sono riservati: si sbloccano quando l\'Hacker ti assegna la qualifica corrispondente.')),
+    h('div', { class: 'two-col', style: 'margin-top:18px' },
       h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'I tuoi dati')),
         form([
-          field('Nome e cognome', h('input', { type: 'text', name: 'name', maxlength: '80', value: app.user.name })),
+          field('Nome e cognome', h('input', { type: 'text', name: 'name', maxlength: '80', value: app.user.name }), 'Come compari ai colleghi nel portale. Il nome utente per accedere non cambia.'),
           h('button', { class: 'btn primary', type: 'submit' }, 'Salva'),
         ], async (v) => { await patch('/api/me', v); toast('Profilo aggiornato.'); await boot(); })),
       h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Cambia password')),
         form([
-          field('Password attuale', h('input', { type: 'password', name: 'current', autocomplete: 'current-password' })),
-          field('Nuova password (almeno 8 caratteri)', h('input', { type: 'password', name: 'next', autocomplete: 'new-password' })),
-          field('Ripeti la nuova password', h('input', { type: 'password', name: 'repeat', autocomplete: 'new-password' })),
+          field('Password attuale', h('input', { type: 'password', name: 'current', autocomplete: 'current-password' }), 'La password con cui sei entrato adesso.'),
+          field('Nuova password', h('input', { type: 'password', name: 'next', autocomplete: 'new-password' }), 'Almeno 8 caratteri, diversa da quella attuale.'),
+          field('Ripeti la nuova password', h('input', { type: 'password', name: 'repeat', autocomplete: 'new-password' }), 'Riscrivi la nuova password per evitare errori di battitura.'),
           h('button', { class: 'btn primary', type: 'submit' }, 'Cambia password'),
         ], async (v, f) => {
           if (v.next !== v.repeat) throw new Error('Le due password non coincidono.');
@@ -202,8 +238,8 @@ export async function viewProfile(el) {
         })),
       h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Segnala un problema')),
         form([
-          field('Cosa non funziona?', h('input', { type: 'text', name: 'message', maxlength: '500' })),
-          field('Dettagli (facoltativo): cosa stavi facendo, cosa ti aspettavi', h('textarea', { name: 'detail', maxlength: '4000' })),
+          field('Cosa non funziona?', h('input', { type: 'text', name: 'message', maxlength: '500' }), 'Una frase che descrive il problema. Esempio: il download di Verbale Studio non parte.'),
+          field('Dettagli (facoltativo)', h('textarea', { name: 'detail', maxlength: '4000' }), 'Cosa stavi facendo, cosa ti aspettavi e cosa è successo invece. La segnalazione arriva all\'Hacker.'),
           h('button', { class: 'btn primary', type: 'submit' }, 'Invia segnalazione'),
         ], async (v, f) => { await post('/api/issues', v); f.reset(); toast('Segnalazione inviata. Grazie.'); }))));
 }

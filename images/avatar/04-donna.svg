@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Avatar 04">
+  <defs><clipPath id="c"><circle cx="60" cy="60" r="60"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="120" height="120" fill="#c4e6df"/>
+    <circle cx="60" cy="130" r="70" fill="rgba(255,255,255,.12)"/>
+    <path d="M14 122 C14 96 36 84 60 84 C84 84 106 96 106 122Z" fill="#1f2c4d"/>
+    <path d="M47 85 L60 108 L73 85 Q60 80 47 85Z" fill="#ffffff"/>
+    <path d="M47 85 L60 108 L50 110 L40 90Z" fill="rgba(255,255,255,.1)"/><path d="M73 85 L60 108 L70 110 L80 90Z" fill="rgba(0,0,0,.14)"/>
+    <path d="M56 88 h8 l3 8 l-7 22 l-7 -22Z" fill="#e2b341"/><path d="M56 88 h8 l-1.5 6 h-5Z" fill="rgba(0,0,0,.18)"/>
+    <circle cx="60" cy="44" r="33" fill="#2b2220"/>
+    <rect x="53" y="70" width="14" height="17" rx="5" fill="#8c5a3c"/><rect x="53" y="76" width="14" height="6" fill="rgba(0,0,0,.12)"/>
+    <circle cx="36.5" cy="55" r="4.5" fill="#8c5a3c"/><circle cx="83.5" cy="55" r="4.5" fill="#8c5a3c"/><circle cx="60" cy="52" r="24" fill="#8c5a3c"/>
+    <path d="M35.5 50 C34 27 86 27 84.5 50 C79 40 71 37 60 37 C49 37 41 40 35.5 50Z" fill="#2b2220"/>
+    <circle cx="50.5" cy="53" r="2.6" fill="#2b2220"/><circle cx="69.5" cy="53" r="2.6" fill="#2b2220"/><path d="M46.5 50 l-2.4 -2 M73.5 50 l2.4 -2" stroke="#2b2220" stroke-width="1.6" stroke-linecap="round"/><path d="M53 63 Q60 69 67 63" fill="none" stroke="#c0566a" stroke-width="2.6" stroke-linecap="round"/>
+    <circle cx="36" cy="62" r="2.4" fill="#e2b341"/><circle cx="84" cy="62" r="2.4" fill="#e2b341"/>
+  </g>
+</svg>

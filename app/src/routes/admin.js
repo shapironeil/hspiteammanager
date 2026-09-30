@@ -25,6 +25,7 @@ route('GET', '/api/dashboard', {}, (ctx) => {
     out.team = {
       active: count('SELECT COUNT(*) AS n FROM users WHERE active = 1'),
       neverLogged: count('SELECT COUNT(*) AS n FROM users WHERE active = 1 AND last_login IS NULL'),
+      pending: count('SELECT COUNT(*) AS n FROM users WHERE pending = 1'),
     };
   }
   if (u.role === 'hacker') {

@@ -5,6 +5,7 @@ const path = require('node:path');
 const config = require('./config');
 const db = require('./db');
 const security = require('./security');
+const media = require('./media');
 
 class HttpError extends Error {
   constructor(status, message) { super(message); this.status = status; }
@@ -14,9 +15,8 @@ const MIME = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
-  '.webp': 'image/webp', '.gif': 'image/gif', '.ico': 'image/x-icon', '.woff2': 'font/woff2',
+  '.webp': 'image/webp', '.avif': 'image/avif', '.gif': 'image/gif', '.ico': 'image/x-icon', '.woff2': 'font/woff2',
 };
-const BRANDING_EXT = ['.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.ico'];
 
 const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
@@ -67,17 +67,17 @@ function clientIp(req) {
 }
 const isLoopback = (ip) => ip === '127.0.0.1' || ip === '::1';
 
-function serveFile(res, baseDir, relPath, allowedExt) {
+function serveFile(res, baseDir, relPath, cache) {
   const file = path.resolve(baseDir, '.' + path.sep + relPath);
   if (file !== baseDir && !file.startsWith(baseDir + path.sep)) return false;
   const ext = path.extname(file).toLowerCase();
-  if (!MIME[ext] || (allowedExt && !allowedExt.includes(ext))) return false;
+  if (!MIME[ext]) return false;
   let stat;
   try { stat = fs.statSync(file); } catch { return false; }
   if (!stat.isFile()) return false;
   res.writeHead(200, {
     'Content-Type': MIME[ext], 'Content-Length': stat.size,
-    'Cache-Control': 'no-cache', ...SECURITY_HEADERS,
+    'Cache-Control': cache || 'no-cache', ...SECURITY_HEADERS,
   });
   fs.createReadStream(file).pipe(res);
   return true;
@@ -88,8 +88,11 @@ function serveStatic(req, res, pathname) {
   let rel;
   try { rel = decodeURIComponent(pathname); } catch { return false; }
   if (rel.includes('\0')) return false;
-  if (rel.startsWith('/branding/')) return serveFile(res, config.BRANDING_DIR, rel.slice('/branding/'.length), BRANDING_EXT);
-  if (rel.startsWith('/images/')) return serveFile(res, config.IMAGES_DIR, rel.slice('/images/'.length), BRANDING_EXT);
+  const m = /^\/media\/([a-z]+)\/([^/]+)$/.exec(rel);
+  if (m) {
+    const file = media.resolve(m[1], m[2]);
+    return file ? serveFile(res, path.dirname(file), path.basename(file), 'private, max-age=3600') : false;
+  }
   if (rel === '/') rel = '/index.html';
   return serveFile(res, config.PUBLIC_DIR, rel.slice(1));
 }

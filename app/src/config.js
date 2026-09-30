@@ -9,15 +9,17 @@ const DATA_DIR = process.env.HSPI_DATA_DIR || path.join(ROOT, 'data');
 const ROLES = ['dipendente', 'manager', 'hacker'];
 const ROLE_LABELS = { dipendente: 'Dipendente', manager: 'Manager', hacker: 'Hacker' };
 
+// Qualifiche: non cambiano i permessi, servono a descrivere la persona e sbloccano gli avatar riservati.
+const TITLES = { dirigente: 'Dirigente', manager: 'Manager', 'project-manager': 'Project Manager', sviluppatore: 'Sviluppatore' };
+
 module.exports = {
-  VERSION: '0.1.2',
+  TITLES,
+  VERSION: '0.2.0',
   ROOT,
   DATA_DIR,
   DB_FILE: path.join(DATA_DIR, 'portale.db'),
   STORAGE_DIR: path.join(DATA_DIR, 'storage'),
   PUBLIC_DIR: path.join(ROOT, 'app', 'public'),
-  BRANDING_DIR: path.join(ROOT, 'branding'),
-  IMAGES_DIR: path.join(ROOT, 'images'),
   PORT: Number(process.env.PORT) || 8080,
   // 127.0.0.1 = raggiungibile solo da questo PC (nessuna richiesta del firewall).
   // 0.0.0.0   = aperto alla rete locale (avvia-rete.bat; serve il permesso del firewall).

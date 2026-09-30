@@ -85,8 +85,28 @@ export function confirmDialog(title, message, confirmLabel, onConfirm) {
 }
 
 // Campo con etichetta.
-export function field(label, input) {
-  return h('label', { class: 'field' }, h('span', {}, label), input);
+// Campo con etichetta. "info" aggiunge la (i) con la spiegazione di cosa va scritto.
+export function field(label, input, info) {
+  return h('label', { class: 'field' },
+    h('span', { class: 'field-label' }, label,
+      info ? h('button', { class: 'info', type: 'button', 'aria-label': `Informazioni: ${info}`, 'data-tip': info }, 'i') : null),
+    input);
+}
+
+// Cerchio dell'utente: immagine avatar, oppure le iniziali se non ne ha una.
+export function avatarEl(user, size) {
+  const cls = 'avatar' + (size ? ` ${size}` : '');
+  return user.avatar
+    ? h('img', { class: cls, src: user.avatar, alt: '' })
+    : h('span', { class: cls }, initials(user.name));
+}
+
+// Stessa regola del server: nome.cognome senza accenti, spazi o simboli.
+const slug = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+export function usernamePreview(firstName, lastName) {
+  const a = slug(firstName);
+  const b = slug(lastName);
+  return a && b ? `${a}.${b}`.slice(0, 28) : '';
 }
 
 // Form con gestione errori: onSubmit riceve i valori dei campi per "name".

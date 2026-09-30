@@ -36,6 +36,7 @@ avvia.bat
     └── src/routes/admin.js          home, annunci, log, errori, sistema
         │
         ├── src/storage.js           unico modulo che tocca i file su disco
+        ├── src/media.js             logo, sfondi e avatar dalle cartelle delle immagini
         ├── src/http.js              router, controllo ruoli, file statici, errori
         │   └── src/security.js      password, sessioni, blocco tentativi
         │       └── src/db.js        database SQLite e migrazioni
@@ -63,7 +64,7 @@ hspiteammanager/
 ├── aggiorna.bat         scarica l'ultima versione da GitHub e avvia il portale
 ├── node-v22.22.2-win-x64/   Node.js portatile, MAI su GitHub
 ├── app/                 codice del portale (server + interfaccia)
-├── images/              logo, sfondo, favicon personalizzati (anche branding/)
+├── images/              risorse grafiche: logo/, background/, avatar/
 ├── docs/                documentazione
 ├── scripts/             script di servizio (primo download)
 └── data/                creata al primo avvio, MAI su GitHub
@@ -81,5 +82,6 @@ hspiteammanager/
 | Una nuova funzione lato server | Una `route(...)` nel file giusto di `src/routes/`, con il ruolo minimo indicato |
 | Una nuova tabella o colonna | Una nuova voce **in fondo** a `MIGRATIONS` in `src/db.js` (mai modificare quelle esistenti) |
 | Un nuovo ruolo | `ROLES` e `ROLE_LABELS` in `src/config.js` |
+| Una nuova qualifica | `TITLES` in `src/config.js` (e avatar riservati con quel prefisso nel nome) |
 | Un altro archivio file (es. OneDrive) | Si sostituisce solo `src/storage.js` |
 | Una libreria esterna | Prima si valuta se serve davvero; se sì, va scritta in questo documento |

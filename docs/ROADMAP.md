@@ -26,7 +26,8 @@
 - [x] Logo personalizzato dalla cartella `images/`
 - [ ] Decidere come collegare gli altri PC: porta aperta dall'IT, oppure altra strada approvata
 - [ ] Prova con i primi colleghi
-- [ ] Logo e sfondo HSPI nella cartella `branding/`
+- [x] v0.2: accesso con Login/Registrazione, nome utente automatico `nome.cognome`, approvazione dell'Hacker
+- [x] v0.2: spiegazioni (i) sui campi, logo più grande, sfondi dinamici, 36 avatar con quelli riservati per qualifica
 - [ ] Portafoglio software e servizi (licenze, scadenze, referenti)
 - [ ] Assegnazioni utente-risorsa
 - [ ] Demo al responsabile

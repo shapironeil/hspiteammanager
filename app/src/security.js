@@ -7,6 +7,19 @@ const { get, run, now } = require('./db');
 const USERNAME_RE = /^[a-z0-9._-]{3,32}$/;
 const MIN_PASSWORD = 8;
 
+// Nome utente = nome.cognome, senza accenti, spazi o simboli.
+// Se esiste gia' si aggiunge un numero: mario.rossi, mario.rossi2, mario.rossi3...
+const slug = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+function makeUsername(firstName, lastName) {
+  const a = slug(firstName);
+  const b = slug(lastName);
+  if (!a || !b) return null;
+  const base = `${a}.${b}`.slice(0, 28);
+  let candidate = base;
+  for (let n = 2; get('SELECT 1 AS x FROM users WHERE username = ?', candidate); n++) candidate = base + n;
+  return candidate;
+}
+
 function hashPassword(password) {
   const salt = crypto.randomBytes(16);
   const hash = crypto.scryptSync(password, salt, 64);
@@ -51,7 +64,7 @@ function userFromRequest(req) {
   const token = parseCookies(req)[config.COOKIE];
   if (!token) return null;
   const row = get(
-    `SELECT u.id, u.username, u.name, u.role, u.must_change, u.active, s.token_hash
+    `SELECT u.id, u.username, u.name, u.role, u.must_change, u.active, u.avatar, u.title, s.token_hash
      FROM sessions s JOIN users u ON u.id = s.user_id
      WHERE s.token_hash = ? AND s.expires_at > ?`, sha(token), now());
   if (!row || !row.active) return null;
@@ -92,7 +105,7 @@ function loginFailed(key) {
 const loginOk = (key) => attempts.delete(key);
 
 module.exports = {
-  USERNAME_RE, hashPassword, verifyPassword, checkPassword,
+  USERNAME_RE, makeUsername, hashPassword, verifyPassword, checkPassword,
   createSession, userFromRequest, sessionCookie, clearCookie,
   destroySession, destroyUserSessions, cleanupSessions,
   loginBlocked, loginFailed, loginOk,

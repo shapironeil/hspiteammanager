@@ -84,6 +84,12 @@ const MIGRATIONS = [
   CREATE INDEX idx_logs_ts ON logs(ts);
   CREATE INDEX idx_files_owner ON files(owner_id);
   `,
+  // 2 - registrazione con approvazione e avatar
+  `
+  ALTER TABLE users ADD COLUMN pending INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE users ADD COLUMN avatar TEXT;
+  ALTER TABLE users ADD COLUMN title TEXT;
+  `,
 ];
 
 function migrate() {

@@ -1,29 +1,44 @@
 // Schermate riservate: Team/Account (manager e hacker), Log, Errori e bug, Sistema (hacker).
 import { get, post, patch } from './api.js';
-import { h, icon, modal, form, field, toast, toastError, fmtBytes, fmtDate, pageHead, meter } from './ui.js';
+import { h, icon, modal, form, field, toast, toastError, fmtBytes, fmtDate, pageHead, meter, avatarEl, usernamePreview } from './ui.js';
 import { app, refresh, boot } from './app.js';
 
 const roleChip = (role) => h('span', { class: `chip ${role}` }, app.state.roles[role] || role);
 const roleSelect = (value) => h('select', { name: 'role' },
   Object.entries(app.state.roles).map(([k, label]) => h('option', { value: k, selected: k === value }, label)));
 
+const titleSelect = (value) => h('select', { name: 'title' },
+  h('option', { value: '' }, 'Nessuna'),
+  Object.entries(app.state.titles).map(([k, label]) => h('option', { value: k, selected: k === value }, label)));
+
+const INFO_ROLE = 'Decide cosa può fare nel portale. Dipendente: programmi, file e profilo. Manager: anche team, annunci e pubblicazione programmi. Hacker: tutto, compresi account, log ed errori.';
+const INFO_TITLE = 'Descrive il lavoro della persona e sblocca gli avatar riservati a quella qualifica. Non cambia i permessi.';
+
 // ---- Team / Account --------------------------------------------------------
 function accountCreator() {
+  const first = h('input', { type: 'text', name: 'firstName', maxlength: '40' });
+  const last = h('input', { type: 'text', name: 'lastName', maxlength: '40' });
+  const preview = h('strong', {}, 'nome.cognome');
+  const update = () => { preview.textContent = usernamePreview(first.value, last.value) || 'nome.cognome'; };
+  first.addEventListener('input', update);
+  last.addEventListener('input', update);
   const m = modal('Nuovo account', form([
-    field('Nome e cognome', h('input', { type: 'text', name: 'name', maxlength: '80' })),
-    field('Nome utente (minuscole, numeri, punto, trattino)', h('input', { type: 'text', name: 'username', autocapitalize: 'none', spellcheck: 'false' })),
-    field('Ruolo', roleSelect('dipendente')),
-    field('Password provvisoria (almeno 8 caratteri)', h('input', { type: 'text', name: 'password', autocomplete: 'off' })),
-    h('p', { class: 'hint' }, 'Al primo accesso la persona dovrà sceglierne una nuova.'),
+    field('Nome', first, 'Nome di battesimo della persona. Esempio: Mario'),
+    field('Cognome', last, 'Cognome della persona. Con il nome forma il nome utente.'),
+    h('div', { class: 'username-preview' }, 'Nome utente: ', preview, h('br'), 'Se esiste già, viene aggiunto un numero alla fine.'),
+    field('Ruolo', roleSelect('dipendente'), INFO_ROLE),
+    field('Qualifica', titleSelect(''), INFO_TITLE),
+    field('Password provvisoria', h('input', { type: 'text', name: 'password', autocomplete: 'off' }), 'Almeno 8 caratteri. La comunichi tu alla persona: al primo accesso dovrà sceglierne una nuova.'),
     h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Crea account')),
-  ], async (v) => { await post('/api/users', v); m.close(); toast('Account creato.'); refresh(); }));
+  ], async (v) => { const r = await post('/api/users', v); m.close(); toast(`Account creato: ${r.username}`); refresh(); }));
 }
 
 function accountEditor(u) {
   const m = modal(`Account · ${u.username}`, h('div', {},
     form([
-      field('Nome e cognome', h('input', { type: 'text', name: 'name', maxlength: '80', value: u.name })),
-      field('Ruolo', roleSelect(u.role)),
+      field('Nome e cognome', h('input', { type: 'text', name: 'name', maxlength: '80', value: u.name }), 'Come compare nel portale. Il nome utente non cambia.'),
+      field('Ruolo', roleSelect(u.role), INFO_ROLE),
+      field('Qualifica', titleSelect(u.title), INFO_TITLE),
       h('label', { class: 'check' }, h('input', { type: 'checkbox', name: 'active', checked: u.active }), 'Account attivo (può accedere al portale)'),
       h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Salva')),
     ], async (v) => {
@@ -32,7 +47,7 @@ function accountEditor(u) {
     }),
     h('h3', { style: 'margin:18px 0 12px' }, 'Reimposta password'),
     form([
-      field('Nuova password provvisoria', h('input', { type: 'text', name: 'password', autocomplete: 'off' })),
+      field('Nuova password provvisoria', h('input', { type: 'text', name: 'password', autocomplete: 'off' }), 'Almeno 8 caratteri. La persona dovrà cambiarla al prossimo accesso.'),
       h('div', { class: 'modal-actions' }, h('button', { class: 'btn', type: 'submit' }, 'Reimposta')),
     ], async (v) => { await post(`/api/users/${u.id}/reset-password`, v); m.close(); toast('Password reimpostata.'); refresh(); })));
 }
@@ -40,22 +55,31 @@ function accountEditor(u) {
 export async function viewAccounts(el) {
   const users = await get('/api/users');
   const admin = app.can('hacker');
+  const approve = async (u) => {
+    try { await patch(`/api/users/${u.id}`, { active: true }); toast(`${u.name} può entrare nel portale.`); refresh(); } catch (err) { toastError(err); }
+  };
   const rows = users.map((u) => h('tr', {},
-    h('td', {}, u.name, h('div', { class: 'small muted' }, u.username)),
-    h('td', {}, roleChip(u.role)),
-    h('td', {}, !u.active ? h('span', { class: 'chip danger' }, 'Disabilitato')
-      : u.mustChange ? h('span', { class: 'chip warn' }, 'Password provvisoria') : h('span', { class: 'chip ok' }, 'Attivo')),
+    h('td', {}, h('div', { class: 'person' }, avatarEl(u, 'sm'), h('div', {}, u.name, h('div', { class: 'small muted' }, u.username)))),
+    h('td', {}, h('div', { class: 'row', style: 'gap:6px' }, roleChip(u.role), u.title ? h('span', { class: 'chip' }, app.state.titles[u.title]) : null)),
+    h('td', {}, u.pending ? h('span', { class: 'chip warn' }, 'In attesa di approvazione')
+      : !u.active ? h('span', { class: 'chip danger' }, 'Disabilitato')
+        : u.mustChange ? h('span', { class: 'chip warn' }, 'Password provvisoria') : h('span', { class: 'chip ok' }, 'Attivo')),
     h('td', { class: 'nowrap' }, fmtDate(u.lastLogin)),
-    admin ? h('td', { class: 'num' }, h('button', { class: 'btn sm', type: 'button', onclick: () => accountEditor(u) }, icon('edit'), 'Modifica')) : null));
+    admin ? h('td', { class: 'num' }, h('div', { class: 'row end', style: 'flex-wrap:nowrap' },
+      u.pending ? h('button', { class: 'btn primary sm', type: 'button', onclick: () => approve(u) }, 'Approva') : null,
+      h('button', { class: 'btn sm', type: 'button', onclick: () => accountEditor(u) }, icon('edit'), 'Modifica'))) : null));
 
+  const waiting = users.filter((u) => u.pending).length;
   el.replaceChildren(
     pageHead(admin ? 'Account' : 'Team',
-      admin ? 'Crea gli account, assegna i ruoli, disabilita chi non deve più entrare.' : 'Le persone abilitate al portale e il loro ultimo accesso.',
+      admin ? 'Approva le registrazioni, assegna ruoli e qualifiche, disabilita chi non deve più entrare.' : 'Le persone abilitate al portale e il loro ultimo accesso.',
       admin ? h('button', { class: 'btn primary', type: 'button', onclick: accountCreator }, icon('plus'), 'Nuovo account') : null),
-    h('section', { class: 'card glass' }, h('div', { class: 'table-wrap' },
-      h('table', {},
-        h('thead', {}, h('tr', {}, h('th', {}, 'Persona'), h('th', {}, 'Ruolo'), h('th', {}, 'Stato'), h('th', {}, 'Ultimo accesso'), admin ? h('th', {}) : null)),
-        h('tbody', {}, rows)))));
+    h('section', { class: 'card glass' },
+      waiting ? h('div', { class: 'card-head' }, h('h2', {}, 'Persone'), h('span', { class: 'chip warn' }, `${waiting} in attesa di approvazione`)) : null,
+      h('div', { class: 'table-wrap' },
+        h('table', {},
+          h('thead', {}, h('tr', {}, h('th', {}, 'Persona'), h('th', {}, 'Ruolo e qualifica'), h('th', {}, 'Stato'), h('th', {}, 'Ultimo accesso'), admin ? h('th', {}) : null)),
+          h('tbody', {}, rows)))));
 }
 
 // ---- Log attivita' ---------------------------------------------------------
@@ -140,9 +164,9 @@ export async function viewSystem(el) {
           h('dt', {}, 'Cartella dati'), h('dd', { class: 'mono' }, s.dataDir))),
       h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Impostazioni')),
         form([
-          field('Nome del portale', h('input', { type: 'text', name: 'portalName', maxlength: '60', value: s.settings.portalName })),
-          field('Spazio totale assegnato (GB)', h('input', { type: 'number', name: 'quotaGb', min: '1', value: String(s.settings.quotaGb) })),
-          field('Dimensione massima di un file (MB)', h('input', { type: 'number', name: 'maxFileMb', min: '1', value: String(s.settings.maxFileMb) })),
+          field('Nome del portale', h('input', { type: 'text', name: 'portalName', maxlength: '60', value: s.settings.portalName }), 'Il nome mostrato nel login, nel menu e nella scheda del browser.'),
+          field('Spazio totale assegnato (GB)', h('input', { type: 'number', name: 'quotaGb', min: '1', value: String(s.settings.quotaGb) }), 'Quanto spazio del disco può occupare in totale il portale con programmi e file caricati.'),
+          field('Dimensione massima di un file (MB)', h('input', { type: 'number', name: 'maxFileMb', min: '1', value: String(s.settings.maxFileMb) }), 'Il limite per un singolo file caricato. 1024 MB = 1 GB.'),
           h('button', { class: 'btn primary', type: 'submit' }, 'Salva impostazioni'),
         ], async (v) => { await patch('/api/settings', v); toast('Impostazioni salvate.'); await boot(); })),
       h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Stato')),
