@@ -11,6 +11,9 @@ rem       (es. node-v22.22.2-win-x64), senza installare niente
 rem    2. stessa cartella, un livello sopra il progetto
 rem    3. Node.js installato nel sistema
 rem  Serve la versione 22.13 o successiva.
+rem
+rem  Il portale risponde SOLO su questo PC: cosi' Windows non chiede
+rem  il permesso del firewall. Per aprirlo alla rete: avvia-rete.bat
 rem  Per usare un'altra porta:  set PORT=9000  prima di avviare.
 rem ============================================================
 
@@ -32,8 +35,8 @@ if errorlevel 1 goto :oldnode
 echo.
 echo  Node.js: %NODE%
 echo  Avvio di HSPI Team Manager sulla porta %PORT%...
-echo  Se Windows chiede il permesso per Node.js sulla rete, consenti
-echo  l'accesso sulle reti private: serve ai colleghi per collegarsi.
+if /i "%HOST%"=="0.0.0.0" echo  Modalita' RETE: Windows puo' chiedere il permesso del firewall.
+if /i not "%HOST%"=="0.0.0.0" echo  Modalita' SOLO QUESTO PC: nessuna richiesta del firewall.
 echo.
 
 start "" /min cmd /c "timeout /t 2 /nobreak >nul & start http://localhost:%PORT%"

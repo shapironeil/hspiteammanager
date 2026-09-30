@@ -10,18 +10,30 @@ const { route, HttpError } = require('../http');
 const publicUser = (u) => ({ id: u.id, username: u.username, name: u.name, role: u.role, mustChange: !!u.must_change });
 const userCount = () => db.get('SELECT COUNT(*) AS n FROM users').n;
 
-// Cerca nella cartella "branding" i file logo.*, sfondo.* e favicon.*
+// Immagini personalizzate: si cercano nelle cartelle "images" e "branding".
+// 1) file chiamato esattamente logo / sfondo / favicon
+// 2) file che contiene quella parola nel nome (es. "logo-hspi.png")
+// 3) per il logo: la prima immagine rimasta nella cartella "images"
+const IMAGE_EXT = ['.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.ico'];
 function branding() {
   const out = { logo: null, sfondo: null, favicon: null };
-  let names = [];
-  try { names = fs.readdirSync(config.BRANDING_DIR); } catch { return out; }
-  for (const n of names) {
-    const ext = path.extname(n).toLowerCase();
-    const base = path.basename(n, path.extname(n)).toLowerCase();
-    if (base in out && !out[base] && ['.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.ico'].includes(ext)) {
-      out[base] = '/branding/' + encodeURIComponent(n);
+  const found = [];
+  for (const [prefix, dir] of [['/images/', config.IMAGES_DIR], ['/branding/', config.BRANDING_DIR]]) {
+    let names = [];
+    try { names = fs.readdirSync(dir).sort(); } catch { continue; }
+    for (const n of names) {
+      if (!IMAGE_EXT.includes(path.extname(n).toLowerCase())) continue;
+      found.push({ url: prefix + encodeURIComponent(n), base: path.basename(n, path.extname(n)).toLowerCase(), prefix });
     }
   }
+  const take = (key, test) => {
+    if (out[key]) return;
+    const hit = found.find((f) => !f.used && test(f));
+    if (hit) { hit.used = true; out[key] = hit.url; }
+  };
+  for (const key of Object.keys(out)) take(key, (f) => f.base === key);
+  for (const key of Object.keys(out)) take(key, (f) => f.base.includes(key));
+  take('logo', (f) => f.prefix === '/images/');
   return out;
 }
 

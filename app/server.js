@@ -50,6 +50,13 @@ setInterval(security.cleanupSessions, 3600000).unref();
 server.listen(config.PORT, config.HOST, () => {
   console.log('\n  HSPI Team Manager v' + config.VERSION + ' - portale avviato\n');
   for (const u of accessUrls()) console.log('  ' + (u.label + ':').padEnd(28) + u.url);
+  if (config.networkOpen) {
+    console.log('\n  Modalita\' RETE: i colleghi entrano solo se il firewall di Windows');
+    console.log('  consente le connessioni in ingresso (serve un amministratore).');
+  } else {
+    console.log('\n  Modalita\' SOLO QUESTO PC: nessuna richiesta del firewall.');
+    console.log('  Per aprirlo alla rete locale usa avvia-rete.bat.');
+  }
   console.log('\n  Dati salvati in: ' + config.DATA_DIR);
   console.log('  Per fermare il portale: CTRL+C oppure chiudi questa finestra.\n');
 });

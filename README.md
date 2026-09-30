@@ -7,7 +7,7 @@ Portale interno (beta) per il team HSPI: account con ruoli, programmi da scarica
 ## Avvio rapido (Windows)
 
 1. Metti nella cartella del progetto la cartella di Node.js portatile (es. `node-v22.22.2-win-x64`, dallo ZIP "Windows Binary" di nodejs.org). Non serve installare niente.
-2. Doppio clic su **`avvia.bat`**.
+2. Doppio clic su **`avvia.bat`**: il portale parte solo su questo PC, senza richieste del firewall. Per aprirlo ai colleghi sulla stessa rete c'è **`avvia-rete.bat`** (serve il permesso del firewall, vedi `docs/ACCESSO-RETE.md`).
 3. Si apre `http://localhost:8080`. Al primo avvio crei il tuo account **Hacker**.
 4. Da **Account** crei gli altri utenti con una password provvisoria: al primo accesso ognuno sceglie la propria.
 
@@ -35,7 +35,7 @@ Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Aggiorna 
 | `docs/ACCESSO-RETE.md` | Come far entrare i colleghi: stessa Wi-Fi, Tailscale, cosa evitare |
 | `docs/ARCHITETTURA.md` | Architettura, moduli, modello dati, decisioni aperte |
 | `docs/ROADMAP.md` | Fasi di lavoro |
-| `branding/README.md` | Come personalizzare logo, sfondo e icona |
+| `branding/README.md` | Come personalizzare logo, sfondo e icona (cartella `images`) |
 
 ## Regole del repository
 

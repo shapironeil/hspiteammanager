@@ -22,7 +22,10 @@
 - [x] Annunci, log attività, errori e segnalazioni, pannello Sistema
 - [x] `avvia.bat` e `aggiorna.bat` (aggiornamento automatico, Node.js portatile nella cartella del progetto)
 - [ ] Primo test di aggiornamento con `aggiorna.bat`: a video deve comparire la versione 0.1.1
-- [ ] Prova sul PC Windows e con i primi colleghi in rete locale
+- [x] Avvio sul PC Windows, solo in locale (v0.1.2: nessuna richiesta del firewall)
+- [x] Logo personalizzato dalla cartella `images/`
+- [ ] Decidere come collegare gli altri PC: porta aperta dall'IT, oppure altra strada approvata
+- [ ] Prova con i primi colleghi
 - [ ] Logo e sfondo HSPI nella cartella `branding/`
 - [ ] Portafoglio software e servizi (licenze, scadenze, referenti)
 - [ ] Assegnazioni utente-risorsa

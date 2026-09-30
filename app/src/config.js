@@ -10,15 +10,19 @@ const ROLES = ['dipendente', 'manager', 'hacker'];
 const ROLE_LABELS = { dipendente: 'Dipendente', manager: 'Manager', hacker: 'Hacker' };
 
 module.exports = {
-  VERSION: '0.1.1',
+  VERSION: '0.1.2',
   ROOT,
   DATA_DIR,
   DB_FILE: path.join(DATA_DIR, 'portale.db'),
   STORAGE_DIR: path.join(DATA_DIR, 'storage'),
   PUBLIC_DIR: path.join(ROOT, 'app', 'public'),
   BRANDING_DIR: path.join(ROOT, 'branding'),
+  IMAGES_DIR: path.join(ROOT, 'images'),
   PORT: Number(process.env.PORT) || 8080,
-  HOST: process.env.HOST || '0.0.0.0',
+  // 127.0.0.1 = raggiungibile solo da questo PC (nessuna richiesta del firewall).
+  // 0.0.0.0   = aperto alla rete locale (avvia-rete.bat; serve il permesso del firewall).
+  HOST: process.env.HOST || '127.0.0.1',
+  get networkOpen() { return !['127.0.0.1', 'localhost', '::1'].includes(this.HOST); },
   ROLES,
   ROLE_LABELS,
   roleRank: (role) => ROLES.indexOf(role),

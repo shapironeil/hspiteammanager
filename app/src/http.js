@@ -89,6 +89,7 @@ function serveStatic(req, res, pathname) {
   try { rel = decodeURIComponent(pathname); } catch { return false; }
   if (rel.includes('\0')) return false;
   if (rel.startsWith('/branding/')) return serveFile(res, config.BRANDING_DIR, rel.slice('/branding/'.length), BRANDING_EXT);
+  if (rel.startsWith('/images/')) return serveFile(res, config.IMAGES_DIR, rel.slice('/images/'.length), BRANDING_EXT);
   if (rel === '/') rel = '/index.html';
   return serveFile(res, config.PUBLIC_DIR, rel.slice(1));
 }

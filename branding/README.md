@@ -1,6 +1,14 @@
-# branding
+# Immagini del portale
 
-Metti qui le immagini del portale. Basta il nome giusto: il portale le usa da solo al prossimo caricamento della pagina.
+Le immagini personalizzate si mettono nella cartella **`images`** (oppure in questa, `branding`): il portale le usa da solo al prossimo caricamento della pagina.
+
+Come viene scelto il logo, in ordine:
+
+1. il file chiamato `logo` (es. `logo.png`);
+2. un file con "logo" nel nome (es. `logo-hspi.png`);
+3. altrimenti la prima immagine trovata in `images`.
+
+Lo stesso vale per `sfondo` e `favicon`, ma solo con i primi due criteri.
 
 | Nome del file | Dove compare | Consiglio |
 |---|---|---|
@@ -10,4 +18,4 @@ Metti qui le immagini del portale. Basta il nome giusto: il portale le usa da so
 
 Formati accettati: svg, png, jpg, jpeg, webp, gif, ico. Se un file manca, il portale usa l'aspetto predefinito.
 
-Le immagini che aggiungi qui restano sul tuo PC e `aggiorna.bat` non le tocca.
+Le immagini che aggiungi restano sul tuo PC e `aggiorna.bat` non le tocca.

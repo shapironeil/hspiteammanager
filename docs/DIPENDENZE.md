@@ -58,11 +58,12 @@ app/public/index.html
 
 ```
 hspiteammanager/
-├── avvia.bat            avvia il portale e apre il browser
+├── avvia.bat            avvia il portale solo su questo PC e apre il browser
+├── avvia-rete.bat       come sopra, ma aperto alla rete locale (serve il firewall)
 ├── aggiorna.bat         scarica l'ultima versione da GitHub e avvia il portale
 ├── node-v22.22.2-win-x64/   Node.js portatile, MAI su GitHub
 ├── app/                 codice del portale (server + interfaccia)
-├── branding/            logo, sfondo, favicon personalizzati
+├── images/              logo, sfondo, favicon personalizzati (anche branding/)
 ├── docs/                documentazione
 ├── scripts/             script di servizio (primo download)
 └── data/                creata al primo avvio, MAI su GitHub

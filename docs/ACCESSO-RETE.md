@@ -1,12 +1,35 @@
 # Far entrare i colleghi nel portale
 
-Il portale gira sul tuo PC (host). Gli altri lo raggiungono con un link. Tre strade, dalla più semplice.
+Il portale gira sul tuo PC (host). Gli altri lo raggiungono con un link.
+
+## Prima di tutto: due modi di avviare
+
+| Script | Chi può entrare | Firewall di Windows |
+|---|---|---|
+| `avvia.bat` (e `aggiorna.bat`) | Solo il tuo PC | Nessuna richiesta |
+| `avvia-rete.bat` | Anche i PC sulla stessa rete | Chiede il permesso: serve un account amministratore |
+
+## Il blocco del firewall
+
+Quando un programma si mette in ascolto sulla rete, Windows chiede se consentirlo. Su un PC aziendale quella conferma richiede un account amministratore: senza, gli altri PC non riescono a collegarsi, mentre sul tuo il portale continua a funzionare.
+
+Quel blocco è una regola di sicurezza dell'azienda, non un difetto del portale. La strada pulita è farla aprire a chi ne ha l'autorità. All'IT serve un solo comando, da eseguire una volta come amministratore:
+
+```
+netsh advfirewall firewall add rule name="HSPI Team Manager" dir=in action=allow protocol=TCP localport=8080 profile=domain,private
+```
+
+Apre solo la porta 8080 in ingresso, solo sulle reti aziendali e private. Per toglierla: `netsh advfirewall firewall delete rule name="HSPI Team Manager"`.
+
+Aggirare il blocco con un tunnel verso internet su un PC aziendale significa scavalcare quella regola: non farlo senza l'ok dell'IT.
+
+Una volta aperta la porta, le strade sono queste, dalla più semplice.
 
 ## A. Stessa rete Wi-Fi — consigliata per iniziare
 
-1. Avvia il portale con `avvia.bat`.
+1. Avvia il portale con `avvia-rete.bat`.
 2. La finestra nera mostra i link. Quello utile è **Rete locale**, tipo `http://192.168.1.23:8080`. Lo trovi anche in **Sistema → Link di accesso**, con il pulsante per copiarlo.
-3. Al primo avvio Windows chiede se consentire Node.js sulla rete: rispondi **Consenti** per le reti private.
+3. Se la regola del firewall non c'è ancora, Windows chiede il permesso (vedi sopra).
 4. Manda il link ai colleghi. Entrano con l'account che hai creato per loro.
 
 Cose da sapere:

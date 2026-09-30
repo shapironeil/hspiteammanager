@@ -99,10 +99,9 @@ route('GET', '/api/logs', { role: 'hacker' }, (ctx) => {
 
 // --- Sistema ------------------------------------------------------------------
 function accessUrls() {
-  const urls = [
-    { label: 'Questo PC', url: `http://localhost:${config.PORT}` },
-    { label: 'Rete locale (nome del PC)', url: `http://${os.hostname()}:${config.PORT}` },
-  ];
+  const urls = [{ label: 'Questo PC', url: `http://localhost:${config.PORT}` }];
+  if (!config.networkOpen) return urls;
+  urls.push({ label: 'Rete locale (nome del PC)', url: `http://${os.hostname()}:${config.PORT}` });
   for (const [name, addrs] of Object.entries(os.networkInterfaces())) {
     for (const a of addrs || []) {
       if (a.family !== 'IPv4' || a.internal) continue;
@@ -122,6 +121,7 @@ route('GET', '/api/system', { role: 'hacker' }, (ctx) => {
     uptimeSeconds: Math.round(process.uptime()),
     dataDir: config.DATA_DIR,
     urls: accessUrls(),
+    networkOpen: config.networkOpen,
     storage: {
       usedBytes: storage.usedBytes(),
       quotaBytes: storage.quotaBytes(),

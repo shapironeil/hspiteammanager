@@ -127,7 +127,9 @@ export async function viewSystem(el) {
         h('ul', { class: 'list' }, s.urls.map((u) => h('li', {},
           h('div', { class: 'grow' }, h('div', { class: 'title mono' }, u.url), h('div', { class: 'meta' }, u.label)),
           h('button', { class: 'icon-btn', type: 'button', 'aria-label': `Copia ${u.url}`, title: 'Copia', onclick: () => copy(u.url) }, icon('copy'))))),
-        h('p', { class: 'small muted', style: 'margin-top:10px' }, 'I colleghi sulla stessa rete usano il link "Rete locale". Il PC deve restare acceso con il portale avviato.')),
+        h('p', { class: 'small muted', style: 'margin-top:10px' }, s.networkOpen
+          ? 'Modalità rete: i colleghi sulla stessa rete usano il link "Rete locale". Funziona solo se il firewall di Windows consente le connessioni in ingresso. Il PC deve restare acceso con il portale avviato.'
+          : 'Modalità solo questo PC: il portale non è raggiungibile dagli altri computer. Per aprirlo alla rete locale si avvia con avvia-rete.bat, che richiede il permesso del firewall di Windows (account amministratore).')),
       h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Archiviazione')),
         h('div', { class: 'tile', style: 'padding:0' },
           h('div', { class: 'value' }, fmtBytes(s.storage.usedBytes)),
