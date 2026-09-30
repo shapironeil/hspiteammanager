@@ -3,7 +3,7 @@
 ## Fase 0 — Base (fatta)
 
 - [x] Repository con struttura, documento di architettura e roadmap
-- [x] Script `.bat` per scaricare/aggiornare il progetto da GitHub
+- [x] Script `.bat` per scaricare il progetto da GitHub
 
 ## Fase 1 — Progettazione
 
@@ -14,12 +14,17 @@
 
 ## Fase 2 — v1 da mostrare
 
-- [ ] Scheletro dell'app (Next.js + PostgreSQL + Docker Compose)
-- [ ] Login con email/password e tre ruoli (admin, manager, membro)
-- [ ] Modulo utenti e profilo
-- [ ] Portafoglio software e servizi
+- [x] Portale funzionante in locale (Node.js + SQLite, nessuna dipendenza esterna)
+- [x] Login e tre ruoli (dipendente, manager, hacker), menu laterale per ruolo
+- [x] Gestione account: creazione, ruoli, disabilitazione, password provvisorie
+- [x] Programmi scaricabili con guida all'uso
+- [x] File: caricamento, invio a colleghi, archivio locale con tetto di spazio
+- [x] Annunci, log attività, errori e segnalazioni, pannello Sistema
+- [x] `avvia.bat` e `aggiorna.bat`
+- [ ] Prova sul PC Windows e con i primi colleghi in rete locale
+- [ ] Logo e sfondo HSPI nella cartella `branding/`
+- [ ] Portafoglio software e servizi (licenze, scadenze, referenti)
 - [ ] Assegnazioni utente-risorsa
-- [ ] Dashboard con scadenze e numeri chiave
 - [ ] Demo al responsabile
 
 ## Fase 3 — Verso l'uso reale

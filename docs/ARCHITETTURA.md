@@ -1,7 +1,24 @@
 # Architettura — HSPI Team Manager
 
-Versione 0.1 — bozza di lavoro, 30 settembre 2026.
-È una **proposta**: le scelte segnate come "da decidere" vanno confermate prima di scrivere la v1.
+Versione 0.2 — 30 settembre 2026.
+
+## 0. Stato attuale: v0.1 in locale
+
+La prima versione funzionante esiste e gira sul PC di chi la ospita. Per partire subito, senza dipendere da IT e senza installazioni pesanti, usa una base più leggera di quella descritta come obiettivo nelle sezioni successive:
+
+| Pezzo | v0.1 (oggi) | Obiettivo (sezioni 2-5) |
+|---|---|---|
+| Applicazione | Node.js puro, nessun pacchetto esterno | Da rivalutare: restare così o passare a Next.js |
+| Database | SQLite, un file in `data/portale.db` | PostgreSQL |
+| Archivio file | Cartella locale `data/storage/`, tetto configurabile (100 GB) | OneDrive / SharePoint |
+| Login | Nome utente e password gestiti dal portale | Account Microsoft (Entra ID) |
+| Hosting | PC personale, rete locale | Azure nel tenant HSPI o server aziendale |
+
+I tre punti di sostituzione sono isolati: database in `src/db.js`, archivio in `src/storage.js`, login in `src/security.js`. Dettagli in `DIPENDENZE.md`; accesso dei colleghi in `ACCESSO-RETE.md`.
+
+Moduli presenti nella v0.1: account e ruoli (dipendente, manager, hacker), programmi scaricabili con guida, file personali e invii, annunci, log attività, errori e segnalazioni, pannello Sistema.
+
+Il resto del documento descrive l'architettura a regime ed è una **proposta**: le scelte segnate come "da decidere" vanno confermate.
 
 ## 1. Obiettivo
 
@@ -95,9 +112,9 @@ Dati aziendali reali non vanno su server personali o account personali senza un'
 
 | Ruolo | Può fare |
 |---|---|
-| **Admin** | Tutto: utenti, ruoli, configurazione |
-| **Manager** | Gestire risorse, assegnazioni e processi; vedere tutto il team |
-| **Membro** | Gestire il proprio profilo, vedere le risorse assegnate, fare richieste |
+| **Hacker** (amministratore) | Tutto: account, ruoli, log, errori, configurazione |
+| **Manager** | Ciò che vede il dipendente + team, annunci, pubblicazione dei programmi |
+| **Dipendente** | Programmi, file, profilo, segnalazioni |
 
 ## 7. Modello dati (prima bozza)
 
@@ -135,7 +152,7 @@ Il resto del codice non cambia quando si passa dall'una all'altra: si sostituisc
 
 | # | Decisione | Chi decide |
 |---|---|---|
-| 1 | Conferma dello stack (Next.js + PostgreSQL) | Shappa |
+| 1 | Stack a regime: tenere la base leggera della v0.1 o passare a Next.js + PostgreSQL | Shappa |
 | 2 | Hosting definitivo: Azure nel tenant HSPI o server aziendale | Manager + IT |
 | 3 | Registrazione dell'app in Entra ID | IT |
 | 4 | Archivio: raccolta SharePoint del team o OneDrive; verifica della quota | Manager + IT |

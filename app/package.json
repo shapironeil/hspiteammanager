@@ -1,0 +1,14 @@
+{
+  "name": "hspi-team-manager",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Portale interno del team HSPI (beta)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {}
+}

@@ -1,27 +1,42 @@
 # HSPI Team Manager
 
-Portale interno (beta) per il team HSPI: un posto unico per utenti, risorse software, servizi e processi standardizzati.
+Portale interno (beta) per il team HSPI: account con ruoli, programmi da scaricare con la loro guida, scambio file, log e pannello di controllo.
 
-> **Stato:** fase di progettazione. Non c'è ancora codice applicativo: questo repository contiene la base (struttura, architettura proposta, script di download).
+> **Stato:** v0.1 — prima versione funzionante, in locale sul PC che la ospita. Da usare con dati di prova.
 
-## Cosa c'è qui
+## Avvio rapido (Windows)
 
-| Percorso | Contenuto |
+1. Doppio clic su **`avvia.bat`**. Serve solo Node.js 22.13 o successivo: se manca, lo script propone di installarlo.
+2. Si apre `http://localhost:8080`. Al primo avvio crei il tuo account **Hacker**.
+3. Da **Account** crei gli altri utenti con una password provvisoria: al primo accesso ognuno sceglie la propria.
+
+Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Database e file caricati (cartella `data/`) non vengono toccati.
+
+## Cosa vede ogni ruolo
+
+| Schermata | Dipendente | Manager | Hacker |
+|---|:-:|:-:|:-:|
+| Home, annunci | ✓ | ✓ + pubblica annunci | ✓ |
+| Programmi: scarica e leggi la guida | ✓ | ✓ + pubblica e modifica | ✓ |
+| File: carica, invia, ricevi | ✓ | ✓ | ✓ + tutti i file |
+| Profilo, cambio password, segnala un problema | ✓ | ✓ | ✓ |
+| Team (elenco persone e ultimo accesso) | | ✓ | ✓ |
+| Account (crea, ruoli, disabilita, reimposta password) | | | ✓ |
+| Log attività | | | ✓ |
+| Errori e bug | | | ✓ |
+| Sistema (link di accesso, spazio, impostazioni) | | | ✓ |
+
+## Documentazione
+
+| File | Contenuto |
 |---|---|
-| `docs/ARCHITETTURA.md` | Architettura proposta, moduli, modello dati, decisioni aperte |
-| `docs/ROADMAP.md` | Fasi di lavoro: dalla base alla v1 da mostrare, fino all'uso reale |
-| `app/` | Codice del portale (vuoto per ora, si riempie con la v1) |
-| `scripts/scarica-progetto.bat` | Scarica o aggiorna tutto il progetto da GitHub su Windows |
-
-## Scaricare il progetto su Windows
-
-1. Salva `scripts/scarica-progetto.bat` in una cartella a piacere (es. `Documenti`).
-2. Doppio clic.
-3. Il progetto viene scaricato nella sottocartella `hspiteammanager`. Rilanciando lo script si aggiorna all'ultima versione.
-
-Con Git installato lo script usa `git clone` / `git pull`. Senza Git scarica lo ZIP del ramo `main` (funziona solo se il repository è pubblico; con repository privato serve Git: https://git-scm.com/download/win).
+| `docs/DIPENDENZE.md` | Albero delle dipendenze, struttura delle cartelle, regole per aggiungere cose |
+| `docs/ACCESSO-RETE.md` | Come far entrare i colleghi: stessa Wi-Fi, Tailscale, cosa evitare |
+| `docs/ARCHITETTURA.md` | Architettura, moduli, modello dati, decisioni aperte |
+| `docs/ROADMAP.md` | Fasi di lavoro |
+| `branding/README.md` | Come personalizzare logo, sfondo e icona |
 
 ## Regole del repository
 
-- **Nessun dato aziendale reale** e **nessuna credenziale** nel repository: solo codice, documentazione e dati di esempio.
-- I segreti (chiavi, password, client secret Microsoft) vivono in file `.env` locali, esclusi da Git.
+- **Nessun dato aziendale reale** e **nessuna credenziale** nel repository: solo codice e documentazione.
+- La cartella `data/` (database e file caricati) resta sul PC ed è esclusa da Git.
