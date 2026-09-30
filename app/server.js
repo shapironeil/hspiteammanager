@@ -14,13 +14,15 @@ const http = require('node:http');
 const config = require('./src/config');
 const db = require('./src/db');
 const security = require('./src/security');
-const { handle } = require('./src/http');
+const { handle, setAppHandler } = require('./src/http');
+setAppHandler(require('./src/apps'));
 
 // Le rotte si registrano da sole al caricamento del file.
 require('./src/routes/auth');
 require('./src/routes/users');
 require('./src/routes/programs');
 require('./src/routes/files');
+require('./src/routes/projects');
 const { accessUrls } = require('./src/routes/admin');
 
 const server = http.createServer(handle);

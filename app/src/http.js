@@ -26,6 +26,10 @@ const SECURITY_HEADERS = {
     "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
 };
 
+// Gestori extra per le web app ospitate (registrati da server.js per evitare dipendenze circolari).
+let appHandler = null;
+const setAppHandler = (h) => { appHandler = h; };
+
 const routes = [];
 
 // route('GET', '/api/users/:id', { role: 'manager' }, handler)
@@ -107,7 +111,9 @@ async function handle(req, res) {
 
   try {
     if (!pathname.startsWith('/api/')) {
+      if (appHandler && pathname.startsWith('/apps/') && appHandler.handle(req, res, pathname)) return;
       if (serveStatic(req, res, pathname)) return;
+      if (appHandler && appHandler.handleFromReferer(req, res, pathname)) return;
       throw new HttpError(404, 'Pagina non trovata.');
     }
 
@@ -148,4 +154,4 @@ async function handle(req, res) {
   }
 }
 
-module.exports = { HttpError, route, handle, sendJson, SECURITY_HEADERS };
+module.exports = { setAppHandler, HttpError, route, handle, sendJson, SECURITY_HEADERS };

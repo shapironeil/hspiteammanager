@@ -45,6 +45,7 @@ route('GET', '/api/state', { public: true }, (ctx) => {
     portalName: db.getSetting('portalName'),
     branding: media.branding(),
     backgrounds,
+    portalBackgrounds: media.portalBackgrounds(),
     backgroundStart: backgrounds.length ? backgroundTurn++ % backgrounds.length : 0,
     roles: config.ROLE_LABELS,
     titles: config.TITLES,

@@ -24,6 +24,8 @@
 - [ ] Primo test di aggiornamento con `aggiorna.bat`: a video deve comparire la versione 0.1.1
 - [x] Avvio sul PC Windows, solo in locale (v0.1.2: nessuna richiesta del firewall)
 - [x] Logo personalizzato dalla cartella `images/`
+- [x] v0.3: Progetti con membri e link a OneDrive, programmi come web app da `apptools`, tema chiaro/scuro, sfondo statico, guida a popup, `carica-su-github.bat`
+- [ ] Decidere come trattare i file aziendali dei progetti (vedi `PROGETTI-E-DATI.md`)
 - [ ] Decidere come collegare gli altri PC: porta aperta dall'IT, oppure altra strada approvata
 - [ ] Prova con i primi colleghi
 - [x] v0.2: accesso con Login/Registrazione, nome utente automatico `nome.cognome`, approvazione dell'Hacker

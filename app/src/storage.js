@@ -99,6 +99,51 @@ function sendDownload(res, area, id, name) {
   fs.createReadStream(file).pipe(res);
 }
 
+// Salva il corpo della richiesta in un percorso preciso (file dei progetti), con il limite per singolo file.
+function saveToPath(req, finalPath) {
+  return new Promise((resolve, reject) => {
+    const maxFile = maxFileBytes();
+    if (Number(req.headers['content-length'] || 0) > maxFile) return reject(new HttpError(413, `File troppo grande (massimo ${db.getSetting('maxFileMb')} MB).`));
+    const tmpPath = finalPath + '.part';
+    const out = fs.createWriteStream(tmpPath);
+    let size = 0;
+    let failed = false;
+    const fail = (err) => {
+      if (failed) return;
+      failed = true;
+      req.unpipe(out);
+      out.once('close', () => fs.rm(tmpPath, { force: true }, () => {}));
+      out.destroy();
+      req.resume();
+      reject(err);
+    };
+    req.on('data', (chunk) => { size += chunk.length; if (size > maxFile) fail(new HttpError(413, `File troppo grande (massimo ${db.getSetting('maxFileMb')} MB).`)); });
+    req.on('aborted', () => fail(new HttpError(400, 'Caricamento interrotto.')));
+    req.on('error', () => fail(new HttpError(400, 'Caricamento interrotto.')));
+    out.on('error', (err) => fail(err));
+    out.on('finish', () => {
+      if (failed) return;
+      if (size === 0) return fail(new HttpError(400, 'Il file e\' vuoto.'));
+      fs.rename(tmpPath, finalPath, (err) => (err ? fail(err) : resolve({ size })));
+    });
+    req.pipe(out);
+  });
+}
+
+function sendPath(res, file, name) {
+  let stat;
+  try { stat = fs.statSync(file); } catch { throw new HttpError(404, 'File non trovato.'); }
+  const ascii = name.replace(/[^\x20-\x7e]/g, '_').replace(/["\\]/g, '_');
+  res.writeHead(200, {
+    'Content-Type': 'application/octet-stream',
+    'Content-Length': stat.size,
+    'Content-Disposition': `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(name)}`,
+    'Cache-Control': 'no-store',
+    ...SECURITY_HEADERS,
+  });
+  fs.createReadStream(file).pipe(res);
+}
+
 function diskFreeBytes() {
   try {
     const s = fs.statfsSync(config.DATA_DIR);
@@ -106,4 +151,4 @@ function diskFreeBytes() {
   } catch { return null; }
 }
 
-module.exports = { saveUpload, remove, sendDownload, usedBytes, quotaBytes, maxFileBytes, cleanName, diskFreeBytes };
+module.exports = { saveToPath, sendPath, saveUpload, remove, sendDownload, usedBytes, quotaBytes, maxFileBytes, cleanName, diskFreeBytes };

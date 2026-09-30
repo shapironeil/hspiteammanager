@@ -10,7 +10,8 @@ export async function viewHome(el) {
     h('div', { class: 'label' }, label), h('div', { class: 'value' }, String(value)), sub ? h('div', { class: 'sub' }, sub) : null);
 
   const tiles = [
-    tile('Programmi disponibili', d.programs, 'da scaricare', '#/programmi'),
+    tile('I tuoi progetti', d.projects, app.can('hacker') ? 'tutti quelli del portale' : 'a cui partecipi', '#/progetti'),
+    tile('Programmi disponibili', d.programs, 'da aprire dal portale', '#/programmi'),
     tile('I miei file', d.myFiles, 'caricati da te', '#/file'),
     tile('File ricevuti', d.received, 'dai colleghi', '#/file'),
   ];
@@ -95,27 +96,31 @@ export async function viewPrograms(el) {
         toast('File caricato.'); refresh();
       } catch (err) { status.textContent = ''; toastError(err); }
     });
+    // Web app in apptools: si apre in una nuova scheda. File caricato: si scarica.
+    const state = p.openUrl ? h('span', { class: 'chip ok' }, 'Web app')
+      : p.hasFile ? h('span', { class: 'chip ok' }, fmtBytes(p.fileSize))
+        : h('span', { class: 'chip warn' }, p.folder ? 'Pagina iniziale non trovata' : 'Non ancora disponibile');
     return h('article', { class: 'program glass' },
       h('div', { class: 'program-top' },
         h('div', { class: 'program-icon', 'aria-hidden': 'true' }, p.name[0].toUpperCase()),
         h('div', {}, h('h3', {}, p.name),
-          h('div', { class: 'row', style: 'gap:6px;margin-top:4px' },
-            p.version ? h('span', { class: 'chip' }, `v${p.version}`) : null,
-            p.hasFile ? h('span', { class: 'chip ok' }, fmtBytes(p.fileSize)) : h('span', { class: 'chip warn' }, 'File non ancora caricato')))),
+          h('div', { class: 'row', style: 'gap:6px;margin-top:4px' }, p.version ? h('span', { class: 'chip' }, `v${p.version}`) : null, state))),
       h('p', {}, p.description || 'Nessuna descrizione.'),
       h('div', { class: 'row' },
-        h('a', { class: 'btn primary sm' + (p.hasFile ? '' : ' disabled'), href: p.hasFile ? `/api/programs/${p.id}/download` : null, 'aria-disabled': p.hasFile ? null : 'true' }, icon('download'), 'Scarica'),
+        p.openUrl ? h('a', { class: 'btn primary sm', href: p.openUrl, target: '_blank', rel: 'noopener' }, icon('play'), 'Apri') : null,
+        p.hasFile ? h('a', { class: 'btn sm' + (p.openUrl ? '' : ' primary'), href: `/api/programs/${p.id}/download` }, icon('download'), 'Scarica') : null,
         h('button', { class: 'btn sm', type: 'button', onclick: () => modal(`Guida · ${p.name}`, markdown(p.guide), { wide: true }) }, icon('book'), 'Guida')),
       canEdit ? h('div', { class: 'row' },
         h('button', { class: 'btn sm', type: 'button', onclick: () => programEditor(p) }, icon('edit'), 'Modifica'),
-        h('button', { class: 'btn sm', type: 'button', onclick: uploadFile }, icon('upload'), p.hasFile ? 'Sostituisci file' : 'Carica file'),
-        status) : null);
+        p.folder ? null : h('button', { class: 'btn sm', type: 'button', onclick: uploadFile }, icon('upload'), p.hasFile ? 'Sostituisci file' : 'Carica file'),
+        status) : null,
+      canEdit && p.folder ? h('div', { class: 'small muted mono' }, `apptools/${p.folder}`) : null);
   };
 
   el.replaceChildren(
-    pageHead('Programmi', 'Gli strumenti del team: scarica il programma e leggi la guida per usarlo.',
-      canEdit ? h('button', { class: 'btn primary', type: 'button', onclick: () => programEditor(null) }, icon('plus'), 'Nuovo programma') : null),
-    programs.length ? h('div', { class: 'grid' }, programs.map(card)) : h('div', { class: 'card glass empty' }, 'Nessun programma pubblicato.'));
+    pageHead('Programmi', 'Gli strumenti del team: apri il programma dal portale e leggi la guida per usarlo.'),
+    programs.length ? h('div', { class: 'grid' }, programs.map(card)) : h('div', { class: 'card glass empty' }, 'Nessun programma disponibile.'),
+    canEdit ? h('p', { class: 'note', style: 'margin-top:16px' }, 'I programmi arrivano dalla cartella "apptools": ogni sottocartella con una web app compare qui da sola. Descrizione, versione e guida si scrivono con Modifica.') : null);
 }
 
 // ---- File ------------------------------------------------------------------

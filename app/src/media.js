@@ -1,58 +1,102 @@
 'use strict';
-// Risorse grafiche personalizzabili: logo, sfondi, avatar.
-// Ogni tipo viene cercato in piu' cartelle, in ordine; vale la prima che contiene il file.
+// Risorse grafiche personalizzabili: logo, sfondi dinamici, sfondi statici del portale, avatar.
+// Le cartelle vengono riconosciute dal NOME, senza badare a maiuscole, spazi o trattini,
+// sia dentro la cartella del progetto sia dentro "images". Esempi validi:
+//   logo, Logo, images/logo            -> logo
+//   background, images/background      -> sfondi dinamici
+//   background portal, BackgroundPortal -> sfondi statici (uno chiaro e uno scuro)
+//   avatar, images/avatar              -> avatar
 const fs = require('node:fs');
 const path = require('node:path');
 const config = require('./config');
 
-const EXT = ['.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.ico', '.avif'];
+const EXT = ['.svg', '.png', '.jpg', '.jpeg', '.jfif', '.webp', '.gif', '.ico', '.avif', '.bmp'];
+const norm = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
 
-// Percorsi relativi alla cartella del progetto.
-const DIRS = {
-  logo: ['images/logo', 'logo', 'images', 'branding'],
-  background: ['images/background', 'background'],
-  avatar: ['images/avatar', 'avatar'],
+const MATCH = {
+  logo: (n) => n === 'logo' || n === 'loghi' || n === 'logos',
+  background: (n) => ['background', 'backgrounds', 'sfondi', 'sfondo', 'sfondidinamici', 'backgrounddinamico'].includes(n),
+  portal: (n) => n.includes('portal') && (n.includes('background') || n.includes('sfond')),
+  avatar: (n) => n === 'avatar' || n === 'avatars',
 };
 
-const dirsOf = (kind) => (DIRS[kind] || []).map((d) => path.join(config.ROOT, d));
+function subdirs(dir) {
+  try { return fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => path.join(dir, e.name)); } catch { return []; }
+}
 
-// Elenco dei file immagine di un tipo: [{ name, url }], senza doppioni.
+// Cartelle di un tipo, in ordine di priorita'.
+function dirsOf(kind) {
+  if (!MATCH[kind]) return [];
+  const images = path.join(config.ROOT, 'images');
+  const found = [...subdirs(images), ...subdirs(config.ROOT)].filter((d) => MATCH[kind](norm(path.basename(d))));
+  // Vecchie posizioni del logo: immagini sciolte in "images" e "branding".
+  if (kind === 'logo') found.push(images, path.join(config.ROOT, 'branding'));
+  return found;
+}
+
+function imagesIn(dir, deep) {
+  let entries = [];
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return []; }
+  const out = [];
+  for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+    if (e.isFile() && EXT.includes(path.extname(e.name).toLowerCase())) out.push(path.join(dir, e.name));
+    else if (deep && e.isDirectory()) out.push(...imagesIn(path.join(dir, e.name), false));
+  }
+  return out;
+}
+
+// Elenco dei file immagine di un tipo: [{ name, url, file }], senza doppioni di nome.
 function list(kind) {
   const seen = new Set();
   const out = [];
   for (const dir of dirsOf(kind)) {
-    let names = [];
-    try { names = fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isFile()).map((e) => e.name).sort(); } catch { continue; }
-    for (const name of names) {
-      if (!EXT.includes(path.extname(name).toLowerCase()) || seen.has(name.toLowerCase())) continue;
+    const legacy = kind === 'logo' && ['images', 'branding'].includes(path.basename(dir));
+    for (const file of imagesIn(dir, !legacy)) {
+      const name = path.basename(file);
+      if (seen.has(name.toLowerCase())) continue;
       seen.add(name.toLowerCase());
-      out.push({ name, url: `/media/${kind}/${encodeURIComponent(name)}` });
+      out.push({ name, url: `/media/${kind}/${encodeURIComponent(name)}`, file });
     }
   }
   return out;
 }
 
-// Percorso su disco di un file, oppure null. Il nome non puo' contenere cartelle.
+// Percorso su disco di un file, oppure null. Si cerca solo tra i file elencati: niente percorsi liberi.
 function resolve(kind, name) {
-  if (!DIRS[kind] || !name || name !== path.basename(name) || /[\\/\0]/.test(name)) return null;
-  if (!EXT.includes(path.extname(name).toLowerCase())) return null;
-  for (const dir of dirsOf(kind)) {
-    const file = path.join(dir, name);
-    try { if (fs.statSync(file).isFile()) return file; } catch { /* prossima cartella */ }
-  }
-  return null;
+  if (!name || name !== path.basename(name)) return null;
+  const hit = list(kind).find((f) => f.name === name);
+  return hit ? hit.file : null;
 }
 
-const base = (f) => path.basename(f.name, path.extname(f.name)).toLowerCase();
+const base = (f) => norm(path.basename(f.name, path.extname(f.name)));
+const pub = (f) => (f ? f.url : null);
 
 // Logo e icona della scheda. Il logo e': il file "logo", oppure uno con "logo" nel nome,
 // oppure la prima immagine trovata (esclusi favicon e sfondi rimasti nelle vecchie cartelle).
 function branding() {
   const files = list('logo');
-  const favicon = files.find((f) => base(f).includes('favicon')) || null;
-  const usable = files.filter((f) => !base(f).includes('favicon') && !base(f).includes('sfondo'));
-  const logo = usable.find((f) => base(f) === 'logo') || usable.find((f) => base(f).includes('logo')) || usable[0] || null;
-  return { logo: logo ? logo.url : null, favicon: favicon ? favicon.url : null };
+  const favicon = files.find((f) => base(f).includes('favicon'));
+  const usable = files.filter((f) => !base(f).includes('favicon') && !base(f).includes('sfondo') && !base(f).includes('background'));
+  const logo = usable.find((f) => base(f) === 'logo') || usable.find((f) => base(f).includes('logo')) || usable[0];
+  // Se ci sono due versioni del logo (chiara e scura) si usa quella giusta per il tema.
+  const tone = (words) => usable.find((f) => words.some((w) => base(f).includes(w)));
+  return {
+    logo: pub(logo),
+    logoLight: pub(tone(['white', 'bianc', 'light', 'chiar'])),
+    logoDark: pub(tone(['black', 'nero', 'nera', 'dark', 'scur'])),
+    favicon: pub(favicon),
+  };
+}
+
+// Sfondi statici del portale: uno per il tema chiaro e uno per il tema scuro.
+// Si riconoscono dal nome (white/bianco/light/chiaro e black/nero/dark/scuro);
+// se i nomi non aiutano, decide il browser misurando quale immagine e' piu' luminosa.
+function portalBackgrounds() {
+  const files = list('portal');
+  const has = (f, words) => words.some((w) => base(f).includes(w));
+  const light = files.find((f) => has(f, ['white', 'bianc', 'light', 'chiar']));
+  const dark = files.find((f) => has(f, ['black', 'nero', 'nera', 'dark', 'scur']));
+  return { light: pub(light), dark: pub(dark), all: files.map(pub) };
 }
 
 // Un avatar riservato ha il nome che inizia con la qualifica: "dirigente-1.svg" richiede "dirigente".
@@ -68,4 +112,14 @@ function avatarAllowed(user, name) {
 
 const avatarUrl = (name) => (name && resolve('avatar', name) ? `/media/avatar/${encodeURIComponent(name)}` : null);
 
-module.exports = { list, resolve, branding, avatarUrl, avatarRequires, avatarAllowed };
+// Riepilogo per la schermata Sistema: cosa e' stato trovato e dove.
+function summary() {
+  const rel = (p) => path.relative(config.ROOT, p) || '.';
+  const row = (kind, label) => {
+    const files = list(kind);
+    return { label, folders: [...new Set(files.map((f) => rel(path.dirname(f.file))))], count: files.length };
+  };
+  return [row('logo', 'Logo'), row('background', 'Sfondi dinamici'), row('portal', 'Sfondi statici del portale'), row('avatar', 'Avatar')];
+}
+
+module.exports = { list, resolve, branding, portalBackgrounds, avatarUrl, avatarRequires, avatarAllowed, summary };

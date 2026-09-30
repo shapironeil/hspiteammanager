@@ -90,6 +90,27 @@ const MIGRATIONS = [
   ALTER TABLE users ADD COLUMN avatar TEXT;
   ALTER TABLE users ADD COLUMN title TEXT;
   `,
+  // 3 - programmi come web app in apptools, progetti con membri
+  `
+  ALTER TABLE programs ADD COLUMN folder TEXT;
+  CREATE TABLE projects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    client TEXT NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'attivo',
+    onedrive_url TEXT NOT NULL DEFAULT '',
+    folder TEXT NOT NULL,
+    created_by INTEGER REFERENCES users(id),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+  CREATE TABLE project_members (
+    project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (project_id, user_id)
+  );
+  `,
 ];
 
 function migrate() {

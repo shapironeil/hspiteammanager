@@ -11,7 +11,7 @@ export function h(tag, attrs, ...children) {
     else if (v === true) el.setAttribute(k, '');
     else el.setAttribute(k, v);
   }
-  el.append(...children.flat().filter((c) => c != null && c !== false));
+  el.append(...children.flat(Infinity).filter((c) => c != null && c !== false));
   return el;
 }
 
@@ -35,6 +35,15 @@ const ICONS = {
   book: 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11',
   pin: 'M9 6l6 6-6 6',
   copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
+  briefcase: 'M4 8h16v11H4zM9 8V5h6v3M4 13h16',
+  sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  moon: 'M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z',
+  help: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17h.01',
+  external: 'M14 5h5v5M19 5l-8 8M18 14v5H5V6h5',
+  file: 'M6 3h8l4 4v14H6zM14 3v4h4',
+  cloud: 'M7 18a4 4 0 0 1-.6-7.96A6 6 0 0 1 18 9.5a4.25 4.25 0 0 1-.5 8.5z',
+  play: 'M8 5v14l11-7z',
+  back: 'M15 6l-6 6 6 6',
 };
 
 export function icon(name) {

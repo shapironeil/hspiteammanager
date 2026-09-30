@@ -14,7 +14,7 @@ const TITLES = { dirigente: 'Dirigente', manager: 'Manager', 'project-manager': 
 
 module.exports = {
   TITLES,
-  VERSION: '0.2.0',
+  VERSION: '0.3.0',
   ROOT,
   DATA_DIR,
   DB_FILE: path.join(DATA_DIR, 'portale.db'),

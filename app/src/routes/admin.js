@@ -14,7 +14,8 @@ route('GET', '/api/dashboard', {}, (ctx) => {
   const u = ctx.user;
   const rank = config.roleRank(u.role);
   const out = {
-    programs: count('SELECT COUNT(*) AS n FROM programs'),
+    projects: u.role === 'hacker' ? count('SELECT COUNT(*) AS n FROM projects') : count('SELECT COUNT(*) AS n FROM project_members WHERE user_id = ?', u.id),
+    programs: count('SELECT COUNT(*) AS n FROM programs WHERE folder IS NOT NULL OR file_id IS NOT NULL'),
     myFiles: count('SELECT COUNT(*) AS n FROM files WHERE owner_id = ?', u.id),
     received: count('SELECT COUNT(*) AS n FROM files WHERE owner_id != ? AND (to_user = ? OR to_all = 1)', u.id, u.id),
     announcements: db.all(
@@ -123,6 +124,8 @@ route('GET', '/api/system', { role: 'hacker' }, (ctx) => {
     dataDir: config.DATA_DIR,
     urls: accessUrls(),
     networkOpen: config.networkOpen,
+    resources: require('../media').summary(),
+    apps: require('../apps').folders(),
     storage: {
       usedBytes: storage.usedBytes(),
       quotaBytes: storage.quotaBytes(),

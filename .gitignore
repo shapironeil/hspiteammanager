@@ -3,8 +3,17 @@
 .env.*
 !.env.example
 
-# Node.js portatile (si scarica a parte, non va su GitHub)
+# Dati del portale: database, password, file caricati. MAI su GitHub.
+/data/
+
+# File dei progetti: dati aziendali. MAI su GitHub.
+/progetti/
+/projects/
+
+# Node.js e Git portatili (si scaricano a parte, non vanno su GitHub)
 /node-v*/
+/PortableGit*/
+*.part
 
 # Dipendenze e build
 node_modules/

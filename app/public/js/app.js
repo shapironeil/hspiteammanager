@@ -2,6 +2,8 @@
 import { get, post } from './api.js';
 import { h, icon, form, field, toastError, avatarEl, usernamePreview } from './ui.js';
 import { viewHome, viewPrograms, viewFiles, viewProfile } from './views-main.js';
+import { viewProjects, resetProjects } from './views-projects.js';
+import { maybeShowTour, showTour } from './tour.js';
 import { viewAccounts, viewLogs, viewIssues, viewSystem } from './views-admin.js';
 
 const root = document.getElementById('app');
@@ -11,10 +13,11 @@ export const app = { state: null, user: null, can: (role) => RANK[app.user.role]
 // Testo sotto il nome: la qualifica se c'e', altrimenti il ruolo.
 export const roleText = (u) => (u.title && app.state.titles[u.title]) || app.state.roles[u.role] || u.role;
 
-// Voci del menu. "min" e' il ruolo minimo che vede la voce.
+// Voci del menu. "min" e' il ruolo minimo che vede la voce; "dynamic" = sfondo dinamico in quella schermata.
 // Per aggiungere una schermata: una voce qui + una funzione view in views-*.js.
 const NAV = [
-  { id: 'home', label: 'Home', icon: 'home', min: 'dipendente', view: viewHome },
+  { id: 'home', label: 'Home', icon: 'home', min: 'dipendente', view: viewHome, dynamic: true },
+  { id: 'progetti', label: 'Progetti', icon: 'briefcase', min: 'dipendente', view: viewProjects, reset: resetProjects },
   { id: 'programmi', label: 'Programmi', icon: 'apps', min: 'dipendente', view: viewPrograms },
   { id: 'file', label: 'File', icon: 'folder', min: 'dipendente', view: viewFiles },
   { id: 'team', label: (u) => (u.role === 'hacker' ? 'Account' : 'Team'), icon: 'users', min: 'manager', view: viewAccounts, group: 'Organizzazione' },
@@ -24,23 +27,6 @@ const NAV = [
 ];
 const PROFILE = { id: 'profilo', label: 'Profilo', icon: 'user', min: 'dipendente', view: viewProfile };
 
-const logoUrl = () => app.state.branding.logo || '/img/logo.svg';
-
-function applyBranding() {
-  const { branding, portalName } = app.state;
-  document.title = portalName;
-  if (branding.favicon || branding.logo) document.getElementById('favicon').href = branding.favicon || branding.logo;
-}
-
-// ---- Sfondi dinamici ---------------------------------------------------------
-// Le immagini della cartella "background" si alternano in ordine casuale.
-// Ogni browser ha il suo ordine, salvato in locale: il primo sfondo lo assegna il
-// server a rotazione, cosi' due persone che aprono il portale per la prima volta
-// non partono dalla stessa immagine. A ogni apertura si riparte dalla successiva.
-const BG_KEY = 'hspi.sfondi';
-const BG_SECONDS = 40;
-let backgroundsStarted = false;
-
 function store(key, value) {
   try {
     if (value === undefined) return JSON.parse(localStorage.getItem(key));
@@ -48,6 +34,46 @@ function store(key, value) {
   } catch { /* archivio locale non disponibile */ }
   return null;
 }
+
+// ---- Tema chiaro / scuro -------------------------------------------------------
+const theme = () => document.documentElement.dataset.theme || 'dark';
+function applyTheme(name) {
+  document.documentElement.dataset.theme = name;
+  document.querySelector('meta[name="color-scheme"]').content = name;
+}
+applyTheme(store('hspi.tema') === 'light' ? 'light' : 'dark');
+
+function themeButton() {
+  const dark = theme() === 'dark';
+  return h('button', {
+    class: 'icon-btn', type: 'button', title: dark ? 'Passa al tema chiaro' : 'Passa al tema scuro', 'aria-label': dark ? 'Passa al tema chiaro' : 'Passa al tema scuro',
+    onclick: async () => { const next = dark ? 'light' : 'dark'; store('hspi.tema', next); applyTheme(next); await boot(); },
+  }, icon(dark ? 'sun' : 'moon'));
+}
+
+// Se esistono due versioni del logo si usa quella adatta al tema: logo chiaro su tema scuro e viceversa.
+function logoUrl() {
+  const b = app.state.branding;
+  const themed = theme() === 'dark' ? b.logoLight : b.logoDark;
+  return themed || b.logo || '/img/logo.svg';
+}
+
+function applyBranding() {
+  const { branding, portalName } = app.state;
+  document.title = portalName;
+  if (branding.favicon || branding.logo) document.getElementById('favicon').href = branding.favicon || branding.logo;
+}
+
+// ---- Sfondi ------------------------------------------------------------------
+// Due sfondi: quello DINAMICO (cartella "background", immagini che si alternano) si vede solo
+// nell'accesso e nella Home; nelle altre schermate c'e' quello STATICO (cartella "background portal"),
+// con una versione per il tema chiaro e una per il tema scuro.
+const BG_KEY = 'hspi.sfondi';
+const BG_SECONDS = 40;
+const backdrop = document.querySelector('.backdrop');
+let dynamicStarted = false;
+let staticLayer = null;
+let staticPick = null; // { light, dark } una volta deciso quale immagine va con quale tema
 
 function shuffle(list) {
   const a = [...list];
@@ -58,10 +84,12 @@ function shuffle(list) {
   return a;
 }
 
-function startBackgrounds() {
+// Ogni browser ha il suo ordine: il primo sfondo lo assegna il server a rotazione, cosi' due persone
+// che aprono il portale per la prima volta non partono dalla stessa immagine.
+function startDynamic() {
   const urls = app.state.backgrounds || [];
-  if (backgroundsStarted || !urls.length) return;
-  backgroundsStarted = true;
+  if (dynamicStarted || !urls.length) return;
+  dynamicStarted = true;
 
   let saved = store(BG_KEY);
   const same = saved && Array.isArray(saved.order) && saved.order.length === urls.length && saved.order.every((u) => urls.includes(u));
@@ -72,11 +100,9 @@ function startBackgrounds() {
   let pos = saved.pos % saved.order.length;
   store(BG_KEY, { order: saved.order, pos: (pos + 1) % saved.order.length });
 
-  const backdrop = document.querySelector('.backdrop');
   const layers = [h('div', { class: 'bg-layer' }), h('div', { class: 'bg-layer' })];
   backdrop.prepend(...layers);
   let active = 0;
-
   const show = (url) => {
     const img = new Image();
     img.onload = () => {
@@ -85,26 +111,72 @@ function startBackgrounds() {
       next.classList.add('show');
       layers[active].classList.remove('show');
       active = 1 - active;
-      backdrop.classList.add('has-image');
+      backdrop.classList.add('has-dynamic');
     };
     img.src = url;
   };
   show(saved.order[pos]);
-
   if (saved.order.length > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     setInterval(() => {
-      if (document.hidden) return;
+      if (document.hidden || !backdrop.classList.contains('show-dynamic')) return;
       pos = (pos + 1) % saved.order.length;
       show(saved.order[pos]);
     }, BG_SECONDS * 1000);
   }
 }
 
+// Luminosita' media di un'immagine (0 = nera, 255 = bianca): serve quando i nomi dei file non dicono quale e' chiara.
+function brightness(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = 16; c.height = 16;
+        const g = c.getContext('2d');
+        g.drawImage(img, 0, 0, 16, 16);
+        const d = g.getImageData(0, 0, 16, 16).data;
+        let sum = 0;
+        for (let i = 0; i < d.length; i += 4) sum += d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+        resolve(sum / (d.length / 4));
+      } catch { resolve(128); }
+    };
+    img.onerror = () => resolve(128);
+    img.src = url;
+  });
+}
+
+async function applyStatic() {
+  const p = app.state.portalBackgrounds || { all: [] };
+  if (!p.all.length) return;
+  if (!staticPick) {
+    let { light, dark } = p;
+    if ((!light || !dark) && p.all.length > 1) {
+      const scored = await Promise.all(p.all.map(async (url) => ({ url, b: await brightness(url) })));
+      scored.sort((a, b) => a.b - b.b);
+      dark = dark || scored[0].url;
+      light = light || scored[scored.length - 1].url;
+    }
+    staticPick = { light: light || dark || p.all[0], dark: dark || light || p.all[0] };
+  }
+  if (!staticLayer) { staticLayer = h('div', { class: 'bg-static' }); backdrop.prepend(staticLayer); }
+  const url = staticPick[theme()];
+  const img = new Image();
+  img.onload = () => { staticLayer.style.backgroundImage = `url("${url}")`; staticLayer.classList.add('ready'); backdrop.classList.add('has-static'); };
+  img.src = url;
+}
+
+function setBackdrop(mode) {
+  backdrop.classList.toggle('show-dynamic', mode === 'dynamic');
+  backdrop.classList.toggle('show-static', mode === 'static');
+}
+
 export async function boot() {
   app.state = await get('/api/state');
   app.user = app.state.user;
   applyBranding();
-  startBackgrounds();
+  startDynamic();
+  applyStatic();
   if (!app.user) return renderAuth(app.state.setupNeeded ? 'registrati' : 'accedi');
   if (app.user.mustChange) return renderMustChange();
   renderShell();
@@ -112,7 +184,9 @@ export async function boot() {
 
 // ---- Accesso e registrazione -------------------------------------------------
 function authCard(title, subtitle, content) {
+  setBackdrop('dynamic');
   root.replaceChildren(h('div', { class: 'auth' },
+    h('div', { style: 'position:fixed;top:14px;right:14px' }, themeButton()),
     h('div', { class: 'auth-card glass' },
       h('div', { class: 'auth-brand' },
         h('img', { src: logoUrl(), alt: app.state.portalName }),
@@ -217,7 +291,11 @@ let content = null;
 function renderShell() {
   const items = NAV.filter((n) => app.can(n.min));
   const pinned = store('hspi.menu') === 'fisso';
-  const link = (n) => h('a', { class: 'nav-item', href: `#/${n.id}`, 'data-id': n.id, title: typeof n.label === 'function' ? n.label(app.user) : n.label },
+  const link = (n) => h('a', {
+    class: 'nav-item', href: `#/${n.id}`, 'data-id': n.id, title: typeof n.label === 'function' ? n.label(app.user) : n.label,
+    // Cliccare la voce della schermata in cui si e' gia' la riporta al suo inizio.
+    onclick: () => { if (n.reset) n.reset(); if (location.hash === `#/${n.id}`) navigate(); },
+  },
     icon(n.icon), h('span', {}, typeof n.label === 'function' ? n.label(app.user) : n.label));
 
   const nav = h('nav', { class: 'nav', 'aria-label': 'Menu principale' });
@@ -245,6 +323,8 @@ function renderShell() {
         }, icon('menu')),
         h('a', { href: '#/home', title: 'Home', style: 'line-height:0' }, h('img', { class: 'topbar-logo', src: logoUrl(), alt: app.state.portalName })),
         h('div', { class: 'spacer' }),
+        h('button', { class: 'icon-btn', type: 'button', title: 'Guida al portale', 'aria-label': 'Guida al portale', onclick: () => showTour() }, icon('help')),
+        themeButton(),
         // Cerchio dell'utente in alto a destra: porta alla schermata del profilo.
         h('a', { class: 'user-chip glass', href: '#/profilo', title: 'Il tuo profilo', 'aria-label': `Il tuo profilo: ${app.user.name}` },
           avatarEl(app.user),
@@ -252,6 +332,7 @@ function renderShell() {
       content));
   root.replaceChildren(shell);
   navigate();
+  maybeShowTour();
 }
 
 async function navigate() {
@@ -259,6 +340,7 @@ async function navigate() {
   const id = (location.hash.replace(/^#\//, '') || 'home').split('?')[0];
   const entry = [...NAV, PROFILE].find((n) => n.id === id && app.can(n.min)) || NAV[0];
   shell.classList.remove('menu-open');
+  setBackdrop(entry.dynamic ? 'dynamic' : 'static');
   shell.querySelectorAll('.nav-item[data-id]').forEach((a) => a.classList.toggle('active', a.dataset.id === entry.id));
   try {
     await entry.view(content);

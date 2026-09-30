@@ -1,8 +1,8 @@
 # HSPI Team Manager
 
-Portale interno (beta) per il team HSPI: account con ruoli, programmi da scaricare con la loro guida, scambio file, log e pannello di controllo.
+Portale interno (beta) per il team HSPI: account con ruoli, progetti con le persone autorizzate, programmi che si aprono dal portale con la loro guida, scambio file, log e pannello di controllo.
 
-> **Stato:** v0.1 — prima versione funzionante, in locale sul PC che la ospita. Da usare con dati di prova.
+> **Stato:** v0.3 — in locale sul PC che lo ospita. Da usare con dati di prova finché non sono decisi i punti in `docs/PROGETTI-E-DATI.md`.
 
 ## Avvio rapido (Windows)
 
@@ -11,6 +11,8 @@ Portale interno (beta) per il team HSPI: account con ruoli, programmi da scarica
 3. Si apre `http://localhost:8080`. Il primo account che si registra (solo dal PC che ospita il portale) diventa **Hacker**.
 4. Gli altri si registrano da soli con nome e cognome: il nome utente è `nome.cognome` e l'account entra dopo la tua approvazione in **Account**. In alternativa li crei tu con una password provvisoria.
 
+Per caricare su GitHub le tue risorse (loghi, sfondi, web app): doppio clic su **`carica-su-github.bat`**. Mostra l'elenco dei file e chiede conferma; `data/` e `progetti/` non vengono mai caricati.
+
 Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Aggiorna i file e avvia il portale senza fare domande. Database e file caricati (cartella `data/`), Node.js portatile e le tue immagini non vengono toccati.
 
 ## Cosa vede ogni ruolo
@@ -18,7 +20,8 @@ Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Aggiorna 
 | Schermata | Dipendente | Manager | Hacker |
 |---|:-:|:-:|:-:|
 | Home, annunci | ✓ | ✓ + pubblica annunci | ✓ |
-| Programmi: scarica e leggi la guida | ✓ | ✓ + pubblica e modifica | ✓ |
+| Progetti: solo quelli di cui si è membri | ✓ | ✓ + crea e sceglie le persone | ✓ tutti |
+| Programmi: apri dal portale e leggi la guida | ✓ | ✓ + modifica descrizione e guida | ✓ |
 | File: carica, invia, ricevi | ✓ | ✓ | ✓ + tutti i file |
 | Profilo, avatar, cambio password, segnala un problema | ✓ | ✓ | ✓ |
 | Team (elenco persone e ultimo accesso) | | ✓ | ✓ |
@@ -31,11 +34,12 @@ Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Aggiorna 
 
 | File | Contenuto |
 |---|---|
+| `docs/PROGETTI-E-DATI.md` | Come sono trattati i file dei progetti, permessi, decisioni aperte |
 | `docs/DIPENDENZE.md` | Albero delle dipendenze, struttura delle cartelle, regole per aggiungere cose |
 | `docs/ACCESSO-RETE.md` | Come far entrare i colleghi: stessa Wi-Fi, Tailscale, cosa evitare |
 | `docs/ARCHITETTURA.md` | Architettura, moduli, modello dati, decisioni aperte |
 | `docs/ROADMAP.md` | Fasi di lavoro |
-| `branding/README.md` | Logo, sfondi dinamici e avatar: cartelle `logo`, `background`, `avatar` |
+| `branding/README.md` | Cartelle delle risorse: `logo`, `background`, `background portal`, `avatar`, `apptools` |
 
 ## Regole del repository
 

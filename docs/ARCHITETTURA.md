@@ -16,7 +16,7 @@ La prima versione funzionante esiste e gira sul PC di chi la ospita. Per partire
 
 I tre punti di sostituzione sono isolati: database in `src/db.js`, archivio in `src/storage.js`, login in `src/security.js`. Dettagli in `DIPENDENZE.md`; accesso dei colleghi in `ACCESSO-RETE.md`.
 
-Moduli presenti (v0.2): registrazione con approvazione, account con ruoli (dipendente, manager, hacker) e qualifiche (dirigente, manager, project manager, sviluppatore), avatar, programmi scaricabili con guida, file personali e invii, annunci, log attività, errori e segnalazioni, pannello Sistema.
+Moduli presenti (v0.3): progetti con membri e collegamento alla cartella OneDrive (vedi `PROGETTI-E-DATI.md`), programmi come web app ospitate dal portale, registrazione con approvazione, account con ruoli (dipendente, manager, hacker) e qualifiche (dirigente, manager, project manager, sviluppatore), avatar, programmi scaricabili con guida, file personali e invii, annunci, log attività, errori e segnalazioni, pannello Sistema.
 
 Il resto del documento descrive l'architettura a regime ed è una **proposta**: le scelte segnate come "da decidere" vanno confermate.
 

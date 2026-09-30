@@ -13,6 +13,7 @@ HSPI Team Manager
 │   ├── node:crypto                  password e sessioni   (incluso in Node)
 │   └── node:fs / path / os          file e sistema        (inclusi in Node)
 ├── Git per Windows                  facoltativo: rende più solido aggiorna.bat
+├── PortableGit                      facoltativo, senza installazione: serve a carica-su-github.bat
 └── Browser moderno                  Edge, Chrome o Firefox
 ```
 
@@ -33,10 +34,12 @@ avvia.bat
     ├── src/routes/users.js          account e ruoli
     ├── src/routes/programs.js       catalogo programmi
     ├── src/routes/files.js          file personali e invii
+    ├── src/routes/projects.js       progetti, membri, file locali dei progetti
     └── src/routes/admin.js          home, annunci, log, errori, sistema
         │
         ├── src/storage.js           unico modulo che tocca i file su disco
         ├── src/media.js             logo, sfondi e avatar dalle cartelle delle immagini
+        ├── src/apps.js              web app ospitate dalla cartella apptools
         ├── src/http.js              router, controllo ruoli, file statici, errori
         │   └── src/security.js      password, sessioni, blocco tentativi
         │       └── src/db.js        database SQLite e migrazioni
@@ -50,6 +53,8 @@ app/public/index.html
 ├── css/app.css                      tutto lo stile (colori in cima al file)
 └── js/app.js                        avvio, login, menu laterale, navigazione
     ├── js/views-main.js             Home, Programmi, File, Profilo
+    ├── js/views-projects.js         Progetti: elenco, scheda, file
+    ├── js/tour.js                   guida a popup del primo accesso
     ├── js/views-admin.js            Team/Account, Log, Errori e bug, Sistema
     ├── js/ui.js                     elementi, icone, finestre, avvisi, formati
     └── js/api.js                    chiamate al server
@@ -62,6 +67,9 @@ hspiteammanager/
 ├── avvia.bat            avvia il portale solo su questo PC e apre il browser
 ├── avvia-rete.bat       come sopra, ma aperto alla rete locale (serve il firewall)
 ├── aggiorna.bat         scarica l'ultima versione da GitHub e avvia il portale
+├── carica-su-github.bat carica su GitHub risorse e web app (mai data/ e progetti/)
+├── apptools/            web app del team, una sottocartella per programma
+├── progetti/            file di lavoro dei progetti, MAI su GitHub
 ├── node-v22.22.2-win-x64/   Node.js portatile, MAI su GitHub
 ├── app/                 codice del portale (server + interfaccia)
 ├── images/              risorse grafiche: logo/, background/, avatar/

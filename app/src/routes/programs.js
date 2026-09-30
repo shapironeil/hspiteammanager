@@ -2,6 +2,7 @@
 // Catalogo programmi: tutti vedono e scaricano, manager e hacker pubblicano.
 const db = require('../db');
 const storage = require('../storage');
+const apps = require('../apps');
 const { route, HttpError } = require('../http');
 const { cleanText } = require('./auth');
 
@@ -13,11 +14,17 @@ function findProgram(id) {
 const view = (p) => ({
   id: p.id, name: p.name, description: p.description, version: p.version, guide: p.guide,
   hasFile: !!p.file_id, fileName: p.file_name, fileSize: p.file_size, updatedAt: p.updated_at,
+  folder: p.folder || null,
+  // Web app in apptools: si apre dal portale a questo indirizzo.
+  openUrl: p.folder && apps.entryOf(p.folder) ? `/apps/${p.id}/` : null,
 });
 const optional = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
 
 route('GET', '/api/programs', {}, (ctx) => {
-  ctx.json(200, db.all('SELECT * FROM programs ORDER BY name').map(view));
+  apps.sync();
+  const editor = ctx.user.role !== 'dipendente';
+  // Le schede ancora vuote (niente da aprire o scaricare) le vede solo chi le gestisce.
+  ctx.json(200, db.all('SELECT * FROM programs ORDER BY name').map(view).filter((p) => editor || p.openUrl || p.hasFile));
 });
 
 route('POST', '/api/programs', { role: 'manager' }, async (ctx) => {
