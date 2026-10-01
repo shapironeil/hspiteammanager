@@ -1,8 +1,15 @@
 'use strict';
 // Configurazione centrale: percorsi, porta, ruoli. Nessun altro file calcola percorsi da solo.
+const fs = require('node:fs');
 const path = require('node:path');
 
-const ROOT = path.resolve(__dirname, '..', '..');
+// Versione: unica fonte e' version.json alla radice del programma (non si scrive in nessun altro file).
+const CODE_ROOT = path.resolve(__dirname, '..', '..');
+let release = { version: '0.0.0', channel: 'sviluppo' };
+try { release = { ...release, ...JSON.parse(fs.readFileSync(path.join(CODE_ROOT, 'version.json'), 'utf8')) }; } catch { /* file mancante: versione sconosciuta */ }
+
+// HSPI_ROOT permette ai test di usare una cartella di prova al posto di quella vera.
+const ROOT = process.env.HSPI_ROOT ? path.resolve(process.env.HSPI_ROOT) : path.resolve(__dirname, '..', '..');
 const DATA_DIR = process.env.HSPI_DATA_DIR || path.join(ROOT, 'data');
 
 // Ruoli in ordine di potere crescente.
@@ -14,12 +21,19 @@ const TITLES = { dirigente: 'Dirigente', manager: 'Manager', 'project-manager': 
 
 module.exports = {
   TITLES,
-  VERSION: '0.4.0',
+  VERSION: release.version,
+  CHANNEL: release.channel,
+  RELEASED: release.released || null,
+  CODE_ROOT,
   ROOT,
   DATA_DIR,
   DB_FILE: path.join(DATA_DIR, 'portale.db'),
   STORAGE_DIR: path.join(DATA_DIR, 'storage'),
-  PUBLIC_DIR: path.join(ROOT, 'app', 'public'),
+  // Cartelle vere dello spazio personale di ogni persona (Esplora file): data/personale/<id utente>
+  PERSONAL_DIR: path.join(DATA_DIR, 'personale'),
+  // Dati di Verbale Studio che non appartengono a un singolo progetto (template, preimpostazioni, impostazioni)
+  VERBALI_DIR: path.join(DATA_DIR, 'verbali'),
+  PUBLIC_DIR: path.resolve(__dirname, '..', 'public'),
   PORT: Number(process.env.PORT) || 8080,
   // 127.0.0.1 = raggiungibile solo da questo PC (nessuna richiesta del firewall).
   // 0.0.0.0   = aperto alla rete locale (avvia-rete.bat; serve il permesso del firewall).

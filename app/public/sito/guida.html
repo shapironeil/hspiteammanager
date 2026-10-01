@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guida · HSPI Team Manager</title>
+  <link rel="icon" href="/img/logo.svg">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/sito/sito.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><img src="/img/logo.svg" alt=""><strong>HSPI Team Manager</strong><nav><a href="/benvenuto">Il portale</a><a href="/guida" class="on">Guida</a><a href="/scarica">Scarica</a><a href="/">Accedi</a></nav></header>
+  <section class="hero" style="padding-bottom:10px"><h1>Guida</h1><p>Cos'è il portale, come funziona, come si installa e come ci si collega.</p></section>
+  <div class="two">
+    <nav class="toc card"><a href="#cos-e">Cos'è</a><a href="#funziona">Come funziona</a><a href="#installa">Come si installa</a><a href="#collega">Come ci si collega</a><a href="#telefono">Dal telefono</a><a href="#domande">Domande</a></nav>
+    <div>
+      <h2 id="cos-e">Cos'è</h2>
+      <p>HSPI Team Manager è il portale interno del team. Raccoglie i progetti e le persone che ci lavorano, i file (in cartelle vere, con versioni e cestino), i verbali delle riunioni (Verbale Studio) e le mappe dei processi (Trama). Ognuno vede solo i progetti di cui fa parte.</p>
+
+      <h2 id="funziona">Come funziona</h2>
+      <div class="grid">
+        <div class="card"><h3>Host</h3><p>Un PC del team ospita il portale e conserva i dati. Quando è acceso, il portale è raggiungibile; i file si aprono direttamente dal portale.</p></div>
+        <div class="card"><h3>Client</h3><p>Sul tuo PC gira HSPI Client: si allinea alla versione del portale, accende il motore locale per i lavori pesanti e apre il portale.</p></div>
+        <div class="card"><h3>Rete</h3><p>Si entra solo attraverso Tailscale, la rete privata del team: niente porte aperte su internet.</p></div>
+      </div>
+
+      <h2 id="installa">Come si installa</h2>
+      <ol class="steps">
+        <li><b>Tailscale</b>: installa l'app Tailscale sul PC (e sul telefono, se vuoi) e accetta l'invito che ti è stato mandato. Serve una volta sola.</li>
+        <li><b>HSPI Client</b>: dalla pagina <a href="/scarica">Scarica</a> prendi lo ZIP, estrailo (tasto destro → Estrai tutto) e fai doppio clic su <code>installa.bat</code>. Non servono diritti di amministratore.</li>
+        <li>Sul desktop compare <b>HSPI</b>: da lì apri sempre il portale. All'avvio si aggiorna da solo alla stessa versione del portale.</li>
+      </ol>
+
+      <h2 id="collega">Come ci si collega</h2>
+      <ol class="steps">
+        <li>Con Tailscale acceso, apri HSPI dal desktop (oppure l'indirizzo <code>https://…ts.net</code> che ti è stato dato).</li>
+        <li>Accedi con il tuo nome utente (<code>nome.cognome</code>) e la password provvisoria ricevuta.</li>
+        <li>Al primo accesso scegli la tua password. La guida a popup ti mostra il resto.</li>
+      </ol>
+
+      <h2 id="telefono">Dal telefono</h2>
+      <p>Con Tailscale acceso sul telefono apri l'indirizzo del portale. Su iPhone: Condividi → <i>Aggiungi alla schermata Home</i>. Su Android: menu ⋮ → <i>Installa app</i>. Da lì vedi e carichi file, controlli i verbali e le mappe.</p>
+
+      <h2 id="domande">Domande</h2>
+      <details><summary>Il portale non si apre</summary><p class="muted">Controlla che Tailscale sia acceso e che il PC del portale sia acceso con il portale avviato.</p></details>
+      <details><summary>Devo tenere aperta la finestra di HSPI Client?</summary><p class="muted">Sì, anche ridotta a icona: serve al motore locale (AI e lavori pesanti). Il portale funziona comunque anche senza, ma l'AI locale no.</p></details>
+      <details><summary>Ho perso un file / ho cancellato qualcosa</summary><p class="muted">Niente si cancella davvero: guarda nel cestino della cartella (Esplora file) o nelle versioni precedenti del file. Per il resto c'è il backup giornaliero.</p></details>
+      <details><summary>Chi vede i miei file?</summary><p class="muted">I file personali solo tu. Quelli di un progetto le persone del progetto (e gli ospiti a tempo che il responsabile aggiunge).</p></details>
+    </div>
+  </div>
+
+  <footer>HSPI Team Manager · raggiungibile solo dalla rete privata del team (Tailscale). <span id="versione"></span></footer>
+</div>
+<script src="/sito/sito.js" defer></script>
+</body>
+</html>

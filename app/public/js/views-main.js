@@ -2,6 +2,7 @@
 import { get, post, patch, del, upload } from './api.js';
 import { h, icon, modal, confirmDialog, form, field, toast, toastError, fmtBytes, fmtDate, pageHead, meter, markdown, avatarEl } from './ui.js';
 import { app, refresh, boot, roleText } from './app.js';
+import { myDeadlinesCard } from './trama.js';
 
 // ---- Home ------------------------------------------------------------------
 export async function viewHome(el) {
@@ -44,9 +45,11 @@ export async function viewHome(el) {
       h('div', { class: 'small muted', style: 'margin-top:6px' }, `${a.author || 'Account rimosso'} · ${fmtDate(a.createdAt)}`)))
     : h('div', { class: 'empty' }, 'Nessun annuncio per ora.');
 
+  const deadlines = await myDeadlinesCard();
   el.replaceChildren(
     pageHead(`Ciao, ${app.user.name.split(' ')[0]}`, 'Ecco cosa c\'è nel portale oggi.'),
     h('div', { class: 'tiles' }, tiles),
+    deadlines,
     h('section', { class: 'card glass' },
       h('div', { class: 'card-head' }, h('h2', {}, 'Annunci'),
         app.can('manager') ? h('button', { class: 'btn sm', type: 'button', onclick: newAnnouncement }, icon('plus'), 'Nuovo annuncio') : null),

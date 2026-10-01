@@ -6,9 +6,13 @@ const security = require('../security');
 const media = require('../media');
 const { route, HttpError } = require('../http');
 
+const grades = require('../grades');
+
+// La persona collegata vede se stessa per intero (anche se e' Hacker); grado e badge vengono da grades.js.
 const publicUser = (u) => ({
   id: u.id, username: u.username, name: u.name, role: u.role,
   mustChange: !!u.must_change, avatar: media.avatarUrl(u.avatar), title: u.title || null,
+  ...grades.card(u, u), teamCount: grades.belowCount(u),
 });
 const userCount = () => db.get('SELECT COUNT(*) AS n FROM users').n;
 
@@ -48,6 +52,7 @@ route('GET', '/api/state', { public: true }, (ctx) => {
     portalBackgrounds: media.portalBackgrounds(),
     backgroundStart: backgrounds.length ? backgroundTurn++ % backgrounds.length : 0,
     roles: config.ROLE_LABELS,
+    grades: ctx.user ? grades.all().map(({ level, ...g }) => (ctx.user.role === 'hacker' ? { ...g, level } : g)) : [],
     titles: config.TITLES,
     setupNeeded,
     canSetup: setupNeeded && ctx.isLocal,
@@ -74,9 +79,9 @@ route('POST', '/api/register', { public: true }, async (ctx) => {
   registrations.set(ctx.ip, r);
 
   const res = db.run(
-    'INSERT INTO users(username, name, role, pass_hash, active, pending, avatar, created_at, last_login) VALUES(?,?,?,?,?,?,?,?,?)',
+    'INSERT INTO users(username, name, role, pass_hash, active, pending, avatar, created_at, last_login, grade_id, badge) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
     username, name, first ? 'hacker' : 'dipendente', security.hashPassword(b.password),
-    first ? 1 : 0, first ? 0 : 1, randomAvatar(), db.now(), first ? db.now() : null);
+    first ? 1 : 0, first ? 0 : 1, randomAvatar(), db.now(), first ? db.now() : null, grades.defaultGrade().id, first ? '#2dd4bf' : null);
   const id = Number(res.lastInsertRowid);
   const user = db.get('SELECT * FROM users WHERE id = ?', id);
 

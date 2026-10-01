@@ -20,9 +20,13 @@ setAppHandler(require('./src/apps'));
 // Le rotte si registrano da sole al caricamento del file.
 require('./src/routes/auth');
 require('./src/routes/users');
+require('./src/routes/team');
 require('./src/routes/programs');
 require('./src/routes/files');
 require('./src/routes/projects');
+const explorer = require('./src/routes/explorer');
+require('./src/routes/verbali');
+require('./src/routes/trama');
 const { accessUrls } = require('./src/routes/admin');
 
 const server = http.createServer(handle);
@@ -48,6 +52,11 @@ process.on('unhandledRejection', (err) => {
 
 security.cleanupSessions();
 setInterval(security.cleanupSessions, 3600000).unref();
+// Indice dei file per la ricerca: si aggiorna poco dopo l'avvio e poi ogni ora, senza bloccare il portale.
+setTimeout(explorer.reindexAll, 2000).unref();
+setInterval(explorer.reindexAll, 3600000).unref();
+// Backup automatico una volta al giorno (data, progetti, immagini, web app): vedi src/backup.js
+require('./src/backup').schedule({ sqlite: db.db, getSetting: db.getSetting, onError: (err) => db.issue('backup', 'Backup automatico non riuscito: ' + err.message, err.stack, null) });
 
 server.listen(config.PORT, config.HOST, () => {
   console.log('\n  HSPI Team Manager v' + config.VERSION + ' - portale avviato\n');

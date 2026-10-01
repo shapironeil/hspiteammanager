@@ -60,3 +60,9 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+/app/test/browser/screenshots/
+
+# Backup, aggiornamenti e ripristini dell'host (restano sul PC)
+/Backup/
+/.aggiornamento/
+/.ripristino-precedente/

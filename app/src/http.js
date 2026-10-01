@@ -16,15 +16,10 @@ const MIME = {
   '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
   '.webp': 'image/webp', '.avif': 'image/avif', '.jfif': 'image/jpeg', '.bmp': 'image/bmp', '.gif': 'image/gif', '.ico': 'image/x-icon', '.woff2': 'font/woff2',
+  '.webmanifest': 'application/manifest+json; charset=utf-8', '.mp3': 'audio/mpeg',
 };
 
-const SECURITY_HEADERS = {
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'Referrer-Policy': 'same-origin',
-  'Content-Security-Policy':
-    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
-};
+const { SECURITY_HEADERS } = require('./http-headers');
 
 // Gestori extra per le web app ospitate (registrati da server.js per evitare dipendenze circolari).
 let appHandler = null;
@@ -70,6 +65,16 @@ function clientIp(req) {
   return String(req.socket.remoteAddress || '').replace(/^::ffff:/, '');
 }
 const isLoopback = (ip) => ip === '127.0.0.1' || ip === '::1';
+// "Dal PC che ospita il portale" = connessione da 127.0.0.1 E nessun intermediario.
+// Con "tailscale serve" (HTTPS per i telefoni) le richieste dei colleghi arrivano anch'esse da 127.0.0.1,
+// ma portano le intestazioni del proxy e un nome host diverso da localhost: non sono locali.
+function isLocalRequest(req, ip) {
+  if (!isLoopback(ip)) return false;
+  const hd = req.headers;
+  if (hd['x-forwarded-for'] || hd['x-forwarded-host'] || hd['forwarded'] || hd['tailscale-user-login'] || hd['x-real-ip']) return false;
+  const host = String(hd.host || '').replace(/:\d+$/, '').replace(/^\[|\]$/g, '').toLowerCase();
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+}
 
 function serveFile(res, baseDir, relPath, cache) {
   const file = path.resolve(baseDir, '.' + path.sep + relPath);
@@ -87,6 +92,16 @@ function serveFile(res, baseDir, relPath, cache) {
   return true;
 }
 
+// Il service worker porta nel nome della cache la versione del portale (da version.json).
+function serveServiceWorker(res) {
+  let text;
+  try { text = fs.readFileSync(path.join(config.PUBLIC_DIR, 'sw.js'), 'utf8'); } catch { return false; }
+  const body = text.replace(/__VERSION__/g, config.VERSION);
+  res.writeHead(200, { 'Content-Type': MIME['.js'], 'Content-Length': Buffer.byteLength(body), 'Cache-Control': 'no-cache', ...SECURITY_HEADERS });
+  res.end(body);
+  return true;
+}
+
 function serveStatic(req, res, pathname) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return false;
   let rel;
@@ -97,7 +112,8 @@ function serveStatic(req, res, pathname) {
     const file = media.resolve(m[1], m[2]);
     return file ? serveFile(res, path.dirname(file), path.basename(file), 'private, max-age=3600') : false;
   }
-  if (rel === '/') rel = '/index.html';
+  if (rel === '/sw.js') return serveServiceWorker(res);
+  if (rel.endsWith('/')) rel += 'index.html';
   return serveFile(res, config.PUBLIC_DIR, rel.slice(1));
 }
 
@@ -105,12 +121,13 @@ async function handle(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const pathname = url.pathname;
   const ctx = { req, res, query: url.searchParams, ip: clientIp(req), user: null, params: {} };
-  ctx.isLocal = isLoopback(ctx.ip);
+  ctx.isLocal = isLocalRequest(req, ctx.ip);
   ctx.json = (status, data, headers) => sendJson(res, status, data, headers);
   ctx.body = () => readJson(req);
 
   try {
     if (!pathname.startsWith('/api/')) {
+      if (require('./downloads').handle(req, res, pathname)) return;
       if (appHandler && pathname.startsWith('/apps/') && appHandler.handle(req, res, pathname)) return;
       if (serveStatic(req, res, pathname)) return;
       if (appHandler && appHandler.handleFromReferer(req, res, pathname)) return;

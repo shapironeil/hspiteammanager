@@ -115,6 +115,144 @@ const MIGRATIONS = [
   `
   ALTER TABLE programs ADD COLUMN url TEXT;
   `,
+  // 5 - Esplora file (indice delle cartelle vere) e Verbale Studio integrato
+  `
+  CREATE TABLE fs_index (
+    space TEXT NOT NULL,
+    path TEXT NOT NULL,
+    parent TEXT NOT NULL,
+    name TEXT NOT NULL,
+    is_dir INTEGER NOT NULL DEFAULT 0,
+    size INTEGER NOT NULL DEFAULT 0,
+    mtime TEXT,
+    updated_by INTEGER,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (space, path)
+  );
+  CREATE INDEX idx_fs_parent ON fs_index(space, parent);
+  CREATE INDEX idx_fs_name ON fs_index(name);
+  CREATE INDEX idx_fs_updated ON fs_index(updated_at);
+  CREATE TABLE verbali (
+    id TEXT PRIMARY KEY,
+    project_id INTEGER NOT NULL,
+    folder TEXT NOT NULL,
+    date TEXT NOT NULL,
+    title TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'bozza',
+    template_id TEXT,
+    cue_count INTEGER NOT NULL DEFAULT 0,
+    reviewed_count INTEGER NOT NULL DEFAULT 0,
+    pin_count INTEGER NOT NULL DEFAULT 0,
+    item_count INTEGER NOT NULL DEFAULT 0,
+    updated_by INTEGER,
+    updated_at TEXT NOT NULL
+  );
+  CREATE INDEX idx_verbali_project ON verbali(project_id, date);
+  `,
+  // 6 - gradi personalizzabili (gerarchia), Hacker nascosto con badge, persone eliminate, ospiti temporanei nei progetti
+  `
+  CREATE TABLE grades (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    color TEXT NOT NULL DEFAULT '#9a8f86',
+    level TEXT NOT NULL DEFAULT 'dipendente',
+    position INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  INSERT INTO grades(name, color, level, position, created_at) VALUES
+    ('Stage', '#8fb3c9', 'dipendente', 10, datetime('now')),
+    ('Dipendente', '#a89a8c', 'dipendente', 20, datetime('now')),
+    ('PM manager', '#7f9cf5', 'manager', 30, datetime('now')),
+    ('Manager', '#b388eb', 'manager', 40, datetime('now')),
+    ('Senior manager', '#e0a24f', 'manager', 50, datetime('now'));
+  ALTER TABLE users ADD COLUMN grade_id INTEGER REFERENCES grades(id);
+  ALTER TABLE users ADD COLUMN badge TEXT;
+  ALTER TABLE users ADD COLUMN deleted_at TEXT;
+  UPDATE users SET grade_id = (SELECT id FROM grades WHERE name = 'Manager') WHERE role = 'manager';
+  UPDATE users SET grade_id = (SELECT id FROM grades WHERE name = 'Dipendente') WHERE grade_id IS NULL;
+  UPDATE users SET badge = '#2dd4bf' WHERE role = 'hacker';
+  ALTER TABLE project_members ADD COLUMN expires_at TEXT;
+  ALTER TABLE project_members ADD COLUMN added_by INTEGER;
+  ALTER TABLE project_members ADD COLUMN added_at TEXT;
+  CREATE TABLE project_access_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    added_by INTEGER,
+    days INTEGER,
+    note TEXT,
+    starts_at TEXT NOT NULL,
+    expires_at TEXT,
+    ended_at TEXT
+  );
+  CREATE INDEX idx_access_user ON project_access_log(user_id);
+  `,
+  // 7 - Trama: mappe di processi (macro N, processo N.N, micro N.N.N) per progetto
+  `
+  CREATE TABLE trama_maps (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    created_by INTEGER,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  CREATE TABLE trama_nodes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    map_id INTEGER NOT NULL,
+    parent_id INTEGER,
+    level INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    name TEXT NOT NULL DEFAULT '',
+    macro_code INTEGER,
+    ambito TEXT NOT NULL DEFAULT '',
+    dipartimenti TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '',
+    responsible_id INTEGER,
+    due_date TEXT,
+    status TEXT NOT NULL DEFAULT '',
+    protected INTEGER NOT NULL DEFAULT 0,
+    created_by INTEGER,
+    created_at TEXT NOT NULL,
+    updated_by INTEGER,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    deleted_batch TEXT
+  );
+  CREATE INDEX idx_trama_nodes_map ON trama_nodes(map_id, parent_id, position);
+  CREATE INDEX idx_trama_nodes_due ON trama_nodes(responsible_id, due_date);
+  CREATE TABLE trama_comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    node_id INTEGER NOT NULL,
+    user_id INTEGER,
+    text TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  CREATE INDEX idx_trama_comments_node ON trama_comments(node_id);
+  CREATE TABLE trama_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    map_id INTEGER NOT NULL,
+    node_id INTEGER,
+    user_id INTEGER,
+    action TEXT NOT NULL,
+    detail TEXT,
+    at TEXT NOT NULL
+  );
+  CREATE INDEX idx_trama_history_node ON trama_history(node_id);
+  CREATE TABLE trama_delete_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    node_id INTEGER NOT NULL,
+    map_id INTEGER NOT NULL,
+    requested_by INTEGER,
+    reason TEXT,
+    created_at TEXT NOT NULL,
+    decided_by INTEGER,
+    decided_at TEXT,
+    decision TEXT
+  );
+  `,
 ];
 
 function migrate() {

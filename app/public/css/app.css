@@ -169,7 +169,7 @@ label.field > span { display: flex; align-items: center; gap: 7px; position: rel
   padding: 10px 12px; border-radius: 12px; background: var(--tip); border: 1px solid var(--border-strong); box-shadow: var(--shadow);
   color: var(--text); font: 400 13px/1.45 var(--sans); text-align: left; white-space: normal; opacity: 0; visibility: hidden; transition: opacity 0.12s; pointer-events: none; }
 .info:hover::after, .info:focus::after { opacity: 1; visibility: visible; }
-input[type="text"], input[type="password"], input[type="number"], input[type="search"], select, textarea {
+input[type="text"], input[type="password"], input[type="number"], input[type="search"], input[type="date"], select, textarea {
   width: 100%; padding: 9px 12px; border-radius: var(--radius-sm);
   border: 1px solid var(--border); background: var(--field); outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -364,6 +364,29 @@ details.detail pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/
 .member-list .check:hover { background: var(--glass); }
 .note { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--well); border: 1px solid var(--border); font-size: 12.5px; color: var(--muted); }
 
+/* ---- Esplora file --------------------------------------------------------- */
+.ex-layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 16px; align-items: start; }
+.ex-spaces { padding: 10px; display: flex; flex-direction: column; gap: 3px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; }
+.ex-spaces .nav-item span { opacity: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ex-space { width: 100%; text-align: left; font: inherit; }
+.ex-space.active { color: var(--text); background: rgba(217, 119, 87, 0.2); border-color: rgba(233, 162, 127, 0.35); }
+.ex-side-title { padding: 8px 10px 2px; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+.ex-space-select { display: none; width: 100%; margin-bottom: 12px; }
+.ex-searchbar { display: flex; align-items: center; gap: 10px; padding: 4px 14px; margin-bottom: 16px; border-radius: 999px; }
+.ex-searchbar svg { width: 18px; height: 18px; color: var(--muted); flex: none; }
+.ex-search { flex: 1; border: 0 !important; background: none !important; box-shadow: none !important; padding: 9px 0 !important; min-width: 0; }
+.ex-panel { transition: border-color 0.15s, background 0.15s; }
+.ex-panel.over { border-color: var(--accent-soft); background: rgba(217, 119, 87, 0.1); }
+.ex-panel .file-row { min-height: 44px; }
+.ex-progress { margin-bottom: 10px; }
+.ex-drop-hint { margin-top: 10px; }
+.ex-actions { display: flex; flex-direction: column; gap: 8px; }
+.ex-action { justify-content: flex-start; width: 100%; padding: 10px 14px; }
+.ex-media { display: block; max-width: 100%; max-height: 70vh; margin: 0 auto; border-radius: 10px; background: #000; }
+.ex-text { white-space: pre-wrap; overflow-wrap: anywhere; font: 12.5px/1.55 var(--mono); margin: 0 0 12px; max-height: 62vh; overflow: auto; }
+.ex-editor { width: 100%; min-height: 50vh; font: 13px/1.55 var(--mono); }
+.ex-pick button.link { border: 0; background: none; color: var(--text); cursor: pointer; text-align: left; padding: 4px 0; font: inherit; }
+
 /* ---- Guida a popup -------------------------------------------------------- */
 .tour { width: min(440px, 100%); padding: 26px 26px 20px; text-align: center; background: var(--modal-bg); }
 .tour-icon { width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 16px; display: grid; place-items: center; color: #2a120a; background: linear-gradient(160deg, #f1c7ac, var(--accent)); }
@@ -390,7 +413,71 @@ details.detail pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/
   .topbar-logo { height: 34px; max-width: 130px; }
   .user-chip { padding: 5px; }
   .upload-grid { grid-template-columns: 1fr; }
+  .ex-layout { grid-template-columns: 1fr; }
+  .ex-spaces { display: none; }
+  .ex-space-select { display: block; }
+  .ex-drop-hint { display: none; }
+  .list li { gap: 8px; }
+  .icon-btn { width: 40px; height: 40px; }
+  .modal-back { padding: 8px; align-items: end; }
+  .modal { max-height: calc(100vh - 16px); }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
+}
+
+/* ---- Gradi e badge -------------------------------------------------------- */
+.chip.grade { gap: 6px; }
+.grade-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.list .icon-btn[disabled] { opacity: 0.3; pointer-events: none; }
+.list li > svg { width: 18px; height: 18px; flex: none; color: var(--muted); }
+.list li > select { width: auto; max-width: 200px; flex: none; }
+
+/* ---- Percorso ------------------------------------------------------------- */
+.league-path { display: flex; align-items: stretch; gap: 6px; overflow-x: auto; padding: 22px 16px; }
+.league { flex: 1 0 170px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 14px 8px; border-radius: var(--radius-sm); background: var(--well); border: 1px solid var(--border); }
+.emblem { width: 74px; height: 84px; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); }
+.league-grade { font-weight: 600; font-size: 13px; }
+.league-input { text-align: center; background: transparent !important; border-color: transparent !important; padding: 4px 6px !important; font-size: 13px; }
+.league-input:hover, .league-input:focus { border-color: var(--border) !important; }
+.league .league-input:first-of-type { font-family: var(--serif); font-size: 16px; }
+.league-arrow { align-self: center; font-size: 28px; color: var(--faint); flex: none; }
+
+/* ---- Trama ---------------------------------------------------------------- */
+.tr-tabs { display: inline-grid; grid-auto-flow: column; grid-template-columns: none; margin-bottom: 14px; }
+.tr-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 16px; align-items: start; }
+.tr-layout .card + .card { margin-top: 0; }
+.tr-tree { max-height: calc(100vh - 210px); overflow: auto; position: sticky; top: 12px; }
+.tr-list { list-style: none; margin: 0; padding: 0; }
+.tr-list .tr-list { padding-left: 18px; border-left: 1px solid var(--line); margin-left: 9px; }
+.tr-row { display: flex; align-items: center; gap: 4px; border-radius: 8px; padding: 1px 4px; }
+.tr-row:hover { background: var(--glass); }
+.tr-row.active { background: rgba(217, 119, 87, 0.2); }
+.tr-toggle { width: 20px; flex: none; border: 0; background: none; color: var(--muted); cursor: pointer; padding: 0; font-size: 12px; text-align: center; }
+.tr-toggle[disabled] { cursor: default; opacity: 0.5; }
+.tr-label { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px; border: 0; background: none; color: var(--text); text-align: left; padding: 5px 2px; cursor: pointer; font: inherit; }
+.tr-row[data-level="1"] .tr-label { font-weight: 600; }
+.tr-code { font-family: var(--mono); font-size: 12px; color: var(--link); flex: none; }
+.tr-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-count { font-size: 11px; color: var(--faint); flex: none; }
+.tr-badges { display: inline-flex; gap: 4px; align-items: center; flex: none; }
+.chip.tr-mini { font-size: 10.5px; padding: 0 6px; }
+.tr-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); display: inline-block; flex: none; }
+.tr-bigcode { font-family: var(--mono); font-size: 18px; margin-left: 6px; }
+.tr-h3 { font-size: 15px; margin: 14px 0 6px; }
+.tr-name-input { min-height: 54px; font-size: 15px; }
+.tr-link { border: 0; background: none; color: var(--text); text-align: left; padding: 0; cursor: pointer; font: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-link:hover { color: var(--link); }
+.grid2-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0 12px; }
+.tr-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.tr-filters input[type=search] { max-width: 240px; }
+.tr-filters select { width: auto; }
+.tr-table td { vertical-align: top; }
+.tr-click { cursor: pointer; }
+.tr-click:hover td { background: var(--glass); }
+.tr-late { color: var(--danger); }
+@media (max-width: 820px) {
+  .tr-layout { grid-template-columns: 1fr; }
+  .tr-tree { position: static; max-height: 55vh; }
+  .tr-tabs { display: flex; overflow-x: auto; }
 }

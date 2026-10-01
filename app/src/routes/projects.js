@@ -49,7 +49,8 @@ function sync() {
   }
 }
 
-const isMember = (user, id) => !!db.get('SELECT 1 AS x FROM project_members WHERE project_id = ? AND user_id = ?', id, user.id);
+// Membro = permanente (expires_at vuoto) oppure ospite con accesso non ancora scaduto.
+const isMember = (user, id) => !!db.get('SELECT 1 AS x FROM project_members WHERE project_id = ? AND user_id = ? AND (expires_at IS NULL OR expires_at > ?)', id, user.id, db.now());
 const canSee = (user, p) => user.role === 'hacker' || isMember(user, p.id);
 const canEdit = (user, p) => user.role === 'hacker' || (user.role === 'manager' && isMember(user, p.id));
 
@@ -64,13 +65,21 @@ function find(ctx, needEdit) {
 function members(id) {
   return db.all(
     `SELECT u.id, u.name, u.username, u.avatar FROM project_members m JOIN users u ON u.id = m.user_id
-     WHERE m.project_id = ? ORDER BY u.name`, id).map((u) => ({ ...u, avatar: media.avatarUrl(u.avatar) }));
+     WHERE m.project_id = ? AND m.expires_at IS NULL AND u.deleted_at IS NULL ORDER BY u.name`, id).map((u) => ({ ...u, avatar: media.avatarUrl(u.avatar) }));
+}
+// Ospiti con accesso a tempo, ancora validi.
+function guests(id) {
+  return db.all(
+    `SELECT u.id, u.name, u.username, u.avatar, m.expires_at AS expiresAt, m.added_at AS addedAt, b.name AS addedBy
+     FROM project_members m JOIN users u ON u.id = m.user_id LEFT JOIN users b ON b.id = m.added_by
+     WHERE m.project_id = ? AND m.expires_at IS NOT NULL AND m.expires_at > ? AND u.deleted_at IS NULL ORDER BY m.expires_at`, id, db.now())
+    .map((u) => ({ ...u, avatar: media.avatarUrl(u.avatar) }));
 }
 
 const view = (user, p) => ({
   id: p.id, name: p.name, client: p.client, description: p.description, status: p.status,
   onedriveUrl: p.onedrive_url, folder: p.folder, updatedAt: p.updated_at,
-  members: members(p.id), canEdit: canEdit(user, p),
+  members: members(p.id), guests: guests(p.id), canEdit: canEdit(user, p),
 });
 
 function readFields(b) {
@@ -81,12 +90,16 @@ function readFields(b) {
   return { name: cleanText(b.name, 80, 'Nome'), client: optional(b.client, 80), description: optional(b.description, 500), status, url };
 }
 
+// Membri permanenti scelti nella scheda. Gli ospiti a tempo restano (chi diventa membro permanente smette di essere ospite).
 function setMembers(projectId, ids, always) {
   const wanted = new Set((Array.isArray(ids) ? ids : []).map(Number).filter(Number.isInteger));
   if (always) wanted.add(always);
-  db.run('DELETE FROM project_members WHERE project_id = ?', projectId);
+  db.run('DELETE FROM project_members WHERE project_id = ? AND expires_at IS NULL', projectId);
   for (const id of wanted) {
-    if (db.get('SELECT 1 AS x FROM users WHERE id = ? AND active = 1', id)) db.run('INSERT INTO project_members(project_id, user_id) VALUES(?, ?)', projectId, id);
+    if (!db.get('SELECT 1 AS x FROM users WHERE id = ? AND active = 1 AND deleted_at IS NULL', id)) continue;
+    db.run('DELETE FROM project_members WHERE project_id = ? AND user_id = ?', projectId, id);
+    db.run('UPDATE project_access_log SET ended_at = ? WHERE project_id = ? AND user_id = ? AND ended_at IS NULL', db.now(), projectId, id);
+    db.run('INSERT INTO project_members(project_id, user_id, added_at) VALUES(?, ?, ?)', projectId, id, db.now());
   }
 }
 
@@ -127,6 +140,37 @@ route('DELETE', '/api/projects/:id', { role: 'hacker' }, (ctx) => {
   db.run('DELETE FROM project_members WHERE project_id = ?', p.id);
   db.run('DELETE FROM projects WHERE id = ?', p.id);
   db.log(ctx, 'progetto.rimosso', `${p.name} (cartella conservata: ${p.folder})`);
+  ctx.json(200, { ok: true });
+});
+
+// ---- Ospiti a tempo -------------------------------------------------------------
+// Chi gestisce il progetto aggiunge una persona per un numero di giorni. Resta traccia nello storico degli accessi.
+route('POST', '/api/projects/:id/guests', {}, async (ctx) => {
+  const p = find(ctx, true);
+  const b = await ctx.body();
+  const days = Math.round(Number(b.days));
+  if (!Number.isFinite(days) || days < 1 || days > 365) throw new HttpError(400, 'Giorni: tra 1 e 365.');
+  const u = db.get('SELECT id, name FROM users WHERE id = ? AND active = 1 AND deleted_at IS NULL AND pending = 0', Number(b.userId));
+  if (!u) throw new HttpError(400, 'Persona non trovata.');
+  if (db.get('SELECT 1 AS x FROM project_members WHERE project_id = ? AND user_id = ? AND expires_at IS NULL', p.id, u.id)) throw new HttpError(409, `${u.name} fa già parte del progetto.`);
+  const now = db.now();
+  const expires = new Date(Date.now() + days * 86400000).toISOString();
+  const note = optional(b.note, 200);
+  db.run('DELETE FROM project_members WHERE project_id = ? AND user_id = ?', p.id, u.id);
+  db.run('INSERT INTO project_members(project_id, user_id, expires_at, added_by, added_at) VALUES(?,?,?,?,?)', p.id, u.id, expires, ctx.user.id, now);
+  db.run('UPDATE project_access_log SET ended_at = ? WHERE project_id = ? AND user_id = ? AND ended_at IS NULL', now, p.id, u.id);
+  db.run('INSERT INTO project_access_log(project_id, user_id, added_by, days, note, starts_at, expires_at) VALUES(?,?,?,?,?,?,?)', p.id, u.id, ctx.user.id, days, note, now, expires);
+  db.log(ctx, 'progetto.ospite-aggiunto', `${p.name}: ${u.name} per ${days} giorni${note ? ` (${note})` : ''}`);
+  ctx.json(201, { expiresAt: expires });
+});
+
+route('DELETE', '/api/projects/:id/guests/:userId', {}, (ctx) => {
+  const p = find(ctx, true);
+  const uid = Number(ctx.params.userId);
+  const r = db.run('DELETE FROM project_members WHERE project_id = ? AND user_id = ? AND expires_at IS NOT NULL', p.id, uid);
+  if (!r.changes) throw new HttpError(404, 'Ospite non trovato.');
+  db.run('UPDATE project_access_log SET ended_at = ? WHERE project_id = ? AND user_id = ? AND ended_at IS NULL', db.now(), p.id, uid);
+  db.log(ctx, 'progetto.ospite-tolto', `${p.name}: utente ${uid}`);
   ctx.json(200, { ok: true });
 });
 
@@ -234,4 +278,4 @@ route('PUT', '/api/projects/:id/files', {}, async (ctx) => {
   ctx.json(201, { ok: true, replaced: exists });
 });
 
-module.exports = { baseDir };
+module.exports = { baseDir, sync, canSee, canEdit, isMember, folderName };

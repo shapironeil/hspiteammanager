@@ -50,7 +50,7 @@ Tailscale crea una rete privata tra i dispositivi autorizzati. Il portale resta 
 Cose da sapere:
 
 - Funziona anche fuori dall'ufficio, non solo sulla stessa Wi-Fi.
-- Il piano gratuito ha un numero limitato di utenti: per 12 persone va verificato sul sito se basta.
+- Il piano gratuito ha un numero limitato di utenti: con la **condivisione del solo PC** ogni collega usa il suo account gratuito. Guida completa, anche per installare il portale come app sul telefono (HTTPS con `tailscale serve`): `TELEFONO.md`.
 - Ogni collega deve installare un programma sul PC aziendale: **serve il via libera dell'IT**.
 
 ## C. Tunnel pubblico (Cloudflare Tunnel, ngrok) — da evitare per ora

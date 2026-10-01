@@ -3,25 +3,37 @@ import { get, post } from './api.js';
 import { h, icon, form, field, toast, toastError, avatarEl, usernamePreview } from './ui.js';
 import { viewHome, viewPrograms, viewFiles, viewProfile } from './views-main.js';
 import { viewProjects, resetProjects } from './views-projects.js';
+import { viewExplorer } from './explorer.js';
+import { viewPercorso } from './percorso.js';
+import { viewTrama } from './trama.js';
 import { maybeShowTour, showTour } from './tour.js';
-import { viewAccounts, viewLogs, viewIssues, viewSystem } from './views-admin.js';
+import { viewAccounts, viewLogs, viewIssues, viewSystem, viewRoles, viewTeamStats } from './views-admin.js';
 
 const root = document.getElementById('app');
 const RANK = { dipendente: 0, manager: 1, hacker: 2 };
 export const app = { state: null, user: null, can: (role) => RANK[app.user.role] >= RANK[role] };
 
 // Testo sotto il nome: la qualifica se c'e', altrimenti il ruolo.
-export const roleText = (u) => (u.title && app.state.titles[u.title]) || app.state.roles[u.role] || u.role;
+// Testo sotto il nome: il grado (Stage, Dipendente, Manager, ...); se manca, la qualifica o il ruolo.
+export const roleText = (u) => (u.grade && u.grade.name) || (u.title && app.state.titles[u.title]) || app.state.roles[u.role] || u.role;
 
 // Voci del menu. "min" e' il ruolo minimo che vede la voce; "dynamic" = sfondo dinamico in quella schermata.
 // Per aggiungere una schermata: una voce qui + una funzione view in views-*.js.
 const NAV = [
   { id: 'home', label: 'Home', icon: 'home', min: 'dipendente', view: viewHome, dynamic: true },
   { id: 'progetti', label: 'Progetti', icon: 'briefcase', min: 'dipendente', view: viewProjects, reset: resetProjects },
+  { id: 'esplora', label: 'Esplora file', icon: 'folder', min: 'dipendente', view: viewExplorer },
+  { id: 'trama', label: 'Trama', icon: 'tree', min: 'dipendente', view: viewTrama },
+  // Verbale Studio e' un'app a se' (pagina /verbali/), con gli stessi account e gli stessi progetti.
+  { id: 'verbali', label: 'Verbale Studio', icon: 'note', min: 'dipendente', href: '/verbali/' },
   { id: 'programmi', label: 'Programmi', icon: 'apps', min: 'dipendente', view: viewPrograms },
-  { id: 'file', label: 'File', icon: 'folder', min: 'dipendente', view: viewFiles },
+  { id: 'file', label: 'File inviati', icon: 'upload', min: 'dipendente', view: viewFiles },
   { id: 'team', label: (u) => (u.role === 'hacker' ? 'Account' : 'Team'), icon: 'users', min: 'manager', view: viewAccounts, group: 'Organizzazione' },
-  { id: 'log', label: 'Log attività', icon: 'log', min: 'hacker', view: viewLogs, group: 'Controllo' },
+  // Statistiche di chi sta sotto nella gerarchia: compare solo a chi ha qualcuno sotto di se'.
+  { id: 'mio-team', label: 'Il mio team', icon: 'chart', min: 'dipendente', view: viewTeamStats, show: (u) => u.teamCount > 0 },
+  { id: 'ruoli', label: 'Ruoli', icon: 'shield', min: 'hacker', view: viewRoles, group: 'Controllo' },
+  { id: 'percorso', label: 'Percorso', icon: 'trophy', min: 'hacker', view: viewPercorso },
+  { id: 'log', label: 'Log attività', icon: 'log', min: 'hacker', view: viewLogs },
   { id: 'problemi', label: 'Errori e bug', icon: 'bug', min: 'hacker', view: viewIssues },
   { id: 'sistema', label: 'Sistema', icon: 'system', min: 'hacker', view: viewSystem },
 ];
@@ -193,7 +205,7 @@ function authCard(title, subtitle, content) {
         h('h1', {}, title),
         subtitle ? h('p', { class: 'muted' }, subtitle) : null),
       content,
-      h('div', { class: 'auth-foot' }, `${app.state.portalName} · v${app.state.version} beta`))));
+      h('div', { class: 'auth-foot' }, `${app.state.portalName} · v${app.state.version} beta · `, h('a', { href: '/benvenuto' }, 'Cos\'è e come si installa')))));
   const first = root.querySelector('input');
   if (first) first.focus();
 }
@@ -289,10 +301,10 @@ let shell = null;
 let content = null;
 
 function renderShell() {
-  const items = NAV.filter((n) => app.can(n.min));
+  const items = NAV.filter((n) => app.can(n.min) && (!n.show || n.show(app.user)));
   const pinned = store('hspi.menu') === 'fisso';
   const link = (n) => h('a', {
-    class: 'nav-item', href: `#/${n.id}`, 'data-id': n.id, title: typeof n.label === 'function' ? n.label(app.user) : n.label,
+    class: 'nav-item', href: n.href || `#/${n.id}`, 'data-id': n.id, title: typeof n.label === 'function' ? n.label(app.user) : n.label,
     // Cliccare la voce della schermata in cui si e' gia' la riporta al suo inizio.
     onclick: () => { if (n.reset) n.reset(); if (location.hash === `#/${n.id}`) navigate(); },
   },
@@ -364,7 +376,7 @@ function renderShell() {
 async function navigate(manual) {
   if (!shell || !shell.isConnected) return;
   const id = (location.hash.replace(/^#\//, '') || 'home').split('?')[0];
-  const entry = [...NAV, PROFILE].find((n) => n.id === id && app.can(n.min)) || NAV[0];
+  const entry = [...NAV, PROFILE].find((n) => n.id === id && n.view && app.can(n.min)) || NAV[0];
   shell.classList.remove('menu-open');
   setBackdrop(entry.dynamic ? 'dynamic' : 'static');
   shell.querySelectorAll('.nav-item[data-id]').forEach((a) => a.classList.toggle('active', a.dataset.id === entry.id));
