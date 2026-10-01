@@ -1,5 +1,5 @@
 'use strict';
-// Trama: mappe di processi a tre livelli, come nel file BPB.
+// GestioneCelle: mappe di processi a tre livelli, come nel file BPB.
 //   livello 1 = macro processo (codice N, scritto a mano come "ID Macro")
 //   livello 2 = processo       (codice N.N: ordine dentro il macro)
 //   livello 3 = micro processo (codice N.N.N: ordine dentro il processo)
@@ -17,7 +17,7 @@ const key = (s) => norm(s).toLowerCase();
 
 // ---- Lettura e codici -------------------------------------------------------------
 function nodesOf(mapId, { withDeleted = false } = {}) {
-  return db.all(`SELECT * FROM trama_nodes WHERE map_id = ? ${withDeleted ? '' : 'AND deleted_at IS NULL'} ORDER BY level, position, id`, mapId);
+  return db.all(`SELECT * FROM celle_nodes WHERE map_id = ? ${withDeleted ? '' : 'AND deleted_at IS NULL'} ORDER BY level, position, id`, mapId);
 }
 
 // Albero con codici e controlli. people: Map id -> nome (per i responsabili)
@@ -81,23 +81,23 @@ function flatten(macros) {
 
 // ---- Storico ----------------------------------------------------------------------
 function history(mapId, nodeId, userId, action, detail) {
-  db.run('INSERT INTO trama_history(map_id, node_id, user_id, action, detail, at) VALUES(?,?,?,?,?,?)', mapId, nodeId || null, userId || null, action, detail ? JSON.stringify(detail) : null, db.now());
-  db.run('UPDATE trama_maps SET updated_at = ? WHERE id = ?', db.now(), mapId);
+  db.run('INSERT INTO celle_history(map_id, node_id, user_id, action, detail, at) VALUES(?,?,?,?,?,?)', mapId, nodeId || null, userId || null, action, detail ? JSON.stringify(detail) : null, db.now());
+  db.run('UPDATE celle_maps SET updated_at = ? WHERE id = ?', db.now(), mapId);
 }
 const codeOf = (mapId, nodeId) => { const n = flatten(tree(mapId)).find((x) => x.id === nodeId); return n ? n.code : null; };
 
 // ---- Modifiche ---------------------------------------------------------------------
 function getNode(id) {
-  const n = db.get('SELECT * FROM trama_nodes WHERE id = ? AND deleted_at IS NULL', Number(id));
+  const n = db.get('SELECT * FROM celle_nodes WHERE id = ? AND deleted_at IS NULL', Number(id));
   if (!n) throw new HttpError(404, 'Voce non trovata.');
   return n;
 }
-const siblings = (mapId, parentId) => db.all('SELECT id, position FROM trama_nodes WHERE map_id = ? AND parent_id IS ? AND deleted_at IS NULL ORDER BY position, id', mapId, parentId || null);
+const siblings = (mapId, parentId) => db.all('SELECT id, position FROM celle_nodes WHERE map_id = ? AND parent_id IS ? AND deleted_at IS NULL ORDER BY position, id', mapId, parentId || null);
 function renumber(mapId, parentId, order) {
-  (order || siblings(mapId, parentId).map((s) => s.id)).forEach((id, i) => db.run('UPDATE trama_nodes SET position = ? WHERE id = ?', (i + 1) * 10, id));
+  (order || siblings(mapId, parentId).map((s) => s.id)).forEach((id, i) => db.run('UPDATE celle_nodes SET position = ? WHERE id = ?', (i + 1) * 10, id));
 }
 function nextMacroCode(mapId) {
-  return (db.get('SELECT MAX(macro_code) AS m FROM trama_nodes WHERE map_id = ? AND level = 1 AND deleted_at IS NULL', mapId).m || 0) + 1;
+  return (db.get('SELECT MAX(macro_code) AS m FROM celle_nodes WHERE map_id = ? AND level = 1 AND deleted_at IS NULL', mapId).m || 0) + 1;
 }
 
 function checkParent(mapId, level, parentId) {
@@ -130,7 +130,7 @@ function create(mapId, { level, parentId, name, afterId, fields = {} }, userId, 
   if (level === 1 && values.macro_code == null) values.macro_code = nextMacroCode(mapId);
   const sibs = siblings(mapId, parentId);
   const r = db.run(
-    `INSERT INTO trama_nodes(map_id, parent_id, level, position, name, macro_code, ambito, dipartimenti, note, responsible_id, due_date, status, protected, created_by, created_at, updated_by, updated_at)
+    `INSERT INTO celle_nodes(map_id, parent_id, level, position, name, macro_code, ambito, dipartimenti, note, responsible_id, due_date, status, protected, created_by, created_at, updated_by, updated_at)
      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     mapId, parentId || null, level, (sibs.length + 1) * 10, values.name, values.macro_code ?? null, values.ambito || '', values.dipartimenti || '', values.note || '',
     values.responsible_id ?? null, values.due_date ?? null, values.status || '', values.protected || 0, userId, now, userId, now);
@@ -156,7 +156,7 @@ function update(node, body, userId) {
   }
   if (!Object.keys(changes).length) return {};
   const set = Object.keys(changes).map((c) => `${c} = ?`).join(', ');
-  db.run(`UPDATE trama_nodes SET ${set}, updated_by = ?, updated_at = ? WHERE id = ?`, ...Object.values(changes), userId, db.now(), node.id);
+  db.run(`UPDATE celle_nodes SET ${set}, updated_by = ?, updated_at = ? WHERE id = ?`, ...Object.values(changes), userId, db.now(), node.id);
   const before = Object.fromEntries(Object.keys(changes).map((c) => [c, node[c]]));
   history(node.map_id, node.id, userId, 'modificato', { code: codeOf(node.map_id, node.id), before, after: changes });
   return changes;
@@ -170,7 +170,7 @@ function move(node, { parentId, index }, userId) {
   const order = siblings(node.map_id, newParent).map((s) => s.id).filter((id) => id !== node.id);
   const at = Math.max(0, Math.min(order.length, Number.isInteger(Number(index)) ? Number(index) : order.length));
   order.splice(at, 0, node.id);
-  db.run('UPDATE trama_nodes SET parent_id = ?, updated_by = ?, updated_at = ? WHERE id = ?', newParent, userId, db.now(), node.id);
+  db.run('UPDATE celle_nodes SET parent_id = ?, updated_by = ?, updated_at = ? WHERE id = ?', newParent, userId, db.now(), node.id);
   renumber(node.map_id, newParent, order);
   if (newParent !== node.parent_id) renumber(node.map_id, node.parent_id);
   const after = codeOf(node.map_id, node.id);
@@ -181,7 +181,7 @@ function move(node, { parentId, index }, userId) {
 // ---- Eliminazione con dipendenze ---------------------------------------------------------
 function descendants(node) {
   const out = [];
-  const walk = (id) => { for (const c of db.all('SELECT * FROM trama_nodes WHERE parent_id = ? AND deleted_at IS NULL', id)) { out.push(c); walk(c.id); } };
+  const walk = (id) => { for (const c of db.all('SELECT * FROM celle_nodes WHERE parent_id = ? AND deleted_at IS NULL', id)) { out.push(c); walk(c.id); } };
   walk(node.id);
   return out;
 }
@@ -195,7 +195,7 @@ function impact(node, user, people = new Map()) {
     code: codeOf(node.map_id, node.id), name: node.name, level: node.level,
     processes: all.filter((n) => n.level === 2 && n.id !== node.id).length,
     micros: all.filter((n) => n.level === 3 && n.id !== node.id).length,
-    comments: ids.length ? db.get(`SELECT COUNT(*) AS n FROM trama_comments WHERE node_id IN (${ids.map(() => '?').join(',')})`, ...ids).n : 0,
+    comments: ids.length ? db.get(`SELECT COUNT(*) AS n FROM celle_comments WHERE node_id IN (${ids.map(() => '?').join(',')})`, ...ids).n : 0,
     withDue: all.filter((n) => n.due_date && n.status !== 'fatto').length,
     protected: all.filter((n) => n.protected).length,
     otherResponsibles: [...others].map((id) => people.get(id) || `utente ${id}`),
@@ -210,29 +210,29 @@ function trash(node, userId, reason) {
   const now = db.now();
   const code = codeOf(node.map_id, node.id);
   const all = [node, ...descendants(node)];
-  for (const n of all) db.run('UPDATE trama_nodes SET deleted_at = ?, deleted_batch = ? WHERE id = ?', now, batch, n.id);
+  for (const n of all) db.run('UPDATE celle_nodes SET deleted_at = ?, deleted_batch = ? WHERE id = ?', now, batch, n.id);
   renumber(node.map_id, node.parent_id);
   history(node.map_id, node.id, userId, 'eliminato', { code, name: node.name, items: all.length, reason: reason || null });
   return { batch, items: all.length };
 }
 
 function restore(nodeId, userId) {
-  const n = db.get('SELECT * FROM trama_nodes WHERE id = ? AND deleted_at IS NOT NULL', Number(nodeId));
+  const n = db.get('SELECT * FROM celle_nodes WHERE id = ? AND deleted_at IS NOT NULL', Number(nodeId));
   if (!n) throw new HttpError(404, 'Voce non trovata nel cestino.');
-  if (n.parent_id && db.get('SELECT deleted_at FROM trama_nodes WHERE id = ?', n.parent_id).deleted_at) throw new HttpError(409, 'La voce sopra è anch\'essa nel cestino: ripristina prima quella.');
+  if (n.parent_id && db.get('SELECT deleted_at FROM celle_nodes WHERE id = ?', n.parent_id).deleted_at) throw new HttpError(409, 'La voce sopra è anch\'essa nel cestino: ripristina prima quella.');
   const pos = (siblings(n.map_id, n.parent_id).length + 1) * 10;
-  db.run('UPDATE trama_nodes SET deleted_at = NULL, deleted_batch = NULL, position = ? WHERE id = ?', pos, n.id);
-  db.run('UPDATE trama_nodes SET deleted_at = NULL, deleted_batch = NULL WHERE deleted_batch = ?', n.deleted_batch);
+  db.run('UPDATE celle_nodes SET deleted_at = NULL, deleted_batch = NULL, position = ? WHERE id = ?', pos, n.id);
+  db.run('UPDATE celle_nodes SET deleted_at = NULL, deleted_batch = NULL WHERE deleted_batch = ?', n.deleted_batch);
   history(n.map_id, n.id, userId, 'ripristinato', { name: n.name, code: codeOf(n.map_id, n.id) });
   return n;
 }
 
 function trashList(mapId, people = new Map()) {
-  return db.all(`SELECT n.*, h.user_id AS by_id FROM trama_nodes n
-    LEFT JOIN trama_history h ON h.node_id = n.id AND h.action = 'eliminato' AND h.id = (SELECT MAX(id) FROM trama_history WHERE node_id = n.id AND action = 'eliminato')
+  return db.all(`SELECT n.*, h.user_id AS by_id FROM celle_nodes n
+    LEFT JOIN celle_history h ON h.node_id = n.id AND h.action = 'eliminato' AND h.id = (SELECT MAX(id) FROM celle_history WHERE node_id = n.id AND action = 'eliminato')
     WHERE n.map_id = ? AND n.deleted_at IS NOT NULL AND n.deleted_batch LIKE '%-' || n.id ORDER BY n.deleted_at DESC`, mapId)
     .map((n) => ({ id: n.id, level: n.level, name: n.name, deletedAt: n.deleted_at, by: n.by_id ? people.get(n.by_id) || null : null,
-      items: db.get('SELECT COUNT(*) AS c FROM trama_nodes WHERE deleted_batch = ?', n.deleted_batch).c }));
+      items: db.get('SELECT COUNT(*) AS c FROM celle_nodes WHERE deleted_batch = ?', n.deleted_batch).c }));
 }
 
 module.exports = {

@@ -1,9 +1,9 @@
 'use strict';
-// Crea il file Excel di una mappa di Trama, con la stessa struttura del file BPB di partenza:
+// Crea il file Excel di una mappa di GestioneCelle, con la stessa struttura del file BPB di partenza:
 //   Istruzioni · BPB (tblBPB: un micro processo per riga) · Anagrafica Processi BPB (tblMacro, tblProcessi)
 // con le stesse formule (codici N / N.N / N.N.N, chiave tecnica, check), menu a tendina dell'ID Macro e colori.
 // Ogni cella calcolata porta anche il valore gia' calcolato: il file si legge bene anche prima che Excel ricalcoli.
-// In piu' rispetto all'originale: le colonne Responsabile, Scadenza e Stato (gestite in Trama).
+// In piu' rispetto all'originale: le colonne Responsabile, Scadenza e Stato (gestite in GestioneCelle).
 const { writeZip } = require('./zip');
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -175,7 +175,7 @@ function buildBpbWorkbook(map) {
 
   // ---- foglio Istruzioni
   const guide = [
-    ['GUIDA ALL\'UTILIZZO DEL FILE', '', S.title], [`Mappa: ${map.name} · generata da Trama (HSPI Team Manager) il ${new Date().toLocaleDateString('it-IT')}`, '', 0], ['', '', 0],
+    ['GUIDA ALL\'UTILIZZO DEL FILE', '', S.title], [`Mappa: ${map.name} · generata da GestioneCelle (HSPI Team Manager) il ${new Date().toLocaleDateString('it-IT')}`, '', 0], ['', '', 0],
     ['STRUTTURA DEI CODICI', '', S.section], ['Livello', 'Significato', S.headManual], ['N', 'Macro processo (es. 1)', 0], ['N.N', 'Processo all\'interno del macro processo (es. 1.2)', 0], ['N.N.N', 'Micro processo / sotto processo all\'interno del processo (es. 1.2.3)', 0], ['', '', 0],
     ['FOGLI', '', S.section], ['Foglio', 'Contenuto', S.headManual], ['BPB', 'Elenco di lavoro dei micro processi (una riga = un sotto processo). Tabella tblBPB.', 0], ['Anagrafica Processi BPB', 'Elenco ufficiale dei macro processi (N) e dei processi (N.N). Da qui nascono gli ID usati nel BPB.', 0], ['', '', 0],
     ['LEGENDA COLORI', '', S.section], ['Intestazione blu', 'Colonna da compilare a mano', 0], ['Intestazione grigia', 'Colonna calcolata in automatico: non scrivere, non cancellare', 0], ['Check rosso', 'Riga da verificare: il testo spiega il problema', 0], ['', '', 0],
@@ -188,7 +188,7 @@ function buildBpbWorkbook(map) {
     ['2', 'La numerazione segue l\'ordine delle righe: spostare un processo in anagrafica o una riga nel BPB cambia i relativi ID.', 0],
     ['3', 'Le righe di uno stesso processo nel BPB devono essere consecutive e nell\'ordine dell\'anagrafica (altrimenti il Check lo segnala).', 0],
     ['4', 'Non cancellare le colonne grigie né la colonna "Chiave (tecnica)": servono ai collegamenti tra i fogli.', 0],
-    ['5', 'Responsabile, Scadenza e Stato si gestiscono in Trama: il file si può reimportare in Trama dopo averlo modificato.', 0],
+    ['5', 'Responsabile, Scadenza e Stato si gestiscono in GestioneCelle: il file si può reimportare in GestioneCelle dopo averlo modificato.', 0],
   ];
   const guideRows = guide.map(([a, b, s], i) => `<row r="${i + 1}">${cell(`A${i + 1}`, a, s)}${cell(`B${i + 1}`, b, s === S.headManual ? s : s === S.title || s === S.section ? 0 : S.text)}</row>`);
 
@@ -198,7 +198,7 @@ function buildBpbWorkbook(map) {
     { name: '_rels/.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>` },
     { name: 'docProps/core.xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${esc(map.name)}</dc:title><dc:creator>Trama · HSPI Team Manager</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().slice(0, 19)}Z</dcterms:created></cp:coreProperties>` },
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${esc(map.name)}</dc:title><dc:creator>GestioneCelle · HSPI Team Manager</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${new Date().toISOString().slice(0, 19)}Z</dcterms:created></cp:coreProperties>` },
     { name: 'docProps/app.xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>Microsoft Excel</Application></Properties>` },
     { name: 'xl/workbook.xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

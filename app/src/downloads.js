@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const config = require('./config');
 const pkg = require('./client-package');
+const catalogo = require('./catalogo');
 const { SECURITY_HEADERS } = require('./http-headers');
 
 const PAGES = { '/benvenuto': 'benvenuto.html', '/guida': 'guida.html', '/scarica': 'scarica.html' };
@@ -34,6 +35,31 @@ function handle(req, res, pathname) {
   }
   if (pathname === '/scarica/HSPI-Client.zip') { sendBuffer(res, pkg.installer(originOf(req)), 'application/zip', 'HSPI-Client.zip'); return true; }
   if (pathname === '/scarica/client-app.zip') { sendBuffer(res, pkg.payload().buf, 'application/zip', 'client-app.zip'); return true; }
+  // Catalogo delle app: pacchetto per HSPI Client, icone, manifest per installarle nel browser
+  let m = /^\/scarica\/app\/([a-z0-9-]+)\.zip$/.exec(pathname);
+  if (m) {
+    const p = catalogo.pack(m[1]);
+    if (!p) return false;
+    sendBuffer(res, p.buf, 'application/zip', `${m[1]}.zip`);
+    return true;
+  }
+  m = /^\/catalogo\/([a-z0-9-]+)\/([\w.-]+)$/.exec(pathname);
+  if (m) {
+    if (m[2] === 'manifest.webmanifest') {
+      const man = catalogo.manifest(m[1]);
+      if (!man) return false;
+      const body = Buffer.from(JSON.stringify(man));
+      res.writeHead(200, { 'Content-Type': 'application/manifest+json', 'Content-Length': body.length, 'Cache-Control': 'no-cache', ...SECURITY_HEADERS });
+      res.end(body);
+      return true;
+    }
+    const file = catalogo.iconFile(m[1], m[2]);
+    if (!file) return false;
+    const body = fs.readFileSync(file);
+    res.writeHead(200, { 'Content-Type': file.endsWith('.svg') ? 'image/svg+xml' : 'image/png', 'Content-Length': body.length, 'Cache-Control': 'no-cache', ...SECURITY_HEADERS });
+    res.end(body);
+    return true;
+  }
   if (pathname === '/scarica/node.exe') {
     const exe = pkg.nodeExe();
     if (!exe) {

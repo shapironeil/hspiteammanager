@@ -1,10 +1,10 @@
 'use strict';
-// Prova nel browser di Trama: nuova mappa, import Excel, albero, scheda, aggiunta, scadenza, eliminazione, tabella, export.
+// Prova nel browser di GestioneCelle: nuova mappa, import Excel, albero, scheda, aggiunta, scadenza, eliminazione, tabella, export.
 const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
 const { startPortal, setupHacker, addUser } = require('../helpers');
-const { buildBpbWorkbook } = require('../../src/trama/xlsx-write');
+const { buildBpbWorkbook } = require('../../src/celle/xlsx-write');
 let playwright;
 try { playwright = require('playwright'); } catch { playwright = require(path.join(require('node:child_process').execSync('npm root -g').toString().trim(), 'playwright')); }
 const OUT = process.env.SHOTS || path.join(__dirname, 'screenshots');
@@ -42,7 +42,7 @@ const XLSX = buildBpbWorkbook({ name: 'prova', macros: [
       await page.click('button[type=submit]');
       await page.waitForSelector('.shell');
       await page.evaluate(() => document.querySelectorAll('.modal-back').forEach((m) => m.remove()));
-      await page.goto(portal.base + '/#/trama');
+      await page.goto(portal.base + '/#/celle');
       await page.click('button:has-text("Nuova mappa")');
       await page.fill('.modal input[name=name]', `BPB ${label}`);
       await page.click('.modal button:has-text("Crea")');
@@ -75,7 +75,7 @@ const XLSX = buildBpbWorkbook({ name: 'prova', macros: [
       await page.click('.modal button:has-text("Aggiungi")');
       await page.waitForSelector('.tr-bigcode:text-is("1.1.2")');
       ok(await page.locator('.tr-row:has-text("Flusso qualità") .tr-code').first().textContent() === '1.1.3', 'codici ricalcolati');
-      if (!mobile) await page.screenshot({ path: path.join(OUT, `trama-albero-${label}.png`) });
+      if (!mobile) await page.screenshot({ path: path.join(OUT, `celle-albero-${label}.png`) });
       // elimina il processo 1.1: contiene una voce di Mario -> richiesta
       await page.click('.tr-label:has-text("Pianificazione regionale")');
       await page.click('.tr-detail button[aria-label="Elimina"]');
@@ -93,14 +93,14 @@ const XLSX = buildBpbWorkbook({ name: 'prova', macros: [
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         ok(overflow <= 1, 'nessuno scorrimento orizzontale su telefono (' + overflow + ')');
       }
-      await page.screenshot({ path: path.join(OUT, `trama-tabella-${label}.png`) });
+      await page.screenshot({ path: path.join(OUT, `celle-tabella-${label}.png`) });
       // export
       const dl = page.waitForEvent('download');
       await page.click('a:has-text("Scarica Excel")');
       const d = await dl;
       ok(/\.xlsx$/.test(d.suggestedFilename()), 'Excel scaricato: ' + d.suggestedFilename());
       await page.goto(portal.base + '/#/home');
-      await page.waitForSelector('h2:has-text("Le mie scadenze in Trama")').catch(() => {});
+      await page.waitForSelector('h2:has-text("Le mie scadenze in GestioneCelle")').catch(() => {});
       await ctx.close();
     }
     ok(errors.length === 0, 'nessun errore JavaScript ' + errors.join(' | '));

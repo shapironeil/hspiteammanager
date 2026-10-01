@@ -15,6 +15,7 @@
   ],
   "shortcuts": [
     { "name": "Esplora file", "url": "/#/esplora", "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Verbale Studio", "url": "/verbali/", "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Verbale Studio", "url": "/verbali/", "icons": [{ "src": "/catalogo/verbale-studio/icon-192.png", "sizes": "192x192" }] },
+    { "name": "GestioneCelle", "url": "/celle/", "icons": [{ "src": "/catalogo/gestione-celle/icon-192.png", "sizes": "192x192" }] }
   ]
 }

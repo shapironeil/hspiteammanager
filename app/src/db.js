@@ -253,6 +253,26 @@ const MIGRATIONS = [
     decision TEXT
   );
   `,
+  // 8 - Trama diventa GestioneCelle: stesse tabelle, nome nuovo (i riferimenti tra tabelle si aggiornano da soli)
+  `
+  ALTER TABLE trama_maps RENAME TO celle_maps;
+  ALTER TABLE trama_nodes RENAME TO celle_nodes;
+  ALTER TABLE trama_comments RENAME TO celle_comments;
+  ALTER TABLE trama_history RENAME TO celle_history;
+  ALTER TABLE trama_delete_requests RENAME TO celle_delete_requests;
+  DROP INDEX idx_trama_nodes_map;
+  DROP INDEX idx_trama_nodes_due;
+  DROP INDEX idx_trama_comments_node;
+  DROP INDEX idx_trama_history_node;
+  CREATE INDEX idx_celle_nodes_map ON celle_nodes(map_id, parent_id, position);
+  CREATE INDEX idx_celle_nodes_due ON celle_nodes(responsible_id, due_date);
+  CREATE INDEX idx_celle_comments_node ON celle_comments(node_id);
+  CREATE INDEX idx_celle_history_node ON celle_history(node_id);
+  UPDATE logs SET action = 'celle.' || substr(action, 7) WHERE action LIKE 'trama.%';
+  -- Verbale Studio e' ora un'app del catalogo: via la scheda segnaposto creata al primo avvio, se mai usata
+  DELETE FROM programs WHERE name = 'Verbale Studio' AND description = 'App per la redazione dei verbali.'
+    AND file_id IS NULL AND folder IS NULL AND (url IS NULL OR url = '');
+  `,
 ];
 
 function migrate() {

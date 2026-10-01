@@ -1,6 +1,8 @@
-# Trama — mappe dei processi
+# GestioneCelle — mappe dei processi
 
-Trama porta nel portale il lavoro del file Excel BPB: macro processi, processi e micro processi con codici automatici `1`, `1.2`, `1.2.3`.
+GestioneCelle porta nel portale il lavoro del file Excel BPB: macro processi, processi e micro processi con codici automatici `1`, `1.2`, `1.2.3`.
+
+Fino alla versione 0.6 del portale si chiamava **Trama**. I vecchi collegamenti `#/trama` portano qui. Le tabelle `trama_*` del database sono diventate `celle_*` con la migrazione 8, senza perdere dati. Si apre dal menu del portale oppure come app a sé, all'indirizzo `/celle/` (vedi `docs/APP.md`).
 
 ## Da dove nasce
 
@@ -21,7 +23,7 @@ Il **Check** del file segnala:
 - processo duplicato;
 - voce non ancora usata.
 
-In Trama la struttura ad albero rende impossibili per costruzione gli errori di ordine e di consecutività. Restano i controlli su:
+In GestioneCelle la struttura ad albero rende impossibili per costruzione gli errori di ordine e di consecutività. Restano i controlli su:
 
 - ID macro mancante o duplicato;
 - nomi mancanti;
@@ -32,7 +34,7 @@ In Trama la struttura ad albero rende impossibili per costruzione gli errori di 
 
 | Azione | Come |
 |---|---|
-| Nuova mappa | Trama → *Nuova mappa*. Appartiene a un progetto: la vedono i membri e gli ospiti a tempo |
+| Nuova mappa | GestioneCelle → *Nuova mappa*. Appartiene a un progetto: la vedono i membri e gli ospiti a tempo |
 | Importare il file Excel | Mappa vuota → *Importa Excel*. Il formato BPB è riconosciuto da solo: ordine e codici restano quelli del file. Per altri fogli si sceglie quale colonna è macro, processo, sotto processo, ambito, responsabile, scadenza… |
 | Navigare | *Albero*: si apre livello per livello; il percorso sopra la scheda mostra dove sei. *Tabella*: come il foglio BPB, con filtri per testo, ambito, stato, responsabile, voci scadute e voci con problemi |
 | Aggiungere | Macro, processo o micro in fondo, oppure *dopo questa voce*: i codici successivi scalano da soli |
@@ -41,11 +43,11 @@ In Trama la struttura ad albero rende impossibili per costruzione gli errori di 
 | Note del team | Commenti con autore e data, sotto ogni voce |
 | Storico | Ogni modifica (chi, quando, prima e dopo) è nella scheda della voce e nello storico della mappa |
 | Eliminare | Vedi sotto |
-| Excel | *Scarica Excel*: tre fogli con le stesse formule, menu a tendina, colori e check del file originale, più Responsabile, Scadenza e Stato. *Salva nel progetto*: lo stesso file in `progetti/<progetto>/Trama/`, con le versioni precedenti. Il file si può modificare in Excel e reimportare |
+| Excel | *Scarica Excel*: tre fogli con le stesse formule, menu a tendina, colori e check del file originale, più Responsabile, Scadenza e Stato. *Salva nel progetto*: lo stesso file in `progetti/<progetto>/GestioneCelle/`, con le versioni precedenti. Il file si può modificare in Excel e reimportare |
 
 ## Eliminare senza fare danni
 
-1. Prima di eliminare, Trama mostra cosa si porta dietro: processi e micro, note, scadenze aperte, voci protette, voci di cui sono responsabili altre persone.
+1. Prima di eliminare, GestioneCelle mostra cosa si porta dietro: processi e micro, note, scadenze aperte, voci protette, voci di cui sono responsabili altre persone.
 2. Se ci sono **voci protette** o **voci di altri responsabili**, chi non è Manager del progetto non elimina: parte una **richiesta**. I Manager del progetto la vedono nella scheda *Richieste* e decidono se eliminare o rifiutare.
 3. Tutto va nel **cestino della mappa** e si può ripristinare con i codici ricalcolati.
 
@@ -53,10 +55,10 @@ Proteggere una voce e approvare le richieste spetta ai Manager del progetto (o a
 
 ## Excel per il web
 
-Aprire e comandare Excel per il web dal portale richiede Microsoft 365 con un'app registrata dall'IT (Microsoft Graph). Per ora Trama lavora nel portale e **genera e rilegge** il file Excel con le stesse formule. Vedi `PROPOSTE-2026-10-01.md`.
+Aprire e comandare Excel per il web dal portale richiede Microsoft 365 con un'app registrata dall'IT (Microsoft Graph). Per ora GestioneCelle lavora nel portale e **genera e rilegge** il file Excel con le stesse formule. Vedi `PROPOSTE-2026-10-01.md`.
 
 ## Verifiche fatte
 
-- Il file BPB reale è stato importato: 25 macro, 128 processi, 512 micro. Trama trova gli stessi 4 sotto processi duplicati del Check di Excel.
+- Il file BPB reale è stato importato: 25 macro, 128 processi, 512 micro. GestioneCelle trova gli stessi 4 sotto processi duplicati del Check di Excel.
 - L'Excel esportato è stato confrontato riga per riga con l'originale (ambito, ID macro, ID processo, ID micro, check): 0 differenze.
 - **Da verificare in Excel**: il ricalcolo delle formule (`LET` e `TEXTJOIN` richiedono Excel 2021/365). In questo ambiente non c'è un foglio di calcolo per provarlo.

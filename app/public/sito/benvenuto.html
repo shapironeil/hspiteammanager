@@ -4,25 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Benvenuto · HSPI Team Manager</title>
-  <link rel="icon" href="/img/logo.svg">
+  <link rel="icon" id="favicon" href="/img/logo.svg">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/sito/sito.css">
 </head>
 <body>
 <div class="wrap">
-  <header class="top"><img src="/img/logo.svg" alt=""><strong>HSPI Team Manager</strong><nav><a href="/benvenuto" class="on">Il portale</a><a href="/guida">Guida</a><a href="/scarica">Scarica</a><a href="/">Accedi</a></nav></header>
+  <header class="top"><a class="brand" href="/benvenuto"><img data-logo src="/img/logo.svg" alt=""><strong data-portal-name>HSPI Team Manager</strong></a><nav><a href="/benvenuto" class="on">Il portale</a><a href="/guida">Guida</a><a href="/scarica">Scarica</a><a href="/">Accedi</a></nav></header>
   <section class="hero">
     <h1>Il portale del team,<br>sul PC di chi lo ospita.</h1>
     <p>Progetti, file, verbali delle riunioni e mappe dei processi in un unico posto. I dati restano in azienda: niente cloud esterni, accesso solo dalla rete privata del team.</p>
-    <div class="row"><a class="btn primary" href="/">Accedi al portale</a><a class="btn" href="/guida">Come funziona</a><a class="btn" href="/scarica">Scarica HSPI Client</a></div>
+    <div class="row"><a class="btn primary" href="/">Accedi al portale</a><a class="btn" href="/guida">Come funziona</a><a class="btn" href="/scarica">Scarica le app</a></div>
   </section>
 
   <h2>Cosa trovi dentro</h2>
   <div class="grid">
     <div class="card"><span class="icon">📁</span><h3>Progetti</h3><p>Ogni progetto ha le sue persone, la sua cartella e il collegamento ai documenti aziendali. Ospiti a tempo per chi serve per pochi giorni.</p></div>
     <div class="card"><span class="icon">🗂️</span><h3>Esplora file</h3><p>Cartelle vere, personali e di progetto: carica, apri, modifica, cerca. Ogni versione resta, niente si cancella davvero.</p></div>
-    <div class="card"><span class="icon">📝</span><h3>Verbale Studio</h3><p>Revisione dei transcript di Teams in sincrono con il video, punti chiave, email di riepilogo e storico dei checkpoint.</p></div>
-    <div class="card"><span class="icon">🌿</span><h3>Trama</h3><p>Le mappe dei processi (macro, processi, micro) con codici automatici, scadenze, note e lo stesso file Excel di sempre.</p></div>
+    <div class="card"><img class="icon-img" src="/catalogo/verbale-studio/icon.svg" alt=""><h3>Verbale Studio <small class="ver" data-app-version="verbale-studio"></small></h3><p>Revisione dei transcript di Teams in sincrono con il video, punti chiave, email di riepilogo e storico dei checkpoint.</p></div>
+    <div class="card"><img class="icon-img" src="/catalogo/gestione-celle/icon.svg" alt=""><h3>GestioneCelle <small class="ver" data-app-version="gestione-celle"></small></h3><p>Le mappe dei processi (macro, processi, micro) con codici automatici, scadenze, note e lo stesso file Excel di sempre.</p></div>
     <div class="card"><span class="icon">📱</span><h3>Anche dal telefono</h3><p>Si installa come app: vedi i file, carichi foto e documenti, controlli i verbali.</p></div>
     <div class="card"><span class="icon">🔒</span><h3>Sicuro e ordinato</h3><p>Accesso con il proprio account e gradi del team; backup ogni giorno; registro di chi ha fatto cosa.</p></div>
   </div>
@@ -36,7 +36,7 @@
     <div class="card"><h3>Il tuo PC (HSPI Client)</h3><p>Apre il portale e fa i lavori pesanti, come l'AI locale, sul tuo computer. Si aggiorna da solo.</p></div>
   </div>
 
-  <footer>HSPI Team Manager · raggiungibile solo dalla rete privata del team (Tailscale). <span id="versione"></span></footer>
+  <footer><span data-portal-name>HSPI Team Manager</span> · raggiungibile solo dalla rete privata del team (Tailscale). <span id="versione"></span></footer>
 </div>
 <script src="/sito/sito.js" defer></script>
 </body>

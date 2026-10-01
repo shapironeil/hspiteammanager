@@ -263,7 +263,15 @@ route('PATCH', '/api/github', { role: 'hacker' }, async (ctx) => {
 // Pubblica (senza login): la leggono gli script di aggiornamento e il programma client.
 // Il portale e' raggiungibile solo da questo PC o via Tailscale, quindi non e' visibile da internet.
 route('GET', '/api/version', { public: true }, (ctx) => {
-  ctx.json(200, { name: 'HSPI Team Manager', version: config.VERSION, channel: config.CHANNEL, released: config.RELEASED, client: require('../client-package').info() });
+  ctx.json(200, { name: 'HSPI Team Manager', version: config.VERSION, channel: config.CHANNEL, released: config.RELEASED, client: require('../client-package').info(),
+    // versioni delle app del catalogo: HSPI Client aggiorna da solo quelle che ha scaricato
+    apps: Object.fromEntries(require('../catalogo').list().map((a) => [a.id, { version: a.version, ...a.package }])),
+  });
+});
+
+// Catalogo delle app dedicate (Verbale Studio, GestioneCelle, ...): pubblico, come la versione.
+route('GET', '/api/catalogo', { public: true }, (ctx) => {
+  ctx.json(200, { portal: config.VERSION, apps: require('../catalogo').list() });
 });
 
 // --- Arresto ordinato richiesto dagli script dell'host (aggiornamento, ripristino) ---

@@ -5,7 +5,7 @@ import { viewHome, viewPrograms, viewFiles, viewProfile } from './views-main.js'
 import { viewProjects, resetProjects } from './views-projects.js';
 import { viewExplorer } from './explorer.js';
 import { viewPercorso } from './percorso.js';
-import { viewTrama } from './trama.js';
+import { viewCelle } from './celle.js';
 import { maybeShowTour, showTour } from './tour.js';
 import { viewAccounts, viewLogs, viewIssues, viewSystem, viewRoles, viewTeamStats } from './views-admin.js';
 
@@ -23,10 +23,10 @@ const NAV = [
   { id: 'home', label: 'Home', icon: 'home', min: 'dipendente', view: viewHome, dynamic: true },
   { id: 'progetti', label: 'Progetti', icon: 'briefcase', min: 'dipendente', view: viewProjects, reset: resetProjects },
   { id: 'esplora', label: 'Esplora file', icon: 'folder', min: 'dipendente', view: viewExplorer },
-  { id: 'trama', label: 'Trama', icon: 'tree', min: 'dipendente', view: viewTrama },
+  { id: 'celle', label: 'GestioneCelle', icon: 'tree', min: 'dipendente', view: viewCelle },
   // Verbale Studio e' un'app a se' (pagina /verbali/), con gli stessi account e gli stessi progetti.
   { id: 'verbali', label: 'Verbale Studio', icon: 'note', min: 'dipendente', href: '/verbali/' },
-  { id: 'programmi', label: 'Programmi', icon: 'apps', min: 'dipendente', view: viewPrograms },
+  { id: 'programmi', label: 'App e programmi', icon: 'apps', min: 'dipendente', view: viewPrograms },
   { id: 'file', label: 'File inviati', icon: 'upload', min: 'dipendente', view: viewFiles },
   { id: 'team', label: (u) => (u.role === 'hacker' ? 'Account' : 'Team'), icon: 'users', min: 'manager', view: viewAccounts, group: 'Organizzazione' },
   // Statistiche di chi sta sotto nella gerarchia: compare solo a chi ha qualcuno sotto di se'.
@@ -376,6 +376,8 @@ function renderShell() {
 async function navigate(manual) {
   if (!shell || !shell.isConnected) return;
   const id = (location.hash.replace(/^#\//, '') || 'home').split('?')[0];
+  // Trama ora si chiama GestioneCelle: i vecchi collegamenti portano alla nuova schermata.
+  if (id === 'trama') { history.replaceState(null, '', location.hash.replace('#/trama', '#/celle')); return navigate(manual); }
   const entry = [...NAV, PROFILE].find((n) => n.id === id && n.view && app.can(n.min)) || NAV[0];
   shell.classList.remove('menu-open');
   setBackdrop(entry.dynamic ? 'dynamic' : 'static');

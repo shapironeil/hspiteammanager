@@ -1,5 +1,5 @@
 'use strict';
-// Importazione di un file Excel in una mappa di Trama.
+// Importazione di un file Excel in una mappa di GestioneCelle.
 //   - formato "BPB" (tabelle tblMacro, tblProcessi, tblBPB): riconosciuto da solo, ordine e codici come nel file;
 //   - qualunque altro foglio: si sceglie quali colonne sono macro, processo e micro (mappatura assistita).
 const db = require('../db');

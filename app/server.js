@@ -26,7 +26,7 @@ require('./src/routes/files');
 require('./src/routes/projects');
 const explorer = require('./src/routes/explorer');
 require('./src/routes/verbali');
-require('./src/routes/trama');
+require('./src/routes/celle');
 const { accessUrls } = require('./src/routes/admin');
 
 const server = http.createServer(handle);
