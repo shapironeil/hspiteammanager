@@ -1,4 +1,4 @@
-# sal-rti-rcapac (.docx) — Verbale SAL del progetto R-CAP.AC
+# Modello: Verbale SAL (Word)
 
 File ricevuto: `2026.02.15_Verbale_SAL_Template_v1.00.docx` (453 KB). Analizzato il 1° ottobre 2026.
 
@@ -53,13 +53,6 @@ e accettazione firmata da RUP e DEC. Dieci capitoli con indice automatico. I cam
 
 ## Funzioni dell'app da usare quando arriva un file di questo tipo
 
-1. **Carica il modello nel progetto** (`PUT /api/word/modelli`, cartella `Verbali/Modelli/`): il motore Word lo riconosce (impronta `sal-rti-rcapac`, punteggio 100).
-2. Da Verbale Studio, nel checkpoint del SAL: **⋯ → Verbale SAL in Word (e presentazione)**. I punti del checkpoint (modello di riepilogo "Stato avanzamento lavori (SAL)") entrano da soli; si completano periodo, luogo, lotto, servizi, attività, importi per mese, rappresentanti e riferimenti.
-3. Il compilatore (`app/src/word/sal-verbale.js`) lavora sugli ancoraggi di questo modello: tabella "Informazioni generali", "Ente di appartenenza", "Nome e Cognome | Società", "Identificativo | Titolo", Gantt "# | Nome Attività | Mese_1", blocchi "A – [Inserire nome Servizio] (S_1)", "Denominazione del Deliverable", "Componente RTI | Totale", tabella economica "Q.ta | Tariffa" (sezione orizzontale, colonne dei mesi ricalcolate), "Importo al SAL Economico", prospetto "Ritenuta 0,5%", le due dichiarazioni con `__/__/____` e `[Inserire importo]`, "[inserire periodo di riferimento]", le firme con `[Inserire data]`.
-4. **Controlli** sul risultato: nessun segnaposto rimasto, prospetto che quadra, totali per componente, codici `S_n` coerenti tra i capitoli. Il commento del modello viene tolto; l'indice è segnato da aggiornare all'apertura in Word.
-
-Verificato il 1° ottobre 2026 sul file vero con i dati d'esempio: 0 segnaposto rimasti, 12 tabelle compilate, file valido (schema OOXML) e riapribile.
-
-## Cosa manca ancora
-
-Numeri di pagina dell'indice senza Word, PDF, grassetti a metà frase nei testi compilati.
+Oggi Verbale Studio legge un `.docx` solo come testo del transcript (`docxToText`). Per questo modello serve il motore Word proposto il 1° ottobre 2026:
+lettura strutturata, compilazione per funzioni, calcoli economici, controlli, esportazione. Nel frattempo: il modello di riepilogo
+"Stato avanzamento lavori (SAL)" di Verbale Studio produce i contenuti del capitolo 7 (avanzamento, prossime attivita', rischi, decisioni).

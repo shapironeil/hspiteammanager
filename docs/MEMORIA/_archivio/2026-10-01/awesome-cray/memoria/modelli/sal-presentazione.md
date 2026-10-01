@@ -1,4 +1,4 @@
-# sal-rti-rcapac (.pptx) — Presentazione SAL del progetto R-CAP.AC
+# Modello: Presentazione SAL (PowerPoint)
 
 File ricevuto: `2026.02.23_Template_Presentazione_Sal_V1.00.pptx` (183 KB). Analizzato il 1° ottobre 2026. Nessun contenuto reale: e' lo scheletro.
 
@@ -51,13 +51,11 @@ Master 3 (layout 15, solo titolo con trinacria doppia) non e' usato da nessuna s
 
 ## Funzioni di Cippi da usare quando arriva un file di questo tipo
 
-1. **Importa come modello aziendale** (`Importa` con `modello=1`): Cippi lo riconosce (impronta `sal-rti-rcapac`, punteggio 100) e tiene i suoi master e layout.
-2. **Presentazione SAL** (pannello Funzioni → Presentazione SAL, oppure da Verbale Studio → "Verbale SAL in Word (e presentazione)"): dai dati del SAL nascono copertina compilata, agenda clonata dalla slide 2 con l'indicatore spostato, piano di lavoro, slide per servizio, consuntivazione, fatturazione, rischi. Le slide d'esempio del modello vengono tolte.
-3. Per ritocchi: **Nuova slide** da "Titolo e contenuto" / "Solo titolo" (tabelle) / "Layout personalizzato" (immagine a destra), **Agenda** con "Copia l'agenda della slide 2", **Data** per la copertina, **Pulizia** (toglie 18 layout e 1 master inutilizzati; restano "Diapositiva titolo", "Titolo e contenuto", "Layout personalizzato", "Intestazione sezione", "Solo titolo").
-4. **Controlli**: i segnaposto lasciati ("Titolo", "Testo", "Titolo 1 / Titolo 2") compaiono tra gli avvisi finché non si compilano.
+- Importa → analisi: tipi di slide (copertina, indice, testo, immagine), struttura, controlli.
+- **Salva come modello** per la ricetta; in futuro **Registra modello aziendale** (da aggiungere) per conservare master e layout veri.
+- Modifica testi e ordine, duplica slide (per aggiungere slide "Titolo e contenuto"), Esporta `.pptx`.
 
-Verificato il 1° ottobre 2026 sul file vero: 13 slide generate con le funzioni, presentazione SAL di 17 slide dai dati d'esempio, file validi (schema OOXML) e riapribili.
+## Cosa manca (vedi proposta del 1° ottobre 2026)
 
-## Cosa manca ancora
-
-Grassetti dentro una frase, grafici nativi, anteprima con i caratteri del layout (l'anteprima di Cippi non è PowerPoint).
+Slide nuove da un layout, agenda con numerazione e indicatore automatici, immagini nei segnaposto, tabelle, generazione del SAL da dati,
+aggiornamento della data in copertina, pulizia dei layout, controlli sui segnaposto non compilati.

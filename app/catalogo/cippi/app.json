@@ -1,10 +1,10 @@
 {
   "id": "cippi",
   "name": "Cippi",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "released": "2026-10-01",
   "summary": "Presentazioni PowerPoint del team: le legge, propone i punti chiave e i controlli, le rifà da un modello e le costruisce per funzioni (agenda, slide dai layout, presentazione SAL).",
-  "description": "Importa un .pptx e ne ricostruisce la struttura: sezioni dall'indice, tipo di ogni slide, blocchi nell'ordine di lettura con la loro gerarchia, flussi a corsie (attori, step, decisioni Si/No, sistemi, rimandi), legenda dei colori, sigle. Modalità Revisione con pannello strumenti, visione e punti chiave; modifica dei testi e dell'ordine; modelli riutilizzabili; esportazione in .pptx con la stessa grafica.",
+  "description": "Importa un .pptx e ne ricostruisce la struttura: sezioni dall'indice, tipo di ogni slide, blocchi nell'ordine di lettura con la loro gerarchia, flussi a corsie (attori, step, decisioni Si/No, sistemi, rimandi), legenda dei colori, sigle. Modalità Revisione con pannello strumenti, visione e punti chiave; modifica dei testi e dell'ordine; modelli riutilizzabili; esportazione in .pptx con la stessa grafica. Legge le sezioni di PowerPoint, le schede con le pillole colorate, le tabelle (anche disegnate con le forme, con il controllo dei totali) e il masterplan a Gantt incollato come immagine; riconosce i modelli noti; trova e sostituisce in tutto il documento, piè di pagina compreso; modifica celle e righe delle tabelle. Lavora per funzioni: slide nuove dai layout del modello, agenda con l'indicatore della sezione, immagini, tabelle, data, pulizia dei layout e la presentazione SAL generata dai dati del verbale.",
   "web": "/cippi/",
   "color": "#5b4fd6",
   "icon": "icon.svg",
@@ -12,13 +12,31 @@
   "engine": null,
   "novita": [
     {
+      "version": "0.3.0",
+      "date": "2026-10-01",
+      "items": [
+        "Funzioni: slide nuove dai layout del modello (titolo, testo, tabella, note), agenda numerata con l'indicatore della sezione e i divisori, immagine nel segnaposto, data di copertina, pulizia dei layout inutilizzati, togli slide. Pannello Funzioni (#/doc/<id>?funzioni=1).",
+        "Presentazione SAL generata dai dati (gli stessi del verbale Word di Verbale Studio): copertina, agenda ripetuta, piano di lavoro, attività per servizio, consuntivazione, fatturazione, rischi.",
+        "Modello aziendale: un .pptx si importa direttamente come modello, con i suoi layout.",
+        "Riconoscimento dei modelli noti anche per caratteri usati, immagini del brand e testi fissi dei layout (app/src/modelli.js); controllo dei segnaposto non compilati."
+      ]
+    },
+    {
       "version": "0.2.0",
       "date": "2026-10-01",
       "items": [
-        "Funzioni: slide nuove dai layout del modello (titolo, testo, tabella, note), agenda numerata con l'indicatore della sezione e i divisori, immagine nel segnaposto, data di copertina, pulizia dei layout inutilizzati, togli slide.",
-        "Presentazione SAL generata dai dati (gli stessi del verbale Word di Verbale Studio): copertina, agenda ripetuta, piano di lavoro, attività per servizio, consuntivazione, fatturazione, rischi.",
-        "Modello aziendale: un .pptx si importa direttamente come modello, con i suoi layout.",
-        "Riconoscimento dei modelli noti (memoria in docs/MEMORIA) e controllo dei segnaposto non compilati."
+        "Stile PowerPoint futuristico: pannelli di vetro, elementi più piccoli e professionali.",
+        "Punti chiave sotto l'anteprima della slide; a destra la descrizione della slide: prima i protagonisti, poi la struttura.",
+        "Finestra delle caratteristiche (stile impostazioni, scura): testo, forma (es. rettangolo → rombo), stato nuovo/modificato, tecnologia, collegamenti, descrizione, processo e contesto generale del documento. Forma, colore e testi finiscono nel .pptx.",
+        "Lettura più precisa: frecce a gomito e ruotate seguite correttamente, etichette Sì/No completate, scritte sulle frecce collegate al loro collegamento.",
+        "Sezioni lette da quelle di PowerPoint (niente slide divisorie necessarie); indice a due livelli abbinato ai titoli, senza falsi avvisi; copertina, schede e masterplan riconosciuti.",
+        "Pillole (testo sopra una forma colorata) come intestazioni con il loro colore; tabelle disegnate con le forme lette come tabelle; tabelle vere con celle unite, stile, grassetti e controllo \"il totale torna\".",
+        "Masterplan: il Gantt incollato come immagine SVG diventa un piano con componenti, attività e periodi.",
+        "Anteprima con loghi, barre e numero del layout; tabelle con lo stile; forme personalizzate disegnate dal loro percorso; testo ridotto come in PowerPoint.",
+        "Trova e sostituisci in tutto il documento (testi, tabelle, piè di pagina e layout); modifica delle celle e righe nuove nelle tabelle.",
+        "Sezione Documento: autori e co-autori, azienda, ultime modifiche per slide, caratteri usati; i modelli noti che somigliano alla presentazione (memoria in docs/MEMORIA).",
+        "Glossario della pubblica amministrazione preimpostato (SPID, PagoPA, AppIO, PDND, SEND, FESR...); sigle lunghe spiegate dal documento; niente sigle false da parole accentate.",
+        "Esportazione pulita: via le immagini non più usate, contatori aggiornati; il file passa i validatori."
       ]
     },
     {

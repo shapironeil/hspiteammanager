@@ -1,7 +1,34 @@
-/* Cippi: libreria e modalita' Revisione (tre pannelli). Usa i colori e i componenti del portale (app.css). */
+/* Cippi: libreria e modalita' Revisione. Stile "PowerPoint futuristico": pannelli di vetro, accento arancio-rosso
+   di PowerPoint, elementi compatti (piu' professionale). Usa i componenti del portale (app.css) ridimensionati. */
+.cippi-body {
+  --accent: #d35230; --accent-soft: #f08a5d; --accent-ink: #fff; --link: #ff9b72;
+  --pp: #c43e1c; --pp-2: #ed6c47; --pp-glow: rgba(237, 108, 71, 0.35);
+  --cp-glass: linear-gradient(160deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
+  --cp-edge: rgba(255, 255, 255, 0.13);
+  font-size: 13px;
+}
+:root[data-theme="light"] .cippi-body, :root[data-theme="light"] body.cippi-body {
+  --link: #b8401d; --cp-glass: linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6)); --cp-edge: rgba(60, 30, 20, 0.12);
+}
+.cippi-body .backdrop .orb-a { background: radial-gradient(circle, rgba(237, 108, 71, 0.55), transparent 70%); }
+.cippi-body .backdrop .orb-b { background: radial-gradient(circle, rgba(196, 62, 28, 0.35), transparent 70%); }
+/* elementi piu' piccoli */
+.cippi-body .btn { padding: 6px 12px; font-size: 12.5px; border-radius: 9px; }
+.cippi-body .btn.sm { padding: 4px 9px; font-size: 12px; border-radius: 8px; }
+.cippi-body .btn svg { width: 13px; height: 13px; }
+.cippi-body .btn.primary { background: linear-gradient(180deg, var(--pp-2), var(--pp)); color: #fff; box-shadow: 0 4px 14px var(--pp-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+.cippi-body .icon-btn { width: 28px; height: 28px; border-radius: 8px; }
+.cippi-body .icon-btn svg { width: 15px; height: 15px; }
+.cippi-body .icon-btn.sm { width: 24px; height: 24px; }
+.cippi-body .chip { font-size: 11px; padding: 0 7px; }
+.cippi-body .modal { font-size: 13px; }
+.cippi-body h2 { font-size: 15px; }
+
 
 /* ---- barra in alto e libreria ---- */
-.cp-top { display: flex; align-items: center; gap: 12px; padding: 10px 0 14px; flex-wrap: wrap; }
+.cp-top { display: flex; align-items: center; gap: 10px; padding: 8px 0 10px; flex-wrap: wrap; }
+.cp-top .app-brand img { width: 28px; height: 28px; border-radius: 8px; box-shadow: 0 4px 14px var(--pp-glow); }
+.cp-top .app-brand strong { font-size: 16px; }
 .cp-top .spacer { flex: 1; }
 .cp-docname { display: flex; flex-direction: column; min-width: 0; max-width: 34ch; }
 .cp-docname strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--serif); font-weight: 500; font-size: 16px; }
@@ -11,15 +38,18 @@
 .cp-lib .page-head h1 { font-size: 30px; }
 .cp-tabs-lib { display: flex; gap: 6px; margin: 8px 0 14px; }
 .cp-tabs-lib button, .cp-seg button, .cp-tabs button { border: 1px solid var(--border); background: var(--glass); color: var(--text); border-radius: 999px; padding: 6px 14px; cursor: pointer; font: inherit; font-size: 13px; }
-.cp-tabs-lib button.on, .cp-seg button.on, .cp-tabs button.on { background: linear-gradient(180deg, var(--accent-soft), var(--accent)); color: var(--accent-ink); border-color: transparent; font-weight: 600; }
+.cp-tabs-lib button.on, .cp-seg button.on, .cp-tabs button.on { background: linear-gradient(180deg, var(--pp-2), var(--pp)); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 3px 10px var(--pp-glow); }
+.cp-tabs-lib button, .cp-seg button, .cp-tabs button { padding: 4px 11px; font-size: 12px; }
 .cp-seg { display: flex; gap: 4px; flex-wrap: wrap; }
 .cp-seg.small button { padding: 3px 10px; font-size: 12px; }
 .cp-seg button[disabled] { opacity: 0.45; cursor: default; }
-.cp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-.cp-card { display: flex; flex-direction: column; color: inherit; text-decoration: none; overflow: hidden; border-radius: var(--radius); }
+.cp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.cp-card { display: flex; flex-direction: column; color: inherit; text-decoration: none; overflow: hidden; border-radius: 14px; background: var(--cp-glass); border: 1px solid var(--cp-edge); backdrop-filter: blur(18px); }
+.cp-card:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--pp-glow); }
 .cp-card:hover { border-color: var(--border-strong); }
 .cp-card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; }
-.cp-card h3 { font-size: 16px; }
+.cp-card h3 { font-size: 14px; }
+.cp-card-body { font-size: 12px; }
 .cp-thumb { aspect-ratio: 16 / 9; background: rgba(255, 255, 255, 0.92); display: grid; place-items: center; overflow: hidden; }
 .cp-thumb .cp-slide { width: 100%; box-shadow: none; }
 .cp-parts { display: flex; flex-direction: column; gap: 4px; max-height: 42vh; overflow: auto; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 10px; padding: 6px; }
@@ -36,10 +66,11 @@
 /* ---- revisione: tre pannelli ---- */
 .cp-app { padding: 0 16px 16px; max-width: 1800px; margin: 0 auto; }
 .cp-tabs { display: none; gap: 6px; margin-bottom: 10px; }
-.cp-review { display: grid; grid-template-columns: minmax(230px, 280px) minmax(0, 1fr) minmax(280px, 360px); gap: 14px; align-items: start; }
-.cp-panel { background: var(--glass); border: 1px solid var(--border); border-radius: var(--radius); backdrop-filter: blur(var(--blur)); -webkit-backdrop-filter: blur(var(--blur)); }
-.cp-tools, .cp-points { padding: 12px; position: sticky; top: 10px; max-height: calc(100vh - 90px); overflow: auto; }
-.cp-view { padding: 12px; min-width: 0; }
+.cp-review { display: grid; grid-template-columns: minmax(210px, 250px) minmax(0, 1fr) minmax(270px, 340px); gap: 10px; align-items: start; }
+.cp-panel { background: var(--cp-glass); border: 1px solid var(--cp-edge); border-radius: 14px; backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08); }
+.cp-tools, .cp-points { padding: 10px; position: sticky; top: 8px; max-height: calc(100vh - 76px); overflow: auto; }
+.cp-view { padding: 10px; min-width: 0; }
 .cp-sec { border-top: 1px solid var(--border); padding: 8px 0; }
 .cp-sec summary { cursor: pointer; font-weight: 600; font-size: 13px; list-style: none; display: flex; align-items: center; justify-content: space-between; }
 .cp-sec summary::after { content: "▸"; color: var(--faint); transition: transform 0.15s; }
@@ -99,7 +130,7 @@
 .cp-mini .cp-slide { width: 100%; box-shadow: none; pointer-events: none; }
 
 /* ---- la slide disegnata ---- */
-.cp-slide { position: relative; width: 100%; background: #fff; color: #1f1f1f; container-type: size; overflow: hidden; border-radius: 4px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25); font-family: "Poppins", "Segoe UI", system-ui, sans-serif; }
+.cp-slide { position: relative; width: 100%; background: #fff; color: #1f1f1f; container-type: size; overflow: hidden; border-radius: 6px; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.08); font-family: "Poppins", "Segoe UI", system-ui, sans-serif; }
 .cp-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
 .cp-shape { position: absolute; box-sizing: border-box; }
 .cp-geom { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
@@ -169,3 +200,121 @@
   .cp-docname { max-width: 60vw; }
   .cp-app { padding: 0 10px 12px; }
 }
+
+
+/* ---- elementi cliccabili della slide ---- */
+.cp-clickable { cursor: pointer; }
+.cp-clickable:hover { outline: 2px solid var(--pp-2); outline-offset: 1px; border-radius: 3px; }
+
+/* ---- punti chiave sotto l'anteprima ---- */
+.cp-keypoints { margin-top: 10px; padding: 10px; border-radius: 12px; border: 1px solid var(--cp-edge); background: rgba(0, 0, 0, 0.12); }
+:root[data-theme="light"] .cp-keypoints { background: rgba(255, 255, 255, 0.5); }
+.cp-keypoints .cp-pts { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px; margin: 0; }
+.cp-pt { padding: 7px 8px; font-size: 12px; }
+.cp-pt-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.cp-add { margin-bottom: 8px; }
+.cp-add select, .cp-add input { padding: 4px 8px; font-size: 12px; }
+
+/* ---- descrizione della slide (destra) ---- */
+.cp-desc-head { margin-bottom: 4px; }
+.cp-desc-head h2 { font-size: 15px; margin-bottom: 2px; }
+.cp-h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-family: var(--sans); margin: 12px 0 6px; font-weight: 600; }
+.cp-actors { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cp-actor { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--cp-edge); cursor: pointer; font-size: 12.5px; }
+.cp-actor:hover { border-color: var(--pp-2); background: rgba(237, 108, 71, 0.08); }
+.cp-avatar { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--pp-2), var(--pp)); flex: none; }
+.cp-actor .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--pp-2); }
+.cp-steps li { padding: 0; border: 1px solid var(--cp-edge); border-radius: 10px; overflow: hidden; }
+.cp-step { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; background: none; border: 0; color: inherit; font: inherit; font-size: 12.5px; text-align: left; cursor: pointer; }
+.cp-step:hover { background: rgba(237, 108, 71, 0.08); }
+.cp-step .chip { font-size: 10px; }
+.cp-shape-ico { width: 20px; text-align: center; font-size: 15px; color: var(--pp-2); flex: none; }
+.cp-exits { padding: 0 10px 6px 36px; color: var(--muted); }
+.cp-exits b { color: var(--text); }
+.cp-quick { display: flex; gap: 4px; flex-wrap: wrap; padding: 0 8px 7px 36px; }
+.cp-quick .btn.on { border-color: var(--pp-2); color: var(--link); }
+.cp-refs { display: flex; flex-wrap: wrap; gap: 4px; }
+.cp-proc { margin-top: 12px; padding: 8px 10px; border-radius: 10px; background: rgba(237, 108, 71, 0.08); border: 1px solid rgba(237, 108, 71, 0.25); display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; }
+.cp-context { display: flex; flex-direction: column; gap: 3px; width: 100%; margin-top: 12px; padding: 8px 10px; border-radius: 10px; border: 1px dashed var(--cp-edge); background: none; color: inherit; text-align: left; cursor: pointer; font: inherit; font-size: 12.5px; }
+.cp-context:hover { border-color: var(--pp-2); }
+.cp-blk-head { display: flex; align-items: center; gap: 6px; }
+.cp-blk { padding: 6px 8px; font-size: 12.5px; }
+
+/* ---- finestra delle caratteristiche: stile impostazioni, sempre scura ---- */
+.cs-back { position: fixed; inset: 0; z-index: 80; background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 3vh 2vw; animation: cs-in 0.16s ease; }
+@keyframes cs-in { from { opacity: 0; } to { opacity: 1; } }
+.cs-sheet { width: min(980px, 96vw); height: min(680px, 92vh); display: grid; grid-template-columns: 230px minmax(0, 1fr); border-radius: 16px; overflow: hidden;
+  background: #262624; color: #ececea; border: 1px solid #3a3a37; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55); font-family: var(--sans); font-size: 13px; color-scheme: dark; }
+.cs-nav { background: #1f1e1d; border-right: 1px solid #33332f; padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; overflow: auto; }
+.cs-nav-title { padding: 4px 8px 12px; display: flex; flex-direction: column; gap: 2px; border-bottom: 1px solid #33332f; margin-bottom: 8px; }
+.cs-nav-title small { color: #9b9a95; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+.cs-nav-title b { font-weight: 600; font-size: 13.5px; line-height: 1.3; overflow-wrap: anywhere; }
+.cs-nav-item { text-align: left; padding: 7px 10px; border-radius: 8px; border: 0; background: none; color: #c9c8c3; font: inherit; cursor: pointer; }
+.cs-nav-item:hover { background: #2c2c2a; color: #fff; }
+.cs-nav-item.on { background: #33332f; color: #fff; font-weight: 600; }
+.cs-nav-foot { margin-top: auto; padding: 8px; font-size: 11.5px; color: #e08a65; }
+.cs-main { display: flex; flex-direction: column; min-width: 0; }
+.cs-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px 12px; border-bottom: 1px solid #33332f; }
+.cs-head h2 { font-family: var(--serif); font-weight: 500; font-size: 20px; margin: 0; color: #fff; }
+.cs-close { width: 30px; height: 30px; border-radius: 8px; border: 0; background: none; color: #c9c8c3; cursor: pointer; display: grid; place-items: center; }
+.cs-close:hover { background: #33332f; color: #fff; }
+.cs-close svg { width: 16px; height: 16px; }
+.cs-body { padding: 16px 22px 22px; overflow: auto; display: flex; flex-direction: column; gap: 14px; }
+.cs-help { color: #9b9a95; margin: 0; font-size: 12.5px; }
+.cs-group { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 12px; background: #2c2c2a; border: 1px solid #383835; }
+.cs-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: #9b9a95; }
+.cs-field { display: flex; flex-direction: column; gap: 5px; }
+.cs-field > span { font-size: 12px; color: #c9c8c3; }
+.cs-field small, .cs-hint { color: #8d8c87; font-size: 11.5px; }
+.cs-field input, .cs-field textarea { width: 100%; background: #1f1e1d; color: #ececea; border: 1px solid #3f3f3b; border-radius: 9px; padding: 8px 10px; font: inherit; font-size: 13px; resize: vertical; }
+.cs-field input:focus, .cs-field textarea:focus { outline: none; border-color: #d97757; box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.2); }
+.cs-field input[disabled], .cs-field textarea[disabled] { opacity: 0.7; }
+.cs-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; padding: 2px 0; border-bottom: 1px dashed #383835; }
+.cs-row:last-child { border-bottom: 0; }
+.cs-row span { color: #9b9a95; }
+.cs-row b { font-weight: 500; text-align: right; overflow-wrap: anywhere; }
+.cs-choices { display: flex; flex-wrap: wrap; gap: 6px; }
+.cs-choice { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9px; border: 1px solid #3f3f3b; background: #1f1e1d; color: #dcdbd6; font: inherit; font-size: 12.5px; cursor: pointer; }
+.cs-choice:hover:not([disabled]) { border-color: #6b6a65; }
+.cs-choice.on { border-color: #d97757; background: rgba(217, 119, 87, 0.15); color: #fff; }
+.cs-choice .ico { font-size: 15px; width: 18px; text-align: center; }
+.cs-choice .sw { width: 12px; height: 12px; border-radius: 3px; border: 1px solid #555; background: #fff; }
+.cs-choice.st-nuovo .sw { background: #92d050; }
+.cs-choice.st-modificato .sw { background: #ffff00; }
+.cs-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.cs-btn { padding: 7px 14px; border-radius: 9px; border: 1px solid #3f3f3b; background: #2c2c2a; color: #ececea; font: inherit; font-size: 12.5px; cursor: pointer; }
+.cs-btn:hover { border-color: #6b6a65; }
+.cs-btn.primary { background: #d97757; border-color: transparent; color: #1f1e1d; font-weight: 600; }
+.cs-btn.primary:hover { filter: brightness(1.08); }
+.cs-link { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; width: 100%; padding: 7px 10px; border-radius: 9px; border: 1px solid #383835; background: #1f1e1d; color: #ececea; font: inherit; font-size: 12.5px; text-align: left; cursor: pointer; }
+.cs-link:hover { border-color: #d97757; }
+.cs-link small { color: #9b9a95; }
+.cs-pill { font-size: 11px; padding: 0 7px; border-radius: 999px; background: #33332f; color: #e9a27f; }
+.cs-muted { color: #8d8c87; margin: 0; font-size: 12.5px; }
+.cs-suggest { padding: 10px 12px; border-radius: 10px; background: rgba(217, 119, 87, 0.08); border: 1px solid rgba(217, 119, 87, 0.3); font-size: 12.5px; }
+.cs-suggest p { margin: 6px 0 8px; color: #c9c8c3; white-space: pre-wrap; }
+.cs-li { font-size: 12.5px; }
+.cs-li.add { color: #8fcf9f; }
+.cs-li.mod { color: #f0d474; }
+@media (max-width: 700px) {
+  .cs-back { padding: 0; }
+  .cs-sheet { width: 100vw; height: 100vh; border-radius: 0; grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .cs-nav { flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid #33332f; padding: 8px; }
+  .cs-nav-title { width: 100%; padding-bottom: 6px; margin-bottom: 4px; }
+  .cs-nav-foot { display: none; }
+  .cs-head, .cs-body { padding-left: 14px; padding-right: 14px; }
+}
+
+/* ---- sfondo del layout, tabelle con stile, modifica delle celle, piano di progetto, scheda del documento ---- */
+.cp-shape.cp-bg { pointer-events: none; }
+.cp-table td.cp-th { font-weight: 700; }
+.cp-cellgrid { width: 100%; border-collapse: collapse; font-size: 12px; margin: 4px 0 6px; }
+.cp-cellgrid td { border: 1px solid var(--border); padding: 2px; vertical-align: top; }
+.cp-cellgrid td.head { background: var(--glass); font-weight: 600; }
+.cp-cellgrid input { width: 100%; min-width: 60px; font: inherit; padding: 3px 4px; }
+.cp-gantt ul { list-style: none; padding: 0; margin: 4px 0; }
+.cp-gantt li { padding: 2px 0 2px 10px; font-size: 12.5px; }
+.cp-gantt li.componente { padding-left: 0; margin-top: 6px; }
+.cp-doc > div { margin: 3px 0; }
+.cp-doc ul { margin: 2px 0 0 16px; padding: 0; }
+.cp-sim li { margin: 2px 0; }

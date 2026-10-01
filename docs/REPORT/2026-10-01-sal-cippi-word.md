@@ -4,7 +4,7 @@ Branch: `claude/awesome-cray-8lgn1k`.
 
 ## Da dove si parte
 
-Due file del team: la **presentazione SAL** (`.pptx`, 5 slide scheletro con 4 master e 24 layout) e il **verbale SAL** (`.docx`, 10 capitoli, 12 tabelle, sezione orizzontale, segnaposto `[Inserire …]`). Le schede e le impronte stanno in `docs/MEMORIA/` (`pptx/sal-rti-rcapac`, `docx/sal-rti-rcapac`, `fascicolo-sal-rti-rcapac.md`), nella convenzione comune con le altre sessioni. Nessun file dei clienti nel repository.
+Due file del team: la **presentazione SAL** (`.pptx`, 5 slide scheletro con 4 master e 24 layout) e il **verbale SAL** (`.docx`, 10 capitoli, 12 tabelle, sezione orizzontale, segnaposto `[Inserire …]`). Le schede e le impronte stanno in `docs/MEMORIA/` (`pptx/sal-presentazione`, `docx/sal-verbale`, `fascicoli/fascicolo-sal.md`), nella convenzione comune con le altre sessioni. Nessun file dei clienti nel repository.
 
 ## Cosa è cambiato
 

@@ -4,6 +4,10 @@ GestioneCelle porta nel portale il lavoro del file Excel BPB: macro processi, pr
 
 Fino alla versione 0.6 del portale si chiamava **Trama**. I vecchi collegamenti `#/trama` portano qui. Le tabelle `trama_*` del database sono diventate `celle_*` con la migrazione 8, senza perdere dati. Si apre dal menu del portale oppure come app a sé, all'indirizzo `/celle/` (vedi `docs/APP.md`).
 
+## Stile
+
+GestioneCelle ha uno stile proprio, "Excel glass": vetro bianco e verde con un tocco di nero (barra degli strumenti, codici), controlli come quelli di iPhone, tabelle come un foglio di calcolo. Vale dentro il portale e nell'app a sé (`/celle/`, sempre chiara).
+
 ## Da dove nasce
 
 Il file di partenza ha tre fogli:
@@ -36,7 +40,8 @@ In GestioneCelle la struttura ad albero rende impossibili per costruzione gli er
 |---|---|
 | Nuova mappa | GestioneCelle → *Nuova mappa*. Appartiene a un progetto: la vedono i membri e gli ospiti a tempo |
 | Importare il file Excel | Mappa vuota → *Importa Excel*. Il formato BPB è riconosciuto da solo: ordine e codici restano quelli del file. Per altri fogli si sceglie quale colonna è macro, processo, sotto processo, ambito, responsabile, scadenza… |
-| Navigare | *Albero*: si apre livello per livello; il percorso sopra la scheda mostra dove sei. *Tabella*: come il foglio BPB, con filtri per testo, ambito, stato, responsabile, voci scadute e voci con problemi |
+| Navigare | *Processi* (prima si chiamava Albero): si apre livello per livello; il percorso sopra la scheda mostra dove sei. *Tabella*: come il foglio BPB, con filtri per testo, ambito, stato, responsabile, voci scadute e voci con problemi |
+| Modificare la struttura | *Modifica*: a sinistra la **tabella di riferimento** (tutte le voci in ordine, come un foglio, con le righe numerate; si filtra per livello: tutti, macro, processi, micro; frecce ↑ ↓ per scorrere), a destra le **caratteristiche** della voce scelta. La barra in alto aggiunge un **predecessore** (stesso livello, prima), un **successore** (dopo), una sotto-voce, sposta su e giù, elimina. I codici delle voci successive si ricalcolano **a cascata**: il foglio evidenzia quelli cambiati e mostra il codice di prima |
 | Aggiungere | Macro, processo o micro in fondo, oppure *dopo questa voce*: i codici successivi scalano da soli |
 | Spostare | Su e giù, oppure in un altro macro o processo. Il portale dice il codice prima e dopo |
 | Scadenze, responsabile, stato, note | Nella scheda della voce. Le voci scadute sono in rosso; ognuno vede le sue scadenze nella Home |

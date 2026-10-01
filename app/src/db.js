@@ -319,6 +319,22 @@ const MIGRATIONS = [
     PRIMARY KEY (project_id, term)
   );
   `,
+  // 10 - Cippi: contesto generale del documento e caratteristiche degli elementi (step, attori, processi, blocchi)
+  `
+  ALTER TABLE cippi_docs ADD COLUMN background TEXT NOT NULL DEFAULT '';
+  CREATE TABLE cippi_items (
+    doc_id INTEGER NOT NULL,
+    key TEXT NOT NULL,
+    data TEXT NOT NULL,
+    updated_by INTEGER,
+    updated_at TEXT,
+    PRIMARY KEY (doc_id, key)
+  );
+  `,
+  // 11 - Cippi: modifiche a livello di documento (trova e sostituisci anche nei layout: piè di pagina, scritte fisse)
+  `
+  ALTER TABLE cippi_docs ADD COLUMN edits TEXT NOT NULL DEFAULT '{}';
+  `,
 ];
 
 function migrate() {

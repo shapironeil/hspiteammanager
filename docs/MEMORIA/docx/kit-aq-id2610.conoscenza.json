@@ -1,0 +1,1744 @@
+{
+ "nota": "Conoscenza estratta dal kit dell'Accordo Quadro Consip ID 2610 (Lotto 1, servizi applicativi in ottica cloud). Documenti pubblici di gara: niente dati del team.",
+ "accordoQuadro": {
+  "id": "2610",
+  "edizione": "terza",
+  "oggetto": "Servizi applicativi in ottica cloud e servizi di demand e PMO per le Pubbliche Amministrazioni Locali",
+  "lotto": "1 - Servizi applicativi in ottica cloud",
+  "normativa": "D.Lgs. 36/2023"
+ },
+ "servizi": [
+  {
+   "servizio": "Sviluppo e Manutenzione Evolutiva del Software (SVI)",
+   "modalita": "Progettuale a corpo per ciascun intervento",
+   "metrica": "Punti Funzione IFPUG",
+   "dimensionamento": "Punti Funzione"
+  },
+  {
+   "servizio": "Sviluppo e Manutenzione Evolutiva del Software (SVI)",
+   "modalita": "Giorno Team ottimale Sviluppo e MEV",
+   "metrica": "Giorni/Team pari a 8 ore lavorative",
+   "dimensionamento": "xxxx"
+  },
+  {
+   "servizio": "Migrazione Applicativa al Cloud (MI)",
+   "modalita": "Progettuale a corpo per ciascun intervento",
+   "metrica": "Giorno Team ottimale di Migrazione Applicativa al Cloud",
+   "dimensionamento": "Giorni/Team pari a 8 ore lavorative"
+  },
+  {
+   "servizio": "Configurazione e Personalizzazione di Soluzioni di terze parti/open source/riuso (CF)",
+   "modalita": "Progettuale a corpo per ciascun intervento",
+   "metrica": "Giorno Team ottimale di Configurazione e Personalizzazione",
+   "dimensionamento": "Giorni/Team pari a 8 ore lavorative"
+  },
+  {
+   "servizio": "Servizio di Sviluppo e Evoluzione software in co-working con l’Amministrazione (CW)",
+   "modalita": "Continuativa a consumo",
+   "metrica": "Giorno Team “puntuale” di Coworking definito dall’Amministrazione",
+   "dimensionamento": "Giorni/Persona Totali previsti per il periodo del servizio"
+  },
+  {
+   "servizio": "Manutenzione Adeguativa (MAD)",
+   "modalita": "Progettuale a corpo per ciascun intervento",
+   "metrica": "Giorno Team ottimale MAD-MAC",
+   "dimensionamento": "Giorni/Team MAD-MAC totali previsti per il periodo del servizio"
+  },
+  {
+   "servizio": "Manutenzione Adeguativa (MAD)",
+   "modalita": "Continuativo a canone su effort medio",
+   "metrica": "Canone per singolo FTE/mese MAD-MAC",
+   "dimensionamento": "Numero Totale di FTE/mese MAD per il periodo del servizio"
+  },
+  {
+   "servizio": "Manutenzione Correttiva (MAC)",
+   "modalita": "Per intervento a Consumo",
+   "metrica": "Giorni/Persona",
+   "dimensionamento": "Giorni/persona Totali previsti per il periodo del servizio"
+  },
+  {
+   "servizio": "Manutenzione Correttiva (MAC)",
+   "modalita": "Continuativo a canone su baseline PF Software ad hoc pregresso e non in garanzia",
+   "metrica": "Canone mese per singolo PF pregresso e non in garanzia",
+   "dimensionamento": "PF MAC totali relativi a software ad hoc pregresso e non in garanzia da affidare per il periodo del servizio"
+  },
+  {
+   "servizio": "Manutenzione Correttiva (MAC)",
+   "modalita": "Continuativo a canone su effort medio",
+   "metrica": "Canone per singolo FTE/mese MAD-MAC",
+   "dimensionamento": "Numero Totale di FTE/mese MAC per il periodo del servizio"
+  },
+  {
+   "servizio": "Manutenzione Adeguativa e Manutenzione Correttiva Software ad hoc pregresso non in garanzia (MAD-MAC)",
+   "modalita": "Progettuale a corpo per ciascun intervento",
+   "metrica": "Giorno Team ottimale MAD-MAC",
+   "dimensionamento": "Giorni/Team MAD-MAC totali previsti per il periodo del servizio"
+  },
+  {
+   "servizio": "Manutenzione Adeguativa e Manutenzione Correttiva Software ad hoc pregresso non in garanzia (MAD-MAC)",
+   "modalita": "Continuativo a canone su effort medio",
+   "metrica": "Canone per singolo FTE/mese MAD-MAC",
+   "dimensionamento": "Numero Totale di FTE/mese MAD-MAC per il periodo del servizio"
+  },
+  {
+   "servizio": "Supporto Tecnico-Specialistico ICT (SS)",
+   "modalita": "Per intervento a Consumo",
+   "metrica": "Giorni/Persona a consumo",
+   "dimensionamento": "Giorni/persona Totali previsti per il periodo del servizio"
+  },
+  {
+   "servizio": "Supporto Tecnico-Specialistico ICT (SS)",
+   "modalita": "Progettuale a corpo per ciascun intervento",
+   "metrica": "Giorno Team ottimale di Supporto Tecnico-Specialistico ICT",
+   "dimensionamento": "Giorni/Team pari a 8 ore lavorative"
+  },
+  {
+   "servizio": "Gestione del Portafoglio Applicativo (GA)",
+   "modalita": "Per intervento a Consumo",
+   "metrica": "Giorni/Persona a consumo",
+   "dimensionamento": "Giorni/persona Totali previsti per il periodo del servizio"
+  },
+  {
+   "servizio": "Gestione del Portafoglio Applicativo (GA)",
+   "modalita": "Continuativo a canone su effort medio",
+   "metrica": "Canone per singolo FTE/mese GA",
+   "dimensionamento": "Numero Totale di FTE/mese GA per il periodo del servizio"
+  },
+  {
+   "servizio": "Gestione Operativa",
+   "modalita": "Per intervento a Consumo",
+   "metrica": "Giorni/Persona a consumo",
+   "dimensionamento": "Giorni/persona Totali previsti per il periodo del servizio"
+  },
+  {
+   "servizio": "Gestione Operativa",
+   "modalita": "Progettuale a corpo per ciascun intervento",
+   "metrica": "Giorno Team ottimale di Gestione Operativa",
+   "dimensionamento": "Giorni/Team pari a 8 ore lavorative"
+  },
+  {
+   "servizio": "Supporto alla Gestione dell’Identità e dell’Accesso Utente",
+   "modalita": "Per intervento a Consumo",
+   "metrica": "Giorni/Persona a consumo",
+   "dimensionamento": "Giorni/persona Totali previsti per il periodo del servizio"
+  },
+  {
+   "servizio": "Supporto alla Gestione dell’Identità e dell’Accesso Utente",
+   "modalita": "Progettuale a corpo per ciascun intervento",
+   "metrica": "Giorno Team ottimale di Supporto alla Gestione dell’Identità e dell’Accesso Utente",
+   "dimensionamento": "Giorni/Team pari a 8 ore lavorative"
+  },
+  {
+   "servizio": "Acquisizione e Classificazione Dati",
+   "modalita": "Per intervento a Consumo",
+   "metrica": "Giorni/Persona a consumo",
+   "dimensionamento": "Giorni/persona Totali previsti per il periodo del servizio"
+  },
+  {
+   "servizio": "Acquisizione e Classificazione Dati",
+   "modalita": "Progettuale a corpo per ciascun intervento",
+   "metrica": "Giorno Team ottimale di Acquisizione e Classificazione Dati",
+   "dimensionamento": "Giorni/Team pari a 8 ore lavorative"
+  },
+  {
+   "servizio": "E-learning e assistenza virtuale",
+   "modalita": "Per intervento a Consumo",
+   "metrica": "Giorni/Persona a consumo",
+   "dimensionamento": "Giorni/persona Totali previsti per il periodo del servizio"
+  },
+  {
+   "servizio": "E-learning e assistenza virtuale",
+   "modalita": "Progettuale a corpo per ciascun intervento",
+   "metrica": "Giorno Team ottimale di E-learning e assistenza virtuale",
+   "dimensionamento": "Giorni/Team pari a 8 ore lavorative"
+  },
+  {
+   "servizio": "Contact Center e Help Desk",
+   "modalita": "Per intervento a Consumo",
+   "metrica": "Giorni/Persona a consumo",
+   "dimensionamento": "Giorni/persona Totali previsti per il periodo del servizio"
+  },
+  {
+   "servizio": "Contact Center e Help Desk",
+   "modalita": "Progettuale a corpo per ciascun intervento",
+   "metrica": "Giorno Team ottimale di Contact Center e Help Desk",
+   "dimensionamento": "Giorni/Team pari a 8 ore lavorative"
+  }
+ ],
+ "sigleServizi": [
+  "SVI",
+  "MI",
+  "CF",
+  "CW",
+  "MAD",
+  "MAC",
+  "MAD-MAC",
+  "SS",
+  "GA"
+ ],
+ "aziendeRti": [
+  "Engineering",
+  "NTT Data Gov/&amp;Tech",
+  "Schema31",
+  "Eustema",
+  "Perfexia",
+  "HSPI",
+  "Consis",
+  "ICS 4",
+  "DGS",
+  "RPCNET",
+  "XD Speed Solution",
+  "Advantech",
+  "Medas",
+  "Esri Italia",
+  "Società Gruppo ISC",
+  "Progesi",
+  "IFM",
+  "EDP La Traccia"
+ ],
+ "ruoliFornitore": [
+  {
+   "ruolo": "RUAC del CE",
+   "riferimento": "Rif. par.§ 7.2.1. Allegato 12- Capitolato Tecnico Generale"
+  },
+  {
+   "ruolo": "Responsabile Tecnico per i Servizi Tecnologici",
+   "riferimento": "Rif. par.§ 7.2.2. Allegato 12- Capitolato Tecnico Generale"
+  },
+  {
+   "ruolo": "Responsabile della Migrazione Cloud",
+   "riferimento": "Rif. par.§ 7.2.2. Allegato 12- Capitolato Tecnico Generale"
+  },
+  {
+   "ruolo": "Referente per i Servizi realizzativi",
+   "riferimento": "Rif. par.§ 7.2.2. Allegato 12- Capitolato Tecnico Generale"
+  },
+  {
+   "ruolo": "Referente per il servizio di Gestione del Portafoglio Applicativo",
+   "riferimento": "Rif. par.§ 7.2.2. Allegato 12- Capitolato Tecnico Generale"
+  },
+  {
+   "ruolo": "Referente per i servizi di Manutenzione",
+   "riferimento": "Rif. par.§ 7.2.2. Allegato 12- Capitolato Tecnico Generale"
+  },
+  {
+   "ruolo": "Referente per i servizi di Supporto Tecnico-Specialistico ICT",
+   "riferimento": "Rif. par.§ 7.2.2. Allegato 12- Capitolato Tecnico Generale"
+  },
+  {
+   "ruolo": "Referente per i servizi accessori",
+   "riferimento": "Rif. par.§ 7.2.2. Allegato 12- Capitolato Tecnico Generale"
+  },
+  {
+   "ruolo": "Referente tecnologico, specializzato nello sviluppo cloud native",
+   "riferimento": "Rif. par.§ 7.2.2. Allegato 12- Capitolato Tecnico Generale"
+  }
+ ],
+ "cicliDiVita": {
+  "tradizionali": [
+   "Ciclo Completo",
+   "Ridotto",
+   "A Fase Unica",
+   "Realizzativo"
+  ],
+  "agili": [
+   "Sprint"
+  ],
+  "fasiComplete": [
+   "Definizione",
+   "Analisi",
+   "Disegno",
+   "Realizzazione",
+   "Collaudo",
+   "Documentazione",
+   "Avvio in esercizio"
+  ],
+  "criteriDiUscita": [
+   "Attivazione",
+   "Approvazione",
+   "Consegna",
+   "Consegna",
+   "Accettazione",
+   "Consegna",
+   "Valutazione all'avvio"
+  ]
+ },
+ "attivitaCicloDiVita": [
+  "Definizione",
+  "Analisi",
+  "Disegno",
+  "Realizzazione",
+  "Verifica",
+  "Collaudo",
+  "Documentazione",
+  "Avvio in esercizio"
+ ],
+ "prodotti": [
+  "Lettera di consegna",
+  "Piano della Qualità Generale di Lotto",
+  "Piano della Qualità Specifico di Contratto Esecutivo",
+  "Piano della Qualità di obiettivo",
+  "Piano di Lavoro Generale",
+  "Piano di Lavoro di obiettivo",
+  "Piano di Set-Up e Subentro",
+  "Piano di Trasferimento di Know how",
+  "Rendiconto risorse",
+  "Report aggiornamento baseline",
+  "Report Indicatori di qualità",
+  "Report Indicatori di qualità di obiettivo",
+  "Specifiche requisiti",
+  "Product Backlog",
+  "Sprint Backlog",
+  "Specifiche funzionali",
+  "Disegno di dettaglio",
+  "Disegno dell’architettura",
+  "Re-design architetturale (migrazione al Cloud)",
+  "Report/Check-list di conformità",
+  "Codice sorgente",
+  "Piano di Test",
+  "Prototipo",
+  "Documentazione utente",
+  "Manuale di gestione applicativo",
+  "Manuale di gestione infrastruttura e servizi cloud",
+  "Piano di adeguamento degli ambienti",
+  "Documentazione dati",
+  "Modulo per conteggio FP",
+  "Report sulla qualità del software",
+  "Piano di Gestione della Configurazione",
+  "Security e Vulnerability Assessment",
+  "Report di Sicurezza",
+  "Lista oggetti software",
+  "Documentazione delle procedure batch/DTS",
+  "Convalida sulla tecnologia",
+  "Demo sulle novità del sistema",
+  "Altri documenti"
+ ],
+ "indicatori": [
+  {
+   "codice": "RSPL",
+   "nome": "Rispetto del Piano di lavoro di obiettivo",
+   "gruppo": "Servizi Realizzativi",
+   "aspetto": "Rispetto di una scadenza temporale dell’obiettivo definita nel piano di lavoro approvato (o analogo documento)",
+   "unita": "Giorni lavorativi",
+   "periodo": "Durata dell’obiettivo",
+   "frequenza": "Ogni scadenza del Piano di lavoro",
+   "soglia": "La Sommatoria dei ritardi al termine dell’obiettivo deve essere inferiore o uguale a: RSPL <= 5 giorni lavorativi",
+   "azioni": "Nel caso di superamento della soglia fino al valore RSPL <= 10 giorni lavorativi, l’Amministrazione applicherà la perdita della quota sospesa “Ritardo Pianificazione” pari a: 8% per obiettivi di classe di rischio A, 5% nei restanti casi. Inoltre, per valori RSPL > 10, per ogni giorno lavorativo eccedente l’Amministrazione applicherà altresì la penale “Mancato rispetto del Piano di lavoro dell’obiettivo” pari a:",
+   "rilievo": false,
+   "quotaSospesa": true,
+   "penale": true
+  },
+  {
+   "codice": "GSCO",
+   "nome": "Giorni di sospensione del collaudo",
+   "gruppo": "Servizi Realizzativi",
+   "aspetto": "Numero complessivo di giorni in cui è stato sospeso il collaudo di un obiettivo per cause imputabili al Fornitore",
+   "unita": "Giorno lavorativo",
+   "periodo": "Durata collaudo",
+   "frequenza": "Al termine del collaudo",
+   "soglia": "Deve essere inferiore- o uguale al 5% della durata pianificata del collaudo GSCO <= 5% * durata collaudo in giorni solari",
+   "azioni": "1 Rilievo TROR per ogni giorno lavorativo eccedente la soglia. Inoltre, per valori GSCO > (5% * durata collaudo in giorni solari + 10 giorni lavorativi), per ogni giorno lavorativo eccedente l’Amministrazione applicherà la penale “Eccesso di sospensione Collaudo” pari a: 1% del corrispettivo dell’obiettivo per obiettivi di classe di rischio A, 0,8% del corrispettivo dell’obiettivo nei restanti casi.",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": true
+  },
+  {
+   "codice": "DAES",
+   "nome": "Difettosità in avvio in esercizio",
+   "gruppo": "Servizi Realizzativi",
+   "aspetto": "Difettosità del sistema rilasciato in esercizio",
+   "unita": "Numero e tipologia di malfunzionamenti (errori e non conformità)",
+   "periodo": "Fase di avvio in esercizio",
+   "frequenza": "evento",
+   "soglia": "Classe di rischio A Classe di rischio B Classe di rischio C",
+   "azioni": "Il superamento della soglia DAES_bloccanti comporta la perdita della quota sospesa “Eccesso Blocchi in avvio” pari a: 7% per obiettivi di classe di rischio A, 5% nei restanti casi. Dal 3° errore bloccante l’Amministrazione applicherà altresì la penale “Anomalie Bloccanti Reiterate” per ogni errore bloccante pari a:",
+   "rilievo": true,
+   "quotaSospesa": true,
+   "penale": true
+  },
+  {
+   "codice": "CTFU",
+   "nome": "Copertura test funzionali",
+   "gruppo": "Servizi Realizzativi",
+   "aspetto": "Copertura Funzionale del piano di test",
+   "unita": "Numero Casi d’uso",
+   "periodo": "Durata dell’obiettivo",
+   "frequenza": "Ciascuna Milestone di consegna del documento di analisi/disegno e piano di test",
+   "soglia": "CTFU = NREko AND NScenari ko = zero",
+   "azioni": "Se CTFU > 0 comporterà 1 Rilievo TROR aggiuntivo. Il documento completo dovrà essere riconsegnato entro 3 giorni lavorativi o diverso termine indicato dall’Amministrazione. La mancata consegna nei suddetti termini comporterà 1 Rilievo TROR aggiuntivo. La verifica e l’applicazione delle azioni contrattuali sarà ripetuta per ogni nuova versione consegnata.",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "RIUSO",
+   "nome": "Riuso di componenti",
+   "gruppo": "Servizi Realizzativi",
+   "aspetto": "Riuso di componenti nello sviluppo ex-novo",
+   "unita": "Percentuale",
+   "periodo": "Durata dell’obiettivo",
+   "frequenza": "Semestrale",
+   "soglia": "RIUSO >= 10% il primo semestre di erogazione dei servizi. La soglia si alza del 5% ogni semestre.",
+   "azioni": "Nel caso di mancato raggiungimento del valore di soglia, l’Amministrazione applicherà la perdita della quota sospesa “Riuso sviluppo ex-novo” pari al 5%.",
+   "rilievo": false,
+   "quotaSospesa": true,
+   "penale": false
+  },
+  {
+   "codice": "TRCG",
+   "nome": "Tempestività di Ripristino dell’Operatività in collaudo ed in garanzia",
+   "gruppo": "Servizi Realizzativi",
+   "aspetto": "Tempestività di ripristino dell'operatività in collaudo ed in garanzia",
+   "unita": "Ora solare o lavorativa in funzione della soglia",
+   "periodo": "Durata del Collaudo Garanzia: Durata contrattuale",
+   "frequenza": "evento",
+   "soglia": "Categoria Tempo massimo di risoluzione",
+   "azioni": "Difettosità in collaudo: le categorie 1 e 2 comportano la sospensione del collaudo secondo l’indicatore DFCC. Relativamente alle categorie 3 e 4: per ogni giorno lavorativo eccedente il valore soglia (o il diverso termine indicato dall’amministrazione) verrà emesso un Rilievo TROR. Garanzia in esercizio: se la rilevazione è avvenuta nel periodo di erogazione dei servizi (dopo la fase di Avvio in Esercizio), il non rispetto del valore di soglia comporterà l’emissione di 1 Rilievo RLFN per ogni giorno o frazione di superamento della soglia. Garanzia Post-Erogazione: il mancato rispetto del valore soglia comporta la penale “Mancato Ripristino Operatività in garanzia” pari a € 5.000 per ogni 8 ore (solari per le categorie 1 e 2 – lavorative per le categorie 3 o 4) o frazione di superamento della soglia.",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": true
+  },
+  {
+   "codice": "TROR",
+   "nome": "Totale Rilievi Obiettivo Realizzativo",
+   "gruppo": "Servizi Realizzativi",
+   "aspetto": "Numero di rilievi emessi per non conformità dei servizi realizzativi afferenti obbligazioni contrattuali non adempiute nei tempi e/o nei modi rappresentati nel Contratto Esecutivo e relativi allegati e/o tracciati sui Piani di lavoro",
+   "unita": "Rilievo sull’obiettivo",
+   "periodo": "Durata dell’obiettivo",
+   "frequenza": "Al termine dell’obiettivo",
+   "soglia": "TROR ≤ 3 (progetti con durata complessiva<= 6 mesi) o TROR ≤ 5 (progetti con durata complessiva> 6 mesi)",
+   "azioni": "Il superamento della soglia comporta la perdita della quota sospesa “Eccesso Rilievi di Obiettivo” pari a: 8% per obiettivi di classe di rischio A, 5% nei restanti casi. Inoltre, per ogni rilievo eccedente le seguenti soglie:",
+   "rilievo": false,
+   "quotaSospesa": true,
+   "penale": true
+  },
+  {
+   "codice": "DFCC",
+   "nome": "Difettosità in collaudo",
+   "gruppo": "Servizi Realizzativi",
+   "aspetto": "Numero di non conformità di categoria bloccante in collaudo",
+   "unita": "Non conformità bloccanti (categorie 1 e 2)",
+   "periodo": "La fase di collaudo dell'obiettivo",
+   "frequenza": "Alla rilevazione dell’evento",
+   "soglia": "DFCC (categoria 1) = 0 DFCC (categoria 2) <=3",
+   "azioni": "Il superamento del valore soglia comporta la sospensione del collaudo come previsto dall’indicatore GSCO – Giorni di sospensione del collaudo.",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "MDTE",
+   "nome": "Miglioramento Debito Tecnico (moduli preesistenti)",
+   "gruppo": "Servizi Realizzativi",
+   "aspetto": "Il debito tecnico",
+   "unita": "Giorni persona",
+   "periodo": "La fase di realizzazione dell'obiettivo",
+   "frequenza": "Fase di realizzazione",
+   "soglia": "MDTE <= 0",
+   "azioni": "Apertura malfunzionamento bloccante se MDTE <= 50%, bloccante se superiore. Per l’accettazione del software il codice deve essere corretto sino al raggiungimento di una soglia fissata dall’Amministrazione.",
+   "rilievo": false,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "TRPM",
+   "nome": "Tempo di Risposta post-migrazione",
+   "gruppo": "Servizi Realizzativi",
+   "aspetto": "Misura della differenza delle prestazioni dell’applicazione on-premise e di quella migrata",
+   "unita": "Percentuale",
+   "periodo": "Durata dell’obiettivo:",
+   "frequenza": "Pre-migrazione",
+   "soglia": "TRPM >= 98",
+   "azioni": "Il mancato raggiungimento del valore soglia comporta l’apertura di un malfunzionamento bloccante in collaudo. Per l’accettazione del software deve essere raggiunto un valore di soglia fissato dall’Amministrazione.",
+   "rilievo": false,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "QNFU",
+   "nome": "Qualità Non Funzionale",
+   "gruppo": "Servizi Realizzativi",
+   "aspetto": "Qualità non funzionale del software misurata attraverso le caratteristiche descritte in Tabella 2",
+   "unita": "Numero",
+   "periodo": "La fase di collaudo dell'obiettivo",
+   "frequenza": "Alla rilevazione dell’evento",
+   "soglia": "QNFU = 0",
+   "azioni": "Apertura non conformità: non bloccante se QNFU <= 4 bloccante se QNFU > 4 bloccante in caso di non risoluzione del malfunzionamento aperto o di peggioramento dell’indicatore.",
+   "rilievo": false,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "TROI",
+   "nome": "Tempestività di Ripristino dell’Operatività in esercizio",
+   "gruppo": "Servizio di Manutenzione Correttiva",
+   "aspetto": "Tempestività di ripristino dell'operatività in esercizio a seguito di malfunzionamenti differenziata per categoria di malfunzionamento",
+   "unita": "Percentuale",
+   "periodo": "Durata del servizio",
+   "frequenza": "mensile",
+   "soglia": "Livello di Prestazione Standard TROI >= 90% e TROI (tlimitej_ finale= tlimitej+1giorno lavorativo) = 100%",
+   "azioni": "Livello di Prestazione Standard 1 Rilievo per ogni punto percentuale inferiore rispetto ai valori di soglia sopra previsti che andrà ad incrementare l’indicatore RMCO Valore limite Livello di Prestazione Premium",
+   "rilievo": true,
+   "quotaSospesa": true,
+   "penale": true
+  },
+  {
+   "codice": "CSR",
+   "nome": "Interventi di manutenzione correttiva recidivi",
+   "gruppo": "Servizio di Manutenzione Correttiva",
+   "aspetto": "Numero di interventi di manutenzione correttiva recidivi, cioè relativi allo stesso modulo per lo stesso malfunzionamento",
+   "unita": "Case recidivi",
+   "periodo": "Durata del servizio",
+   "frequenza": "mensile",
+   "soglia": null,
+   "azioni": "Ripristino Premium 1 Rilievo per ogni Case recidivo che andrà ad incrementare l’indicatore RMCO Per valori dell’indicatore superiore a 2, l’Amministrazione applicherà la penale “Eccesso di interventi recidivi” pari all’1 ‰ dell’importo contrattualmente fissato per il servizio di manutenzione correttiva del contratto esecutivo.",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": true
+  },
+  {
+   "codice": "RMCO",
+   "nome": "Rilievi di Manutenzione Correttiva",
+   "gruppo": "Servizio di Manutenzione Correttiva",
+   "aspetto": "Numero di rilievi emessi per non conformità inerenti al servizio di manutenzione correttiva rispetto al contratto ed allegati",
+   "unita": "Rilievo",
+   "periodo": "Durata del servizio",
+   "frequenza": "Mensile",
+   "soglia": "RMCO = 0 nel caso di attivazione per singolo intervento RMCO <= 1 nel caso di servizio continuativo",
+   "azioni": "Nel caso di superamento della soglia, perdita della quota sospesa “Eccesso di rilievi di Manutenzione Correttiva” pari al 15%. Per valori dell’indicatore superiori a 3 nel caso di attivazione per singolo intervento e 4 nel caso di servizio continuativo, l’Amministrazione applicherà altresì la penale “Reiterati rilievi manutenzione correttiva” pari all’1‰ dell’importo contrattualmente fissato per il servizio di manutenzione correttiva del contratto esecutivo.",
+   "rilievo": false,
+   "quotaSospesa": true,
+   "penale": true
+  },
+  {
+   "codice": "RSCC",
+   "nome": "Rispetto di una scadenza dei servizi di sviluppo e evoluzione sw in co-working",
+   "gruppo": "Servizio di Sviluppo e Evoluzione software in co-working con l’Amministrazione",
+   "aspetto": "Rispetto di una scadenza temporale pianificata",
+   "unita": "Giorni lavorativi",
+   "periodo": "Durata del servizio",
+   "frequenza": "mensile",
+   "soglia": null,
+   "azioni": "1 Rilievo per ogni giorno lavorativo di ritardo che andrà ad incrementare l’indicatore RLFN ## Servizio di Gestione del Portafoglio Applicativo",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "DSGP",
+   "nome": "Disponibilità dei servizi di Gestione del Portafoglio Applicativo",
+   "gruppo": "Servizio di Gestione del Portafoglio Applicativo",
+   "aspetto": "Disponibilità dei servizi di gestione",
+   "unita": "Segnalazioni",
+   "periodo": "Durata del servizio",
+   "frequenza": "mensile",
+   "soglia": null,
+   "azioni": null,
+   "rilievo": true,
+   "quotaSospesa": true,
+   "penale": true
+  },
+  {
+   "codice": "RSCA",
+   "nome": "Rispetto di una scadenza dei servizi di gestione del Portafoglio",
+   "gruppo": "Servizio di Gestione del Portafoglio Applicativo",
+   "aspetto": "Rispetto di una scadenza temporale pianificata",
+   "unita": "Giorni lavorativi",
+   "periodo": "Durata del servizio",
+   "frequenza": "mensile",
+   "soglia": "Livello Premium RSCA <= 0",
+   "azioni": "1 Rilievo per ogni giorno lavorativo di ritardo che andrà ad incrementare l’indicatore RSGT",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "TRRA",
+   "nome": "Tempestività di risoluzione delle richieste di assistenza",
+   "gruppo": "Servizio di Gestione del Portafoglio Applicativo",
+   "aspetto": "Tempestività di risoluzione delle richieste di assistenza",
+   "unita": "Percentuale",
+   "periodo": "Durata del servizio",
+   "frequenza": "mensile",
+   "soglia": "Livello Premium TRRA (T_ottimale= 3 ore lavorative) ≥ 95% e TRRA (T_ottimale= 6 ore lavorative) = 100%",
+   "azioni": "1 Rilievo per ogni punto percentuale inferiore rispetto ai valori di soglia che andrà ad incrementare l’indicatore RSGT",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "NRPR",
+   "nome": "Numero di ricicli su deliverables rilasciati",
+   "gruppo": "Servizio di Gestione del Portafoglio Applicativo",
+   "aspetto": "Numero di ricicli",
+   "unita": "Riapertura della richiesta",
+   "periodo": "Durata del servizio",
+   "frequenza": "mensile",
+   "soglia": null,
+   "azioni": "1 Rilievo per ogni riciclo che andrà ad incrementare l’indicatore RSGT",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "RSGT",
+   "nome": "Rilievi sui servizi di gestione del Portafoglio applicativo",
+   "gruppo": "Servizio di Gestione del Portafoglio Applicativo",
+   "aspetto": "Numero di rilievi emessi per non conformità inerenti alla disponibilità del servizio secondo le modalità di erogazione definite nel Contratto Esecutivo e nel Piano di lavoro.",
+   "unita": "Numero",
+   "periodo": "Durata del servizio",
+   "frequenza": "Mensile",
+   "soglia": null,
+   "azioni": null,
+   "rilievo": false,
+   "quotaSospesa": true,
+   "penale": true
+  },
+  {
+   "codice": "SPSS",
+   "nome": "Slittamento nella consegna di un prodotto e/o di un’attività del servizio di Supporto Specialistico",
+   "gruppo": "Servizio di Servizio di Supporto Tecnico-Specialistico ICT",
+   "aspetto": "Rispetto di una scadenza temporale pianificata nell’ambito del servizio di supporto specialistico",
+   "unita": "Giorni lavorativi",
+   "periodo": "Durata dell’intervento di supporto specialistico",
+   "frequenza": "Al termine di ciascun intervento",
+   "soglia": "SPSS <= 0 (le scadenze possono essere anticipate)",
+   "azioni": "1 Rilievo per ogni giorno lavorativo di ritardo che andrà ad incrementare l’indicatore RSSP",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "CSIS",
+   "nome": "Customer effort Score dell’intervento specialistico",
+   "gruppo": "Servizio di Servizio di Supporto Tecnico-Specialistico ICT",
+   "aspetto": "La percezione della qualità dei servizi e il grado di soddisfazione degli utenti come espressione della facilità d’uso complessiva del servizio, misurata rilevando dagli strumenti di feedback le risposte fornite.",
+   "unita": "Percentuale",
+   "periodo": "Durata dell’intervento di supporto specialistico",
+   "frequenza": "Al termine di ciascun intervento",
+   "soglia": "CSIS >= 85 %",
+   "azioni": "Il mancato rispetto del valore di soglia comporterà 1 rilievo RSSP. Per CSIS < 80 %, perdita della quota sospesa “Supporto Specialistico non soddisfacente” pari al 5%. Per CSIS < 65 %, per ogni 10% di peggioramento o frazione, l’Amministrazione applicherà altresì la penale “Inadeguatezza del supporto specialistico” a pari all’1‰ dell’importo contrattualmente fissato per il servizio del contratto esecutivo.",
+   "rilievo": true,
+   "quotaSospesa": true,
+   "penale": true
+  },
+  {
+   "codice": "RSSP",
+   "nome": "Rilievi sui servizi di supporto specialistico",
+   "gruppo": "Servizio di Servizio di Supporto Tecnico-Specialistico ICT",
+   "aspetto": "Numero di rilievi emessi per non conformità inerenti al servizio di supporto specialistico",
+   "unita": "Rilievo",
+   "periodo": "Durata dell’intervento di supporto specialistico",
+   "frequenza": "al termine dell’intervento",
+   "soglia": "RSSP ≤ 1",
+   "azioni": "Il superamento della soglia comporta la perdita della quota sospesa “Eccesso di rilievi di Supporto Specialistico” pari al 15%. Per valori dell’indicatore RSSP > 3, l’Amministrazione applicherà altresì la penale “Reiterati rilievi supporto specialistico” pari all’1‰ dell’importo contrattualmente fissato per il servizio di supporto Specialistico del contratto esecutivo.",
+   "rilievo": false,
+   "quotaSospesa": true,
+   "penale": true
+  },
+  {
+   "codice": "DSIS",
+   "nome": "Disponibilità dei sistemi",
+   "gruppo": "Servizi Accessori",
+   "aspetto": "Disponibilità dei sistemi",
+   "unita": "Punto Percentuale",
+   "periodo": "Durata del servizio",
+   "frequenza": "mensile",
+   "soglia": "DSIS_xxx >= 99,8%",
+   "azioni": "Il mancato rispetto del valore soglia comporterà per ogni 0,1% di scostamento o frazione l’applicazione della penale “Indisponibilità dei sistemi”, pari all’1‰ dell’importo contrattualmente fissato per il servizio di gestione operativa nel contratto esecutivo.",
+   "rilievo": false,
+   "quotaSospesa": false,
+   "penale": true
+  },
+  {
+   "codice": "RSAC",
+   "nome": "Rispetto di una scadenza dei servizi accessori",
+   "gruppo": "Servizi Accessori",
+   "aspetto": "Rispetto di una scadenza temporale pianificata",
+   "unita": "Giorni lavorativi",
+   "periodo": "Durata del servizio",
+   "frequenza": "mensile",
+   "soglia": "RSAC <= 0 nel 90% dei casi RSAC <=1 nel 100% dei casi",
+   "azioni": "1 Rilievo per ogni giorno lavorativo di ritardo che andrà ad incrementare l’indicatore RLSA",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "TRCH",
+   "nome": "Tempestività di risposta per il servizio di Contact Center e Help Desk",
+   "gruppo": "Servizi Accessori",
+   "aspetto": "Tempestività di risposta per il servizio di Contact Center e Help Desk",
+   "unita": "Percentuale",
+   "periodo": "Durata del servizio",
+   "frequenza": "mensile",
+   "soglia": "TRCH ≥ 95%",
+   "azioni": "1 Rilievo per ogni punto percentuale inferiore rispetto ai valori di soglia che andrà ad incrementare l’indicatore RLSA.",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "TPAC",
+   "nome": "Tempestività di presa in carico delle richieste nell’ambito dei servizi accessori",
+   "gruppo": "Servizi Accessori",
+   "aspetto": "Tempestività di presa in carico delle richieste",
+   "unita": "Percentuale",
+   "periodo": "Durata del servizio",
+   "frequenza": "mensile",
+   "soglia": "TPAC (T_ottimale= 2 ore lavorative) ≥ 90% e TPAC (T_ottimale= 4 ore lavorative) = 100%",
+   "azioni": "1 Rilievo per ogni punto percentuale inferiore rispetto ai valori di soglia che andrà ad incrementare l’indicatore RLSA.",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "TRAC",
+   "nome": "Tempestività di risoluzione delle richieste nell’ambito dei servizi accessori",
+   "gruppo": "Servizi Accessori",
+   "aspetto": "Tempestività di risoluzione delle richieste",
+   "unita": "Percentuale",
+   "periodo": "Durata del servizio",
+   "frequenza": "mensile",
+   "soglia": null,
+   "azioni": "1 Rilievo per ogni punto percentuale inferiore rispetto ai valori di soglia che andrà ad incrementare l’indicatore RLSA.",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "RLSA",
+   "nome": "Rilievi sui servizi accessori",
+   "gruppo": "Servizi Accessori",
+   "aspetto": "Numero di rilievi emessi per non conformità inerenti ai servizi accessori",
+   "unita": "Rilievo",
+   "periodo": "Durata del servizio",
+   "frequenza": "Mensile",
+   "soglia": "RLSA ≤ 1",
+   "azioni": "Il superamento della soglia comporta l’emissione della penale “Reiterati rilievi servizi accessori” pari all’1‰ dell’importo contrattualmente fissato per i servizi accessori del contratto esecutivo. ## Governo della fornitura",
+   "rilievo": false,
+   "quotaSospesa": false,
+   "penale": true
+  },
+  {
+   "codice": "PFI",
+   "nome": "Personale inadeguato",
+   "gruppo": "Governo della fornitura",
+   "aspetto": "Numero di risorse ritenute inadeguate dall’Amministrazione",
+   "unita": "Risorse inadeguate",
+   "periodo": "Durata del Contratto Esecutivo",
+   "frequenza": "Mensile",
+   "soglia": "PFI = 0",
+   "azioni": "Il mancato rispetto del valore di soglia comporterà l’applicazione della penale “Personale inadeguato” pari all’1‰ dell’importo contrattuale per ogni risorsa inadeguata",
+   "rilievo": false,
+   "quotaSospesa": false,
+   "penale": true
+  },
+  {
+   "codice": "TIP",
+   "nome": "Tempestività nell’inserimento di personale",
+   "gruppo": "Governo della fornitura",
+   "aspetto": "Tempo trascorso tra la richiesta della Amministrazione e l’effettivo inserimento/sostituzione della risorsa richiesta.",
+   "unita": "Giorni lavorativi",
+   "periodo": "Durata della fornitura",
+   "frequenza": "Ad evento (dopo ogni inserimento/sostituzione)",
+   "soglia": "TIP < =5",
+   "azioni": "Il mancato rispetto del valore di soglia comporterà un rilievo RLFN sulla fornitura per ogni ritardo di 1 giorno lavorativo rispetto al valore di soglia.",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "RSCT",
+   "nome": "Rispetto di una scadenza contrattuale",
+   "gruppo": "Governo della fornitura",
+   "aspetto": "Rispetto di una scadenza contrattuale",
+   "unita": "Giorni lavorativi",
+   "periodo": "Durata della fornitura",
+   "frequenza": "Mensile",
+   "soglia": "RSCT <= 0",
+   "azioni": "Per ogni 5 giorni lavorativi o frazione eccedenti il valore di soglia l’Amministrazione applicherà la penale “Slittamento di una scadenza contrattuale” pari all’1‰ dell’importo contrattuale. A titolo di esempio: RSCT = 6, comporterà l’applicazione di una penale pari alla somma di 1‰ per il primo giorno e di un altro 1‰ gli altri 5 giorni di ritardo. I ritardi sull’Offerta Tecnica devono essere segnalati al Comitato di monitoraggio e controllo.",
+   "rilievo": false,
+   "quotaSospesa": false,
+   "penale": true
+  },
+  {
+   "codice": "MAPP",
+   "nome": "Mancata Approvazione di un Artefatto della Fornitura",
+   "gruppo": "Governo della fornitura",
+   "aspetto": "Inadeguatezza o incompletezza dell’Artefatto da Approvare",
+   "unita": "Numero",
+   "periodo": "Durata del Contratto Esecutivo",
+   "frequenza": "Ad evento",
+   "soglia": "MAPP= 0",
+   "azioni": "Il superamento del valore di soglia comporta il non superamento della milestone associata. Eventuali slittamenti delle milestone sono imputati al fornitore con l’applicazione delle sanzioni previste per l’obiettivo/ servizio. Alla seconda mancata approvazione del medesimo Artefatto l’Amministrazione applicherà la penale “Reiterato Rigetto di Artefatti/Deliverable” pari all’1‰ dell’importo contrattuale.",
+   "rilievo": false,
+   "quotaSospesa": false,
+   "penale": true
+  },
+  {
+   "codice": "VQF",
+   "nome": "Valutazione Qualità della Fornitura",
+   "gruppo": "Governo della fornitura",
+   "aspetto": "La percezione della qualità della fornitura e il grado di soddisfazione degli utenti come espressione della facilità d’uso complessiva dei servizi, misurata rilevando dagli strumenti di feedback le risposte fornite.",
+   "unita": "Percentuale",
+   "periodo": "Semestre precedente la rilevazione",
+   "frequenza": "Semestrale",
+   "soglia": "SUT >= 75%",
+   "azioni": "Il mancato rispetto del valore di soglia comporterà un rilievo RLFN per ogni 5 punti percentuali inferiori alla soglia.",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "RSER",
+   "nome": "Impegni assunti in offerta tecnica",
+   "gruppo": "Governo della fornitura",
+   "aspetto": "Numero di impegni assunti dal Fornitore in offerta tecnica non adempiuti",
+   "unita": "Impegno",
+   "periodo": "Trimestre precedente la rilevazione",
+   "frequenza": "Trimestrale",
+   "soglia": "RSER = 0",
+   "azioni": "Per ogni rilievo di scostamento rispetto al valore soglia l’Amministrazione applicherà la penale “Impegni assunti in offerta tecnica”, pari all’1 per mille dell’importo del Contratto Esecutivo. Applicazione Amministrazione Contraente",
+   "rilievo": false,
+   "quotaSospesa": false,
+   "penale": true
+  },
+  {
+   "codice": "MIDG",
+   "nome": "Monitoraggio indicatori di digitalizzazione",
+   "gruppo": "Governo della fornitura",
+   "aspetto": "Rispetto della scadenza di rilevazione degli indicatori di digitalizzazione",
+   "unita": "Giorni lavorativi",
+   "periodo": "Durata della fornitura",
+   "frequenza": "Trimestrale",
+   "soglia": "MIDG <= 0",
+   "azioni": "Il mancato rispetto del valore di soglia comporterà un rilievo RLFN. L’applicazione del rilievo non solleva il Fornitore dall’obbligo dell’adempimento.",
+   "rilievo": true,
+   "quotaSospesa": false,
+   "penale": false
+  },
+  {
+   "codice": "TAI",
+   "nome": "Tempo di Attivazione degli Interventi",
+   "gruppo": "Governo della fornitura",
+   "aspetto": "Il tempo di attivazione degli interventi a partire dalla richiesta dell’Amministrazione",
+   "unita": "Giorni lavorativi",
+   "periodo": "Durata della fornitura",
+   "frequenza": "mensile",
+   "soglia": "Per interventi pianificati nel Piano di Lavoro Generale TAI = 0 Negli altri casi TAI <= 10 giorni lavorativi per servizi realizzativi",
+   "azioni": "Per ogni 5 giorni lavorativi o frazione eccedenti il valore di soglia l’Amministrazione applicherà la penale “Ritardo nell’attivazione intervento” pari all’1‰ dell’importo contrattuale. A titolo di esempio: TAI = 11, comporterà l’applicazione di una penale pari alla somma di 1‰ per il primo giorno e di un altro 1‰ per gli altri 5 giorni di ritardo.",
+   "rilievo": false,
+   "quotaSospesa": false,
+   "penale": true
+  }
+ ],
+ "profili": [
+  {
+   "profilo": "Business Information Manager",
+   "titoloDiStudio": "Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente",
+   "anzianita": "Minimo 10 anni, di cui almeno 6 nella funzione",
+   "competenzeECF": [
+    {
+     "codice": "A.1.",
+     "nome": "IS and Business Strategy Alignment",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "A.3.",
+     "nome": "Business Plan Development",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "E.4.",
+     "nome": "Relationship Management",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "E.7.",
+     "nome": "Business Change Management",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "E.9.",
+     "nome": "IS Governance",
+     "livello": "Livello 4"
+    }
+   ],
+   "certificazioni": "Ciascun Business Information Manager deve possedere almeno una certificazione per ognuno dei seguenti gruppi: Project Management: PRINCE2®, PMI/PMP, IPMA, ISIPM, UNI 11648;"
+  },
+  {
+   "profilo": "Project Manager",
+   "titoloDiStudio": "Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 8 anni, di cui almeno 4 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.4.",
+     "nome": "Product/Service Planning",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "E.2.",
+     "nome": "Project and Portfolio Management",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "E.3.",
+     "nome": "Risk Management",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.4.",
+     "nome": "Relationship Management",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.7.",
+     "nome": "Business Change Management",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "Ciascun Project Manager deve possedere almeno una certificazione per ognuno dei seguenti gruppi: Project Management: PRINCE2®, PMI/PMP, IPMA, ISIPM, UNI 11648;"
+  },
+  {
+   "profilo": "Cloud Application Architect",
+   "titoloDiStudio": "Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 8 anni, di cui almeno 4 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.1.",
+     "nome": "IS and Business Strategy Alignment",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "A.3.",
+     "nome": "Business Plan Development",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "A.5.",
+     "nome": "Architecture Design",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "A.7.",
+     "nome": "Technology Trend Monitoring",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "B.2.",
+     "nome": "Component Integration",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "B.6.",
+     "nome": "Systems Engineering",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "E.8.",
+     "nome": "Information Security Management",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "Ciascun Cloud Application Architect deve possedere almeno una delle seguenti certificazioni in ambito cloud: Arcitura Cloud Certified Professional (CCP), ISC2 CCSP Certified Cloud Security Professional, CompTIA Cloud +, Cloud Credential Council (CTA-Cloud Technology Associate/PCA-Professional Cloud Administrator/ PCSM-Professional Cloud Service Manager/PCSA-Professional Cloud Solutions Architect). Almeno un Cloud Application Architect per contratto esecutivo dovrà disporre di una certificazione sulla piattaforma Cloud utilizzata dall’Amministrazione, come di seguito riportato:"
+  },
+  {
+   "profilo": "Cloud Application Specialist",
+   "titoloDiStudio": "Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 6 anni, di cui almeno 3 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.5.",
+     "nome": "Architecture Design",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "A.7.",
+     "nome": "Technology Trend Monitoring",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "C.2.",
+     "nome": "Change Support",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "C.3.",
+     "nome": "Service Delivery",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "D.11.",
+     "nome": "Needs Identification",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.2.",
+     "nome": "Component Integration",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.6.",
+     "nome": "Systems Engineering",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "Ciascun Cloud Application Specialist deve possedere almeno una delle seguenti certificazioni in ambito cloud: ISC2 Certified Cloud Security Professional (CCSP)/Arcitura Cloud Certified Professional (CCP), CompTIA Cloud Essential+, Cloud Credential Council (CTA-Cloud Technology Associate/PCSM-Professional Cloud Service Manager/ PCSA-Professional Cloud Solution Architect)."
+  },
+  {
+   "profilo": "Cloud Security Specialist",
+   "titoloDiStudio": "Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 8 anni, di cui almeno 5 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.7.",
+     "nome": "Technology Trend Monitoring",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "A.9.",
+     "nome": "Innovating",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "C.2.",
+     "nome": "Change Support",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "D.1.",
+     "nome": "Information Security Strategy Development",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "D.3.",
+     "nome": "Education and Training Provision",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.3.",
+     "nome": "Risk Management",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.8.",
+     "nome": "Information Security Management",
+     "livello": "Livello 4"
+    }
+   ],
+   "certificazioni": "Ciascun Cloud Security Specialist deve possedere almeno una delle seguenti certificazioni in ambito sicurezza: ISC2 CCSP Certified Cloud Security Professional/ CISSP - Certified Information Systems Security Professional, CompTIA Security+, DevOps Institute DevOps Engineering Foundation/DevOps Leader/DevSecOps Foundation/DevSecOps Practitioner/Site Reliability Engineering Foundation/Site Reliability Engineering Practitioner, EC-Council Certified Ethical Hacker (CEH), ISACA CISM (Certified Information Security Manager)/CRISC (Certified in Risk and Information Systems Control)."
+  },
+  {
+   "profilo": "Devsecops Expert",
+   "titoloDiStudio": "Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 8 anni, di cui almeno 4 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "B.1.",
+     "nome": "Application Development",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.2.",
+     "nome": "Component Integration",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "B.3.",
+     "nome": "Testing",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "B.4.",
+     "nome": "Solution Deployment",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "C.2.",
+     "nome": "Change Support",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "Ciascun DevSecOps Expert deve possedere almeno una delle seguenti certificazioni in ambito devops: EXIN DevOps Master/EXIN DevOps Professional."
+  },
+  {
+   "profilo": "Ux Designer",
+   "titoloDiStudio": "Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 6 anni, di cui almeno 3 anni nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.1.",
+     "nome": "IS and Business Strategy Alignment",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "A.7.",
+     "nome": "Technology Trend Monitoring",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "A.9.",
+     "nome": "Innovating",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "D.5.",
+     "nome": "Sales Proposal Development",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "D.10.",
+     "nome": "Information and Knowledge Management",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "D.12.",
+     "nome": "Digital Marketing",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "- Titolo di studio Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente."
+  },
+  {
+   "profilo": "Enterprise Architect",
+   "titoloDiStudio": "Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 10 anni, di cui almeno 6 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.1.",
+     "nome": "IS and Business Strategy Alignment",
+     "livello": "Livello 5"
+    },
+    {
+     "codice": "A.3.",
+     "nome": "Business Plan Development",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "A.5.",
+     "nome": "Architecture Design",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "A.7.",
+     "nome": "Technology Trend Monitoring",
+     "livello": "Livello 5"
+    },
+    {
+     "codice": "E.8.",
+     "nome": "Information Security Management",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "Ciascun Enterprise Architect deve possedere almeno una certificazione per ognuno dei seguenti gruppi: Architetture Enterprise: TOGAF, Open Certified Architect Master."
+  },
+  {
+   "profilo": "Data Scientist",
+   "titoloDiStudio": "Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 8 anni, di cui almeno 4 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.7.",
+     "nome": "Technology Trend Monitoring",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "A.9.",
+     "nome": "Innovating",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "D.10.",
+     "nome": "Information and Knowledge Management",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "D.11.",
+     "nome": "Needs Identification",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.1.",
+     "nome": "Forecast Development",
+     "livello": "Livello 4"
+    }
+   ],
+   "certificazioni": "Almeno un Data Scientist per contratto esecutivo dovrà disporre di una certificazione sui prodotti e le tecnologie utilizzate dall’Amministrazione. Titolo di studio Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente."
+  },
+  {
+   "profilo": "Quality Assurance Manager",
+   "titoloDiStudio": "Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 8 anni, di cui almeno 4 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "D.2.",
+     "nome": "ICT Quality Strategy Development",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "E.3.",
+     "nome": "Risk Management",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.5.",
+     "nome": "Process Improvement",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.6.",
+     "nome": "ICT Quality Management",
+     "livello": "Livello 4"
+    }
+   ],
+   "certificazioni": "Ciascun Quality Assurance Manager deve possedere tutte le seguenti certificazioni: Certificazione IFPUG CFPS v4.3.1."
+  },
+  {
+   "profilo": "Digital Consultant",
+   "titoloDiStudio": "Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 8 anni, di cui almeno 4 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.7.",
+     "nome": "Technology Trend Monitoring",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "A.9.",
+     "nome": "Innovating",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "D.11.",
+     "nome": "Needs Identification",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.3.",
+     "nome": "Risk Management",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.7.",
+     "nome": "Business Change Management",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "- Titolo di studio Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente."
+  },
+  {
+   "profilo": "Business Analyst",
+   "titoloDiStudio": "Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 8 anni, di cui almeno 5 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.1.",
+     "nome": "IS and Business Strategy Alignment",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "A.3.",
+     "nome": "Business Plan Development",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "D.10.",
+     "nome": "Information and Knowledge Management",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "D.11.",
+     "nome": "Needs Identification",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "E.5.",
+     "nome": "Process Improvement",
+     "livello": "Livello 4"
+    }
+   ],
+   "certificazioni": "Ciascun Business Analyst deve possedere almeno una certificazione per ognuno dei seguenti gruppi: IT Management Framework: ITIL 4, COBIT 2019."
+  },
+  {
+   "profilo": "Esperto Di Dominio",
+   "titoloDiStudio": "Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente e almeno un corso post-laurea (es. master, corso formativo, ecc.) nella materia di riferimento della capacità professionale (es. Economia, Legge, Comunicazione, ecc.).",
+   "anzianita": "Minimo 10 anni, di cui almeno 6 nella funzione.",
+   "competenzeECF": [],
+   "certificazioni": "Ciascun Esperto di dominio deve possedere l’iscrizione all’albo professionale (se esistente per la specifica materia di riferimento della capacità professionale). Titolo di studio Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente e almeno un corso post-laurea (es. master, corso formativo, ecc.) nella materia di riferimento della capacità professionale (es. Economia, Legge, Comunicazione, ecc.)."
+  },
+  {
+   "profilo": "System Analyst",
+   "titoloDiStudio": "Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 6 anni, di cui almeno 3 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.5.",
+     "nome": "Architecture Design",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.5.",
+     "nome": "Documentation Production",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.6.",
+     "nome": "Systems Engineering",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "E.5.",
+     "nome": "Process Improvement",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "Ciascun System Analyst deve possedere le seguenti certificazioni: ITIL v4 Foundation."
+  },
+  {
+   "profilo": "Test Specialist",
+   "titoloDiStudio": "Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 5 anni, di cui almeno 2 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "B.1.",
+     "nome": "Application Development",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.2.",
+     "nome": "Component Integration",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "B.3.",
+     "nome": "Testing",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "C.4.",
+     "nome": "Problem Management",
+     "livello": "Livello 2"
+    }
+   ],
+   "certificazioni": "Ciascun Test Specialist deve possedere almeno la seguente certificazione: ISTQB Advanced level."
+  },
+  {
+   "profilo": "Database Specialist And Administrator",
+   "titoloDiStudio": "Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 8 anni, di cui almeno 4 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.6.",
+     "nome": "Application Design",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.1.",
+     "nome": "Application Development",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.2.",
+     "nome": "Component Integration",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "C.2.",
+     "nome": "Change Support",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "D.10.",
+     "nome": "Information and Knowledge Management",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "E.8.",
+     "nome": "Information Security Management",
+     "livello": "Livello 4"
+    }
+   ],
+   "certificazioni": "Almeno un Database Specialist and Administrator per contratto esecutivo dovrà disporre della certificazione sulla piattaforma DBMS utilizzata dall’Amministrazione. Di seguito le principali certificazioni: Oracle: Oracle Database Certified Associate (OCA)/Oracle Database Certified Professional (OCP)/Oracle Certified Master (OCM)."
+  },
+  {
+   "profilo": "Systems And Network Administrator",
+   "titoloDiStudio": "Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 8 anni, di cui almeno 4 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.6.",
+     "nome": "Application Design",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.2.",
+     "nome": "Component Integration",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.3.",
+     "nome": "Testing",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "C.2.",
+     "nome": "Change Support",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "C.4.",
+     "nome": "Problem Management",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "D.8.",
+     "nome": "Contract Management",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.8.",
+     "nome": "Information Security Management",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "Almeno un System and Network Administrator per contratto esecutivo deve possedere una certificazione per i prodotti e/o le tecnologie richieste dall’Amministrazione. Titolo di studio Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente."
+  },
+  {
+   "profilo": "Developer/ Cloud Developer/ Front-End Developer",
+   "titoloDiStudio": "Diploma di scuola media superiore o cultura equivalente o cultura equivalente.",
+   "anzianita": "Minimo 3 anni nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "B.1.",
+     "nome": "Application Development",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.2.",
+     "nome": "Component Integration",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.3.",
+     "nome": "Testing",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.4.",
+     "nome": "Solution Deployment",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "C.2.",
+     "nome": "Change Support",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "Ciascun Developer/ Cloud/ Front-End Developer deve possedere almeno una certificazione per linguaggi di programmazione maggiormente diffusi (JAVA, PHP, .NET, ecc.) ed in uso presso l’Amministrazione. Titolo di studio Diploma di scuola media superiore o cultura equivalente o cultura equivalente."
+  },
+  {
+   "profilo": "Ict Consultant Senior",
+   "titoloDiStudio": "Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 8 anni, di cui almeno 4 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.5.",
+     "nome": "Architecture Design",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "A.7.",
+     "nome": "Technology Trend Monitoring",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "A.9.",
+     "nome": "Innovating",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "B.2.",
+     "nome": "Component Integration",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "B.6.",
+     "nome": "Systems Engineering",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "E.3.",
+     "nome": "Risk Management",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.8.",
+     "nome": "Information Security Management",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "Ciascun ICT Consultant Senior deve possedere almeno una certificazione, superiore al livello base, per il prodotto e/o la tecnologia richiesta dall’Amministrazione nel contratto esecutivo. Titolo di studio Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente."
+  },
+  {
+   "profilo": "Ict Consultant",
+   "titoloDiStudio": "Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 4 anni, di cui almeno 2 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.5.",
+     "nome": "Architecture Design",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "A.7.",
+     "nome": "Technology Trend Monitoring",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "A.9.",
+     "nome": "Innovating",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.2.",
+     "nome": "Component Integration",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.6.",
+     "nome": "Systems Engineering",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.3.",
+     "nome": "Risk Management",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "E.8.",
+     "nome": "Information Security Management",
+     "livello": "Livello 2"
+    }
+   ],
+   "certificazioni": "Ciascun ICT Consultant deve possedere almeno una certificazione per il prodotto e/o la tecnologia richiesta dall’Amministrazione nel contratto esecutivo. Titolo di studio Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente."
+  },
+  {
+   "profilo": "Digital Media Specialist/Mobile Media Specialist",
+   "titoloDiStudio": "Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 6 anni, di cui almeno 4 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.6.",
+     "nome": "Application Design",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.1.",
+     "nome": "Application Development",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.3.",
+     "nome": "Testing",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "B.4.",
+     "nome": "Solution Deployment",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "D.12.",
+     "nome": "Digital Marketing",
+     "livello": "Livello 2"
+    }
+   ],
+   "certificazioni": "- Titolo di studio Laurea triennale, specialistica o vecchio ordinamento o cultura equivalente."
+  },
+  {
+   "profilo": "Digital Media Specialist - Publishing",
+   "titoloDiStudio": "Diploma di scuola media superiore o cultura equivalente.",
+   "anzianita": "Minimo 3 anni, di cui almeno 2 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.6.",
+     "nome": "Application Design",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "B.1.",
+     "nome": "Application Development",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "B.3.",
+     "nome": "Testing",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "B.4.",
+     "nome": "Solution Deployment",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "D.12.",
+     "nome": "Digital Marketing",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "- Titolo di studio Diploma di scuola media superiore o cultura equivalente."
+  },
+  {
+   "profilo": "Service Desk Agent",
+   "titoloDiStudio": "Diploma di scuola media superiore o cultura equivalente.",
+   "anzianita": "Minimo 3 anni, di cui almeno 1 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "C.1.",
+     "nome": "User Support",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "C.2.",
+     "nome": "Change Support",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "C.3.",
+     "nome": "Service Delivery",
+     "livello": "Livello 1"
+    },
+    {
+     "codice": "C.4.",
+     "nome": "Problem Management",
+     "livello": "Livello 2"
+    }
+   ],
+   "certificazioni": "- Titolo di studio Diploma di scuola media superiore o cultura equivalente."
+  },
+  {
+   "profilo": "Ict Security Specialist",
+   "titoloDiStudio": "Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente.",
+   "anzianita": "Minimo 8 anni, di cui almeno 5 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.7.",
+     "nome": "Technology Trend Monitoring",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "A.9.",
+     "nome": "Innovating",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "C.2.",
+     "nome": "Change Support",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "D.1.",
+     "nome": "Information Security Strategy Development",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "D.3.",
+     "nome": "Education and Training Provision",
+     "livello": "Livello 4"
+    },
+    {
+     "codice": "E.3.",
+     "nome": "Risk Management",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.8.",
+     "nome": "Information Security Management",
+     "livello": "Livello 4"
+    }
+   ],
+   "certificazioni": "- Titolo di studio Laurea magistrale, specialistica o vecchio ordinamento o cultura equivalente."
+  },
+  {
+   "profilo": "System Specialist",
+   "titoloDiStudio": "Laurea triennale o cultura equivalente.",
+   "anzianita": "Minimo 6 anni, di cui almeno 3 nella funzione.",
+   "competenzeECF": [
+    {
+     "codice": "A.6.",
+     "nome": "Application Design",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "B.2.",
+     "nome": "Component Integration",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "C.2.",
+     "nome": "Change Support",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "C.4.",
+     "nome": "Problem Management",
+     "livello": "Livello 3"
+    },
+    {
+     "codice": "E.8.",
+     "nome": "Information Security Management",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "- Titolo di studio Laurea triennale o cultura equivalente."
+  },
+  {
+   "profilo": "Operatore Data Entry",
+   "titoloDiStudio": "Diploma di scuola secondaria di II grado o cultura equivalente-",
+   "anzianita": "Minimo 3 anni-",
+   "competenzeECF": [
+    {
+     "codice": "C.1.",
+     "nome": "User Support",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "C.2.",
+     "nome": "Change Support",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "D.7.",
+     "nome": "Data Science and Analytics",
+     "livello": "Livello 2"
+    },
+    {
+     "codice": "D.10.",
+     "nome": "Information and Knowledge Management",
+     "livello": "Livello 3"
+    }
+   ],
+   "certificazioni": "- Titolo di studio Diploma di scuola secondaria di II grado o cultura equivalente-"
+  },
+  {
+   "profilo": "E-Learning Specialist",
+   "titoloDiStudio": "Laurea triennale o cultura equivalente.",
+   "anzianita": "Minimo 10 anni, di cui almeno 5 nella funzione.",
+   "competenzeECF": [],
+   "certificazioni": "Almeno un E-learning Specialist per contratto esecutivo deve possedere una certificazione per la piattaforma LMS richiesta dall’Amministrazione. Titolo di studio Laurea triennale o cultura equivalente."
+  }
+ ],
+ "glossarioBase": {
+  "AQ": "Accordo Quadro",
+  "CE": "Contratto Esecutivo",
+  "GG/PP": "Giorni Persona",
+  "OT": "Offerta Tecnica",
+  "RTI": "Raggruppamento Temporaneo di Imprese",
+  "RUAC del CE": "Responsabile Unico delle attività contrattuali relativo al Contratto Esecutivo",
+  "ODA": "Ordine di Acquisto",
+  "PdF": "Piano dei Fabbisogni",
+  "PO": "Piano Operativo",
+  "SAC": "Servizi Applicativi in ottica Cloud"
+ }
+}
