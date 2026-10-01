@@ -1,8 +1,10 @@
 'use strict';
 // Cippi: scrittura di una presentazione PowerPoint a partire da quella di origine (o da un modello).
 //
-// build(sorgente, slides) -> Buffer .pptx
-//   slides = [{ src: numero della slide di origine (1..), texts: { <id forma>: ['riga', { text, lvl }] } }]
+// build(sorgente, slides, modifiche) -> Buffer .pptx
+//   slides = [{ src: numero della slide di origine (1..), texts: { <id forma>: ['riga', { text, lvl }] },
+//              cells: { <id tabella>: { "riga,colonna": ['riga di testo'] } }, tableRows: { <id tabella>: [{ after, cells }] } }]
+//   modifiche = { replace: [{ find, replace, matchCase, whole }] } applicate a layout e master (piè di pagina, loghi con testo)
 //   - l'ordine dell'elenco e' l'ordine della nuova presentazione;
 //   - una slide di origine non elencata viene tolta (con le sue note);
 //   - una slide elencata due volte viene duplicata (per i documenti nati da un modello);
@@ -11,6 +13,7 @@
 // con la stessa grafica.
 const posix = require('node:path').posix;
 const { readZip, writeZip } = require('../celle/zip');
+const E = require('./pptx-edit');
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const relsOf = (part) => posix.join(posix.dirname(part), '_rels', posix.basename(part) + '.rels');
@@ -61,7 +64,8 @@ function replaceShapeText(xml, id, lines) {
   return xml.slice(0, start) + newSp + xml.slice(end);
 }
 
-function build(srcBuf, slides) {
+function build(srcBuf, slides, edits = {}) {
+  const replaces = Array.isArray(edits && edits.replace) ? edits.replace.filter((r) => r && r.find) : [];
   const zip = readZip(srcBuf);
   const files = new Map([...zip].map(([k, f]) => [k, f]));
   const txt = (name) => (files.has(name) ? (typeof files.get(name) === 'function' ? files.get(name)().toString('utf8') : files.get(name).toString('utf8')) : null);
@@ -102,6 +106,13 @@ function build(srcBuf, slides) {
     if (s.texts && Object.keys(s.texts).length) {
       let x = txt(part);
       for (const [id, lines] of Object.entries(s.texts)) if (Array.isArray(lines)) x = replaceShapeText(x, id, lines);
+      put(part, x);
+    }
+    // tabelle: testo delle celle e righe nuove (clonate da una riga esistente)
+    if ((s.cells && Object.keys(s.cells).length) || (s.tableRows && Object.keys(s.tableRows).length)) {
+      let x = txt(part);
+      for (const [fid, cells] of Object.entries(s.cells || {})) x = E.setTableCells(x, fid, cells);
+      for (const [fid, rows] of Object.entries(s.tableRows || {})) if (Array.isArray(rows)) x = E.addTableRows(x, fid, rows);
       put(part, x);
     }
     order.push(entry);
@@ -147,12 +158,22 @@ function build(srcBuf, slides) {
   put('[Content_Types].xml', ct);
   const app = txt('docProps/app.xml');
   if (app) put('docProps/app.xml', app.replace(/<Slides>\d+<\/Slides>/, `<Slides>${order.length}</Slides>`));
+  // trova e sostituisci nei layout e nei master (piè di pagina, scritte fisse): le slide hanno gia' i testi nuovi
+  if (replaces.length) {
+    for (const name of [...files.keys()].filter((k) => /^ppt\/(slideLayouts|slideMasters)\/[^/]+\.xml$/.test(k))) {
+      let x = txt(name); let changed = false;
+      for (const r of replaces) { const out = E.replaceText(x, r.find, r.replace, r); if (out.count) { x = out.xml; changed = true; } }
+      if (changed) put(name, x);
+    }
+  }
   // il registro delle revisioni di PowerPoint cita slide che possono non esistere piu': non serve al file
   for (const k of [...files.keys()]) if (/^ppt\/changesInfos\//.test(k)) files.delete(k);
   if (txt(presRelsName).includes('changesInfo')) put(presRelsName, relsXml(keptRels.filter((r) => !/changesInfo/.test(r.Type))));
   ct = txt('[Content_Types].xml').replace(/<Override PartName="\/ppt\/changesInfos\/[^"]*"[^>]*\/>/g, '');
   put('[Content_Types].xml', ct);
 
+  // via i media che nessuna slide usa piu'; contatori di slide e note aggiornati
+  E.cleanPackage(files);
   const entries = [];
   // [Content_Types].xml per primo, come fa PowerPoint
   const names = [...files.keys()].sort((a, b) => (a === '[Content_Types].xml' ? -1 : b === '[Content_Types].xml' ? 1 : 0));

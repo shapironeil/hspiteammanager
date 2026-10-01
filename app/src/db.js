@@ -319,6 +319,10 @@ const MIGRATIONS = [
     PRIMARY KEY (project_id, term)
   );
   `,
+  // 10 - Cippi: modifiche a livello di documento (trova e sostituisci anche nei layout: piè di pagina, scritte fisse)
+  `
+  ALTER TABLE cippi_docs ADD COLUMN edits TEXT NOT NULL DEFAULT '{}';
+  `,
 ];
 
 function migrate() {

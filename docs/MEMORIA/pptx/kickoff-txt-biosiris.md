@@ -70,17 +70,22 @@ Con 1+2 il file è una presentazione di questa famiglia (kick-off, SAL, chiusura
 | Carattere di prova "FT Habit Trial", caratteri fuori tema | slide 8–11 | controllo "caratteri non standard" |
 | Testi che sforano i riquadri | 5, 7 (intestazioni lunghe) | controllo "testo che non entra" |
 
-## 6. Cosa fa già Cippi su questo file (misurato il 01/10/2026)
+## 6. Cosa fa Cippi su questo file
 
-- Legge tutto in **0,1 s**: 13 slide, tema, caratteri, 12 layout, forme, immagini (PNG e SVG), tabella (testi), note.
-- Tipi riconosciuti: indice ✓, tabella ✓, 4 schede ✓ (7–10). Sbagliati: slide 1 "testo" (è la copertina), 5 "schema", 6, 11 e 12 "testo" (sono schede e masterplan).
-- Sezioni: una sola ("Apertura"): **non legge le sezioni native**.
-- Indice: trovato con 11 voci, ma 5 **falsi avvisi** "voce senza slide" (le sotto-voci e i titoli "Ambito - X"), più "manca una slide di titolo" (falso).
-- Blocchi: ordine di lettura buono; il piè di pagina e la data contano come blocchi; le pillole sono "paragrafo" e non "intestazione"; la tabella disegnata resta forme sciolte.
-- Glossario: 16 sigle, 5 con significato (PSR, PSP, TIC, DSS, OMS); "FINALITÀ" letta come "FINALIT"; BIOSIRIS non spiegato (8 lettere); PagoPA/AppIO non visti.
-- Anteprima nel browser: fedele (colori, posizioni, SVG, Gantt), ma senza loghi/numero slide del layout, tabella senza stile né celle unite, qualche intestazione che sfora per il carattere sostituito, quadrati `custGeom` disegnati come rettangoli.
-- Esportazione `.pptx` dopo riordino/duplicazione/eliminazione: si riapre, ma lascia **3 immagini orfane** (`image11.png`, `image12.svg`, `image17.svg`) e non aggiorna `Notes`/`TitlesOfParts` in `app.xml`.
-- Punteggio 77 %, abbassato dai falsi avvisi.
+**Con Cippi 0.1.0 (prima dell'analisi):** 13 slide lette in 0,1 s; tipi sbagliati in 5 casi (copertina come testo, schede come testo o schema, masterplan come testo); una sola sezione; 5 falsi avvisi sull'indice più "manca la slide di titolo"; piè di pagina e data come blocchi; pillole come paragrafi; tabella disegnata come forme sciolte; tabella vera senza celle unite né stile; glossario con "FINALIT" e senza BIOSIRIS, PagoPA, AppIO; anteprima senza loghi del layout e senza stile della tabella; esportazione con 3 immagini orfane. Punteggio 77%.
+
+**Con Cippi 0.2.0 (dopo le funzioni aggiunte il 01/10/2026, vedi `docs/REPORT/2026-10-01-cippi-kickoff.md`):**
+
+- 13 tipi giusti su 13: copertina, indice, 2 testo, 7 schede, masterplan, tabella.
+- 7 sezioni native (Copertina, Indice, Introduzione e contesto, Obiettivi, Ambito, Masterplan, Sintesi contratto esecutivo).
+- Nessun falso avviso; controlli utili: "Totale verificato" nella sintesi del contratto (3.941.900 €), testo ridotto al 90% in 4 slide. Punteggio **97%**.
+- Pillole come intestazioni con il loro colore; la tabella disegnata delle schede ambito letta come tabella FUNZIONALITÀ · PIATTAFORMA ABILITANTE · FINALITÀ.
+- Masterplan: piano da 2026-10 a 2028-12, 6 componenti e 22 attività con i periodi (per esempio Gestione informatizzata dei vivai da 2027-02 a 2028-12).
+- Glossario: 30 sigle, 26 spiegate (BIOSIRIS, PSR, PSP, TIC, DSS, OMS dal documento; SPID/CIE, PagoPA, AppIO, PDND, SEND, FESR, SAL, FTE... dal glossario della PA).
+- Documento: autrice, 2 co-autori, azienda TXT e-solutions, ultime modifiche alle slide 5, 6, 7 e 12 del 30/09/2026, 1976 parole.
+- Riconosciuto come "kick-off di progetto" al 78% rispetto a questa scheda.
+- Anteprima con loghi e barre del layout, tabella con celle unite e stile, forme esagonali degli obiettivi disegnate.
+- Esportazione con riordino, cella e riga di tabella aggiunte, piè di pagina sostituito: file valido, nessun media orfano.
 
 ## 7. Funzioni di Cippi da usare con un file di questo tipo
 
@@ -91,4 +96,4 @@ Con 1+2 il file è una presentazione di questa famiglia (kick-off, SAL, chiusura
 5. Punti chiave: i grassetti della slide 3 (contesto), importo e durata, le piattaforme abilitanti per ambito, la nota del masterplan ("vista di alto livello…").
 6. Appunti accanto al documento: il piano di lavoro Excel (PdL) dello stesso progetto, da cui nasce il masterplan.
 
-Le funzioni mancanti e la loro priorità sono nella proposta inviata il 01/10/2026 (da approvare prima di toccare il codice).
+Le funzioni proposte il 01/10/2026 sono state approvate e realizzate in Cippi 0.2.0 (`docs/REPORT/2026-10-01-cippi-kickoff.md`).

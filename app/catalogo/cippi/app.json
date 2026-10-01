@@ -1,22 +1,40 @@
 {
   "id": "cippi",
   "name": "Cippi",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "released": "2026-10-01",
   "summary": "Presentazioni PowerPoint del team: le legge, propone i punti chiave e i controlli, le rifà da un modello.",
-  "description": "Importa un .pptx e ne ricostruisce la struttura: sezioni dall'indice, tipo di ogni slide, blocchi nell'ordine di lettura con la loro gerarchia, flussi a corsie (attori, step, decisioni Si/No, sistemi, rimandi), legenda dei colori, sigle. Modalità Revisione con pannello strumenti, visione e punti chiave; modifica dei testi e dell'ordine; modelli riutilizzabili; esportazione in .pptx con la stessa grafica.",
+  "description": "Importa un .pptx e ne ricostruisce la struttura: sezioni dall'indice, tipo di ogni slide, blocchi nell'ordine di lettura con la loro gerarchia, flussi a corsie (attori, step, decisioni Si/No, sistemi, rimandi), legenda dei colori, sigle. Modalità Revisione con pannello strumenti, visione e punti chiave; modifica dei testi e dell'ordine; modelli riutilizzabili; esportazione in .pptx con la stessa grafica. Legge le sezioni di PowerPoint, le schede con le pillole colorate, le tabelle (anche disegnate con le forme, con il controllo dei totali) e il masterplan a Gantt incollato come immagine; riconosce i modelli noti; trova e sostituisce in tutto il documento, piè di pagina compreso; modifica celle e righe delle tabelle.",
   "web": "/cippi/",
   "color": "#5b4fd6",
   "icon": "icon.svg",
   "minPortal": "0.8.0",
   "engine": null,
   "novita": [
-    { "version": "0.1.0", "date": "2026-10-01", "items": [
-      "Lettura delle presentazioni: tipi di slide, sezioni, ordine dei blocchi, gerarchia, flussi a corsie, legenda, sigle.",
-      "Modalità Revisione: pannello strumenti, pannello visione, punti chiave; confronto To-Be / As-Is affiancato.",
-      "Modifica di testi e ordine, salvataggio di versioni nella cartella del progetto, esportazione .pptx.",
-      "Modelli: si salvano dalla presentazione migliore, si usano per crearne di nuove e per misurare la completezza.",
-      "Sinergie: archivio in Esplora file, processi collegati a GestioneCelle, glossario del progetto, appunti accanto al documento."
-    ] }
+    {
+      "version": "0.2.0",
+      "date": "2026-10-01",
+      "items": [
+        "Sezioni lette da quelle di PowerPoint (niente slide divisorie necessarie); indice a due livelli abbinato ai titoli, senza falsi avvisi; copertina, schede e masterplan riconosciuti.",
+        "Pillole (testo sopra una forma colorata) come intestazioni con il loro colore; tabelle disegnate con le forme lette come tabelle; tabelle vere con celle unite, stile, grassetti e controllo \"il totale torna\".",
+        "Masterplan: il Gantt incollato come immagine SVG diventa un piano con componenti, attività e periodi.",
+        "Anteprima con loghi, barre e numero del layout; tabelle con lo stile; forme personalizzate disegnate dal loro percorso; testo ridotto come in PowerPoint.",
+        "Trova e sostituisci in tutto il documento (testi, tabelle, piè di pagina e layout); modifica delle celle e righe nuove nelle tabelle.",
+        "Sezione Documento: autori e co-autori, azienda, ultime modifiche per slide, caratteri usati; i modelli noti che somigliano alla presentazione (memoria in docs/MEMORIA).",
+        "Glossario della pubblica amministrazione preimpostato (SPID, PagoPA, AppIO, PDND, SEND, FESR...); sigle lunghe spiegate dal documento; niente sigle false da parole accentate.",
+        "Esportazione pulita: via le immagini non più usate, contatori aggiornati; il file passa i validatori."
+      ]
+    },
+    {
+      "version": "0.1.0",
+      "date": "2026-10-01",
+      "items": [
+        "Lettura delle presentazioni: tipi di slide, sezioni, ordine dei blocchi, gerarchia, flussi a corsie, legenda, sigle.",
+        "Modalità Revisione: pannello strumenti, pannello visione, punti chiave; confronto To-Be / As-Is affiancato.",
+        "Modifica di testi e ordine, salvataggio di versioni nella cartella del progetto, esportazione .pptx.",
+        "Modelli: si salvano dalla presentazione migliore, si usano per crearne di nuove e per misurare la completezza.",
+        "Sinergie: archivio in Esplora file, processi collegati a GestioneCelle, glossario del progetto, appunti accanto al documento."
+      ]
+    }
   ]
 }

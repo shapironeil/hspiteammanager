@@ -7,6 +7,8 @@
 const posix = require('node:path').posix;
 const { readZip } = require('../celle/zip');
 const X = require('./xml');
+const extra = require('./pptx-extra');
+const { gantt } = require('./gantt-svg');
 
 const EMU_CM = 360000;
 const relsPath = (part) => posix.join(posix.dirname(part), '_rels', posix.basename(part) + '.rels');
@@ -158,8 +160,14 @@ function shapesOf(tree, ctx, map = (r) => r, groupId = null, out = []) {
       if (s.line && !s.line.color && X.child(n, 'p:style')) s.line.color = styleColor(n, 'a:lnRef', ctx.theme);
     }
     if (kind === 'sp') {
-      s.paragraphs = paragraphs(X.child(n, 'p:txBody'), ctx.theme);
+      const txBody = X.child(n, 'p:txBody');
+      s.paragraphs = paragraphs(txBody, ctx.theme);
       s.textbox = (X.child(nv, 'p:cNvSpPr') || { attrs: {} }).attrs.txBox === '1';
+      // testo ridotto da PowerPoint per entrare nella forma (0.9 = 90%)
+      const fsc = extra.fontScaleOf(txBody);
+      if (fsc !== null && fsc < 1) s.fontScale = fsc;
+      // geometria personalizzata: percorso SVG in un riquadro 0..100, per l'anteprima
+      if (s.geom === 'custom') { const d = extra.custGeomPath(spPr); if (d) s.path = d; }
     }
     if (kind === 'cxn') {
       const cn = X.child(nv, 'p:cNvCxnSpPr');
@@ -180,6 +188,8 @@ function shapesOf(tree, ctx, map = (r) => r, groupId = null, out = []) {
       if (tbl) {
         s.kind = 'table';
         s.rows = X.children(tbl, 'a:tr').map((tr) => X.children(tr, 'a:tc').map((tc) => paragraphs(X.child(tc, 'a:txBody'), ctx.theme).map((p) => p.text).join('\n').trim()));
+        // celle unite, riempimenti, grassetti, larghezze delle colonne, stile
+        Object.assign(s, extra.tableDetail(tbl, (node) => color(node, ctx.theme), (tb) => paragraphs(tb, ctx.theme)));
       } else {
         const gd = X.find(n, 'a:graphicData');
         const uri = (gd && gd.attrs.uri) || '';
@@ -259,6 +269,24 @@ function readPptx(buf) {
   };
   const ids = X.children(X.child(pres, 'p:sldIdLst'), 'p:sldId');
   const slides = [];
+  const idToN = {}; // id della slide in presentation.xml -> numero nella presentazione
+  // forme di sfondo di layout e master (loghi, barre, numero di slide): quelle non segnaposto, una volta per layout
+  const backgrounds = {};
+  const backgroundOf = (layoutPart) => {
+    if (!layoutPart) return [];
+    if (backgrounds[layoutPart]) return backgrounds[layoutPart];
+    const ldoc = xmlOf(files, layoutPart);
+    const lrels = readRels(files, layoutPart);
+    const out = [];
+    const masterRel = Object.values(lrels).find((r) => r.type === 'slideMaster');
+    if (masterRel && !(ldoc && ldoc.attrs.showMasterSp === '0')) {
+      const mdoc = xmlOf(files, masterRel.target);
+      if (mdoc) out.push(...shapesOf(treeOf(mdoc), { theme, rels: readRels(files, masterRel.target), files }).filter((s) => !s.ph));
+    }
+    if (ldoc) out.push(...shapesOf(treeOf(ldoc), { theme, rels: lrels, files }).filter((s) => !s.ph));
+    backgrounds[layoutPart] = out.filter((s) => s.x !== undefined && !s.hidden && s.kind !== 'group').map(pct);
+    return backgrounds[layoutPart];
+  };
   ids.forEach((sid, i) => {
     const rel = presRels[sid.attrs['r:id']];
     if (!rel) return;
@@ -277,7 +305,15 @@ function readPptx(buf) {
       notes = (body || []).flatMap((s) => (s.paragraphs || []).map((p) => p.text)).join('\n').trim();
     }
     const show = doc.attrs.show !== '0';
-    slides.push({ n: slides.length + 1, part, layout: layout.name, layoutPart: layoutRel ? layoutRel.target : null, hidden: !show, shapes, notes });
+    // un piano di progetto (Gantt) incollato come immagine SVG: i testi sono ancora leggibili
+    for (const s of shapes) {
+      if (s.kind === 'pic' && /\.svg$/i.test(s.image || '') && files.get(s.image)) {
+        try { const g = gantt(files.get(s.image)().toString('utf8')); if (g) s.gantt = g; } catch { /* SVG non leggibile: resta un'immagine */ }
+      }
+    }
+    const background = doc.attrs.showMasterSp === '0' ? [] : backgroundOf(layoutRel ? layoutRel.target : null);
+    slides.push({ n: slides.length + 1, part, layout: layout.name, layoutPart: layoutRel ? layoutRel.target : null, hidden: !show, shapes, notes, background });
+    idToN[sid.attrs.id] = slides.length;
   });
   const core = xmlOf(files, 'docProps/core.xml');
   const meta = core ? {
@@ -285,7 +321,11 @@ function readPptx(buf) {
     modifiedBy: X.text(X.find(core, 'cp:lastModifiedBy')).trim(), modified: X.text(X.find(core, 'dcterms:modified')).trim(),
   } : {};
   const layouts = [...new Set(Object.values(presRels).filter((r) => r.type === 'slideMaster').flatMap((m) => Object.values(readRels(files, m.target)).filter((r) => r.type === 'slideLayout').map((r) => readLayout(files, r.target, theme).name)))];
-  return { width: W, height: H, ratio: +(W / H).toFixed(4), widthCm: +(W / EMU_CM).toFixed(2), heightCm: +(H / EMU_CM).toFixed(2), theme, fonts, meta, layouts, slides };
+  // sezioni native di PowerPoint, metadati estesi (azienda, co-autori, revisioni) e caratteri usati davvero
+  const sections = extra.nativeSections(pres, idToN);
+  Object.assign(meta, extra.metaExtra(files, idToN));
+  const fontsUsed = extra.fontsUsed(files);
+  return { width: W, height: H, ratio: +(W / H).toFixed(4), widthCm: +(W / EMU_CM).toFixed(2), heightCm: +(H / EMU_CM).toFixed(2), theme, fonts, fontsUsed, meta, layouts, sections, slides };
 }
 
 // Un file del pacchetto (per le immagini dell'anteprima)
@@ -295,4 +335,11 @@ function mediaOf(buf, name) {
   return f ? f() : null;
 }
 
-module.exports = { readPptx, mediaOf, EMU_CM };
+// Il testo XML delle parti il cui nome corrisponde (per esempio layout e master)
+function partsXml(buf, re) {
+  const out = {};
+  for (const [name, f] of readZip(buf)) if (re.test(name)) out[name] = f().toString('utf8');
+  return out;
+}
+
+module.exports = { readPptx, mediaOf, partsXml, EMU_CM };

@@ -11,6 +11,8 @@
 // Per ogni slide: tipo (copertina, indice, divisore, testo, legenda, flusso, mappa, scheda, tabella, chiusura),
 // titolo, blocchi nell'ordine in cui si leggono con il loro livello gerarchico. Per il documento: sezioni,
 // legenda dei colori, flussi ricostruiti (grafo), glossario, punti chiave, controlli di completezza, modello.
+const S = require('./struttura');
+const { GLOSSARIO_PA, MIXED } = require('./glossario-pa');
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 const textOf = (s) => (s.paragraphs || []).map((p) => p.text).join('\n').trim();
 const oneLine = (s) => textOf(s).replace(/\s*\n\s*/g, ' ').trim();
@@ -58,7 +60,7 @@ function sameTint(a, b) {
 // ---- Testi e blocchi ------------------------------------------------------------------------
 function isSlideNumber(s) { return (s.ph && s.ph.type === 'sldNum') || /^\d{1,3}$/.test(oneLine(s)); }
 function isBack(s) { return /^(back|indietro|torna)$/i.test(oneLine(s)) && (/arrow/i.test(s.geom || '') || s.w < 8); }
-const textShapes = (slide) => slide.shapes.filter((s) => !s.hidden && s.kind === 'sp' && s.paragraphs && s.paragraphs.some((p) => p.text.trim()) && s.x !== undefined);
+const textShapes = (slide) => slide.shapes.filter((s) => !s.hidden && s.kind === 'sp' && s.paragraphs && s.paragraphs.some((p) => p.text.trim()) && s.x !== undefined && !S.skipShape(s));
 const maxSize = (s) => Math.max(0, ...(s.paragraphs || []).map((p) => p.size || 0));
 
 function findTitle(slide) {
@@ -98,22 +100,36 @@ const LEVEL = { titolo: 0, sottotitolo: 1, intestazione: 1, paragrafo: 2, elenco
 
 function blocksOf(slide, title) {
   const items = [];
+  const pills = S.pillsOf(slide); // testo trasparente sopra una forma colorata = intestazione con quel colore
   for (const s of slide.shapes) {
-    if (s.hidden || s.x === undefined) continue;
+    if (s.hidden || s.x === undefined || S.skipShape(s)) continue;
     if (s.kind === 'sp' && s.paragraphs && s.paragraphs.some((p) => p.text.trim())) {
       if (isSlideNumber(s)) continue;
       if (isBack(s)) { items.push({ id: s.id, role: 'navigazione', text: oneLine(s), x: s.x, y: s.y, w: s.w, h: s.h }); continue; }
-      const role = roleOf(s, title, slide);
-      items.push({ id: s.id, role, text: textOf(s), paragraphs: s.paragraphs.filter((p) => p.text.trim()).map((p) => ({ text: p.text, lvl: p.lvl, bold: p.bold })), x: s.x, y: s.y, w: s.w, h: s.h });
+      let role = roleOf(s, title, slide);
+      const pill = pills[s.id];
+      const ps = s.paragraphs.filter((p) => p.text.trim());
+      if (pill && colorful(pill.fill) && role !== 'titolo' && ps.length <= 2 && oneLine(s).length < 90) role = 'intestazione';
+      items.push({ id: s.id, role, text: textOf(s), paragraphs: ps.map((p) => ({ text: p.text, lvl: p.lvl, bold: p.bold })), x: s.x, y: s.y, w: s.w, h: s.h, ...(pill ? { fill: pill.fill, onShape: pill.shape } : {}) });
     } else if (s.kind === 'table') {
-      items.push({ id: s.id, role: 'tabella', rows: s.rows, text: s.rows.map((r) => r.join(' · ')).join('\n'), x: s.x, y: s.y, w: s.w, h: s.h });
+      items.push({ id: s.id, role: 'tabella', rows: s.rows, cells: s.cells || null, cols: s.cols || null, tableStyle: s.tableStyle || null, text: s.rows.map((r) => r.join(' · ')).join('\n'), x: s.x, y: s.y, w: s.w, h: s.h });
     } else if (s.kind === 'diagram') {
       items.push({ id: s.id, role: 'schema', text: (s.items || []).join('\n'), x: s.x, y: s.y, w: s.w, h: s.h });
     } else if (s.kind === 'pic' && s.w * s.h > 40) {
       items.push({ id: s.id, role: 'immagine', text: s.descr || '', image: s.image, x: s.x, y: s.y, w: s.w, h: s.h });
     }
   }
-  return readingOrder(items).map((b, i) => ({ ...b, order: i + 1, level: LEVEL[b.role] !== undefined ? LEVEL[b.role] : 2 }));
+  // tabelle disegnate con le forme (righe di caselle allineate in colonne): un blocco solo, con le celle
+  const drawn = S.drawnTables(items);
+  const kept = items.filter((b) => !drawn.used.has(b.id));
+  for (const t of drawn.tables) {
+    const byId = new Map(items.map((b) => [b.id, b]));
+    const idRows = []; let k = 0;
+    for (const r of t.rows) { idRows.push(r.map(() => t.ids[k++])); }
+    const fills = idRows.map((r) => r.map((id) => (byId.get(id) || {}).fill || null));
+    kept.push({ id: t.ids[0], role: 'tabella', drawn: true, rows: t.rows, ids: idRows, fills, header: t.header, text: t.rows.map((r) => r.join(' · ')).join('\n'), x: t.x, y: t.y, w: t.w, h: t.h });
+  }
+  return readingOrder(kept).map((b, i) => ({ ...b, order: i + 1, level: LEVEL[b.role] !== undefined ? LEVEL[b.role] : 2 }));
 }
 
 // ---- Legenda dei flussi ---------------------------------------------------------------------
@@ -244,11 +260,15 @@ function kindOf(slide, info, i, total) {
   const cxns = slide.shapes.filter((s) => s.kind === 'cxn').length;
   const title = info.title || '';
   const bigPic = pics.some((p) => p.w * p.h > 2500);
+  // copertina: il layout "Title Slide" o il segnaposto del titolo centrato, nelle prime due slide
+  if (i <= 1 && (/title slide|copertina|cover/i.test(slide.layout || '') || slide.shapes.some((s) => s.ph && s.ph.type === 'ctrTitle'))) return 'copertina';
   if (/^legenda/i.test(title) || (/legenda/i.test(words) && info.legend.length >= 2)) return 'legenda';
   if (/^(indice|agenda|sommario|index|contents)$/i.test(title) || (/index/i.test(slide.layout) && texts.some((s) => /^(indice|agenda|sommario)$/i.test(oneLine(s))))) return 'indice';
   if (info.flowTitle && cxns >= 4) return 'flusso';
   if (cxns >= 8 && texts.filter((s) => /^\d+\s*\./.test(oneLine(s))).length >= 3) return 'flusso';
   if (/process breakdown|mappa dei processi|bpb/i.test(title)) return 'mappa';
+  // piano di progetto: un Gantt letto dall'immagine SVG, oppure il titolo
+  if (pics.some((p) => p.gantt) || /masterplan|master plan|cronoprogramma|gantt|piano (di|del) (progetto|lavoro)|timeline/i.test(title)) return 'masterplan';
   if (i >= total - 3 && (/(tel|fax)\s*[:.]|sede (legale|operativa)|www\.|@\w+\./i.test(words) || (!texts.length && pics.length))) return 'chiusura';
   if (i === total - 1 && i > 2 && texts.length <= 2 && words.length < 40) return 'chiusura';
   if (i <= 1 && !texts.length && pics.length) return 'copertina';
@@ -259,9 +279,11 @@ function kindOf(slide, info, i, total) {
   if (!texts.length && pics.length) return i <= 1 ? 'copertina' : 'immagine';
   const table = slide.shapes.find((s) => s.kind === 'table');
   const heads = info.blocks.filter((b) => b.role === 'intestazione').length;
-  if (heads >= 4) return 'scheda';
+  // scheda: riquadri arrotondati con intestazioni (pillole, riquadri con icona, griglie)
+  const boxes = slide.shapes.filter((s) => s.kind === 'sp' && !s.hidden && /roundRect/i.test(s.geom || '') && !(s.paragraphs || []).some((p) => p.text.trim()));
+  if (heads >= 4 || (heads >= 2 && boxes.length >= 2) || (heads >= 1 && boxes.some((s) => s.w * s.h > 2000))) return 'scheda';
   if (table && table.w * table.h > 2500) return 'tabella';
-  if (cxns >= 6 || slide.shapes.filter((s) => /chevron|homePlate/i.test(s.geom || '')).length >= 4) return 'schema';
+  if (cxns >= 6 || slide.shapes.filter((s) => /chevron|homePlate/i.test(s.geom || '') && s.w >= 4).length >= 4) return 'schema';
   return 'testo';
 }
 
@@ -283,24 +305,30 @@ function glossaryOf(slides) {
   for (const s of slides) for (const sh of s.shapes) all.push(sh.kind === 'table' ? sh.rows.flat().join('\n') : textOf(sh));
   for (const t of all) for (const m of t.matchAll(/\b([A-Za-zÀ-ú]{2,7})\b/g)) if (/[a-zà-ú]/.test(m[1])) lower.add(m[1].toUpperCase());
   for (const t of all) {
-    for (const m of t.matchAll(/\b([A-Z][A-Z0-9]{1,6}(?:\/[A-Z]{2,6})?)\b/g)) {
+    // una sigla non ha accenti: "FINALITÀ" e' una parola in maiuscolo, non la sigla FINALIT
+    for (const m of t.matchAll(/(?<![A-Za-zÀ-ÿ])([A-Z][A-Z0-9]{1,9}(?:\/[A-Z]{2,6})?)(?![A-Za-zÀ-ÿ])/g)) {
       const k = m[1];
       // una parola qualunque scritta in maiuscolo (APERTO, ROMA) non e' una sigla
       if (STOP.has(k) || /^\d/.test(k) || (!k.includes('/') && lower.has(k))) continue;
       count.set(k, (count.get(k) || 0) + 1);
     }
-    for (const m of t.matchAll(/\b([A-Z]{2,6})\s*(?:[-–:=]|\()\s*([A-Za-zÀ-ú][^()\n.;:]{3,80})/g)) {
+    for (const k of MIXED) {
+      const n = (t.match(new RegExp(`(?<![A-Za-z])${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z])`, 'g')) || []).length;
+      if (n) count.set(k, (count.get(k) || 0) + n);
+    }
+    for (const m of t.matchAll(/\b([A-Z]{2,10})\s*(?:[-–:=]|\()\s*([A-Za-zÀ-ú][^()\n.;:]{3,80})/g)) {
       const words = m[2].replace(/\)$/, '').trim();
       const cut = words.split(/\s+/);
       for (let n = cut.length; n >= 1; n--) { const w = cut.slice(0, n).join(' '); if (fitsAcronym(m[1], w)) { if (!def.has(m[1])) def.set(m[1], w); break; } }
     }
-    for (const m of t.matchAll(/((?:[A-Za-zÀ-ú'’]+\s+){0,6}[A-Za-zÀ-ú'’]+)\s*\(([A-Z]{2,6})\)/g)) {
+    for (const m of t.matchAll(/((?:[A-Za-zÀ-ú'’]+\s+){0,8}[A-Za-zÀ-ú'’]+)\s*\(([A-Z]{2,10})\)/g)) {
       const cut = m[1].trim().split(/\s+/);
       for (let n = 1; n <= cut.length; n++) { const w = cut.slice(cut.length - n).join(' '); if (fitsAcronym(m[2], w)) { if (!def.has(m[2])) def.set(m[2], w); break; } }
     }
   }
-  return [...count.entries()].filter(([k, n]) => n >= 2 || def.has(k)).sort((a, b) => b[1] - a[1]).slice(0, 80)
-    .map(([term, n]) => ({ term, count: n, meaning: def.get(term) || '' }));
+  // sigle lunghe (oltre 6 lettere) solo se il documento le spiega; il glossario della PA propone i significati
+  return [...count.entries()].filter(([k, n]) => (n >= 2 || def.has(k) || GLOSSARIO_PA[k]) && (k.length <= 6 || def.has(k) || GLOSSARIO_PA[k])).sort((a, b) => b[1] - a[1]).slice(0, 80)
+    .map(([term, n]) => ({ term, count: n, meaning: def.get(term) || GLOSSARIO_PA[term] || '', known: !def.has(term) && !!GLOSSARIO_PA[term] }));
 }
 
 // ---- Analisi completa ------------------------------------------------------------------------
@@ -319,6 +347,8 @@ function analyze(pres) {
     const out = { n: s.n, kind, title, layout: s.layout, hidden: s.hidden, notes: s.notes, blocks };
     if (kind === 'flusso') { out.flow = flowOf(s, legend, t); out.flowInfo = info.flowTitle; }
     if (kind === 'legenda') out.legend = legendOf(s);
+    const gantt = s.shapes.find((x) => x.gantt);
+    if (gantt) out.gantt = gantt.gantt;
     if (kind === 'indice') {
       out.entries = blocks.filter((b) => !['titolo', 'immagine', 'navigazione'].includes(b.role) && !/^(indice|agenda|sommario)$/i.test(b.text)).flatMap((b) => (b.paragraphs || [{ text: b.text }]).map((p) => p.text.trim()))
         .filter((x) => x && x.length < 140).map((x) => x.replace(/^\d+[.)]\s*/, ''));
@@ -326,24 +356,27 @@ function analyze(pres) {
     return out;
   });
 
-  // Sezioni: dai divisori; l'indice dice quali ci si aspetta
+  // Sezioni: quelle native di PowerPoint se ci sono; altrimenti dai divisori, e l'indice dice quali ci si aspetta
   const index = slides.find((s) => s.kind === 'indice' && (s.entries || []).length >= 2);
-  const sections = [];
-  let cur = { title: 'Apertura', from: 1, slides: [] };
-  for (const s of slides) {
-    if (s.kind === 'divisore') {
-      if (cur.slides.length) sections.push(cur);
-      const words = s.blocks.filter((b) => b.role !== 'immagine').map((b) => b.text.replace(/\s*\n\s*/g, ' ')).filter(Boolean);
-      // la voce dell'indice piu' simile al testo del divisore (parole in comune), preferendo quelle non ancora usate
-      const used = new Set(sections.map((x) => x.title).concat(cur.title));
-      const best = index ? index.entries.map((e) => ({ e, sc: similarity(e, words.join(' ')) - (used.has(e) ? 0.2 : 0) })).sort((a, b) => b.sc - a.sc)[0] : null;
-      const match = best && best.sc >= 0.5 ? best.e : null;
-      cur = { title: match || words[0] || `Sezione ${sections.length + 1}`, subtitle: words.filter((w) => w !== (match || words[0])).join(' · '), from: s.n, slides: [] };
+  let sections = S.nativeSectionsOf(pres, slides);
+  if (!sections) {
+    sections = [];
+    let cur = { title: 'Apertura', from: 1, slides: [] };
+    for (const s of slides) {
+      if (s.kind === 'divisore') {
+        if (cur.slides.length) sections.push(cur);
+        const words = s.blocks.filter((b) => b.role !== 'immagine').map((b) => b.text.replace(/\s*\n\s*/g, ' ')).filter(Boolean);
+        // la voce dell'indice piu' simile al testo del divisore (parole in comune), preferendo quelle non ancora usate
+        const used = new Set(sections.map((x) => x.title).concat(cur.title));
+        const best = index ? index.entries.map((e) => ({ e, sc: similarity(e, words.join(' ')) - (used.has(e) ? 0.2 : 0) })).sort((a, b) => b.sc - a.sc)[0] : null;
+        const match = best && best.sc >= 0.5 ? best.e : null;
+        cur = { title: match || words[0] || `Sezione ${sections.length + 1}`, subtitle: words.filter((w) => w !== (match || words[0])).join(' · '), from: s.n, slides: [] };
+      }
+      s.section = cur.title;
+      cur.slides.push(s.n);
     }
-    s.section = cur.title;
-    cur.slides.push(s.n);
+    sections.push(cur);
   }
-  sections.push(cur);
 
   // Processi: le parti (1/3, 2/3...) dello stesso codice e variante insieme
   const processes = new Map();
@@ -389,34 +422,45 @@ function analyze(pres) {
   }
 
   const glossary = glossaryOf(pres.slides);
-  const checks = checksOf(slides, sections, index, procList);
+  const checks = checksOf(slides, sections, index, procList, pres);
   const keyPoints = keyPointsOf(slides, procList, comparisons, sections);
   const counts = {};
   for (const s of slides) counts[s.kind] = (counts[s.kind] || 0) + 1;
   return {
     meta: pres.meta, size: { width: pres.width, height: pres.height, ratio: pres.ratio, widthCm: pres.widthCm, heightCm: pres.heightCm },
-    theme: pres.theme, fonts: pres.fonts, layouts: pres.layouts,
-    slides, sections, index: index ? { slide: index.n, entries: index.entries } : null, legend, processes: procList, comparisons,
+    theme: pres.theme, fonts: pres.fonts, fontsUsed: pres.fontsUsed || [], layouts: pres.layouts,
+    slides, sections, nativeSections: !!(sections[0] && sections[0].native), index: index ? { slide: index.n, entries: index.entries } : null, legend, processes: procList, comparisons,
     glossary, checks, keyPoints, counts, score: scoreOf(checks, slides),
     reading: readingPath(slides, sections, procList, comparisons, legend, glossary),
   };
 }
 
 // ---- Controlli (completezza e coerenza) --------------------------------------------------------
-function checksOf(slides, sections, index, procs) {
+function checksOf(slides, sections, index, procs, pres) {
   const out = [];
   const add = (level, slide, text) => out.push({ level, slide, text });
+  const HOUSE = /^(copertina|cover|indice|agenda|sommario|apertura|chiusura|back ?up|allegati|appendice)$/i;
   if (!slides.some((s) => s.kind === 'titolo' || s.kind === 'copertina')) add('avviso', null, 'Manca una slide di titolo (cliente, titolo, data).');
   if (!index && slides.length > 8) add('avviso', null, 'Manca l\'indice: con più di 8 slide aiuta a orientarsi.');
   if (index) {
-    for (const e of index.entries) if (!sections.some((s) => s.title === e) && !slides.some((s) => norm(s.title) === norm(e))) add('avviso', index.slide, `Voce dell'indice senza slide: "${e}".`);
-    for (const s of sections.slice(1)) if (!index.entries.includes(s.title)) add('info', s.from, `Sezione non presente nell'indice: "${s.title}" (va bene per le sottosezioni).`);
+    for (const e of index.entries) if (!S.indexEntryFound(e, slides, sections)) add('avviso', index.slide, `Voce dell'indice senza slide: "${e}".`);
+    for (const s of sections.slice(1)) if (!HOUSE.test(s.title) && !index.entries.some((e) => norm(e) === norm(s.title))) add('info', s.from, `Sezione non presente nell'indice: "${s.title}" (va bene per le sottosezioni).`);
   }
   for (const s of slides) {
     if (!s.title && !['copertina', 'chiusura', 'divisore', 'immagine', 'titolo', 'indice'].includes(s.kind)) add('avviso', s.n, 'Slide senza titolo.');
     if (s.hidden) add('info', s.n, 'Slide nascosta: non compare in presentazione.');
   }
   if (slides.some((s) => s.kind === 'flusso') && !slides.some((s) => s.kind === 'legenda')) add('avviso', null, 'Ci sono flussi ma manca la legenda dei simboli e dei colori.');
+  // tabelle con una riga "Totale": la somma delle righe deve tornare, colonna per colonna
+  for (const s of slides) {
+    for (const b of s.blocks.filter((x) => x.role === 'tabella' && x.rows)) {
+      for (const c of S.tableTotalCheck(b.rows) || []) {
+        if (c.ok) add('info', s.n, `Totale verificato nella colonna "${c.header}": la somma delle righe torna (${c.expected.toLocaleString('it-IT')}).`);
+        else add('errore', s.n, `Totale che non torna nella colonna "${c.header}": la tabella dice ${c.expected.toLocaleString('it-IT')}, la somma delle righe fa ${c.sum.toLocaleString('it-IT')}.`);
+      }
+    }
+  }
+  if (pres) { for (const c of S.fontChecks(pres)) out.push(c); for (const c of S.overflowChecks(pres)) out.push(c); }
   // parti numerate (1/3, 2/3, 3/3)
   for (const p of procs) {
     if (p.parts > 1 && p.slides.length !== p.parts) add('errore', p.slides[0], `${p.code || ''} ${p.name}: trovate ${p.slides.length} parti su ${p.parts}.`);
@@ -473,6 +517,12 @@ function keyPointsOf(slides, procs, comparisons, sections) {
     if (p.new.length) add(p.slides[0], `${p.code || p.name}: ${p.new.length} step nuovi (${p.new.slice(0, 4).join('; ')}${p.new.length > 4 ? '; …' : ''}).`, 'novita');
     if (p.changed.length) add(p.slides[0], `${p.code || p.name}: ${p.changed.length} step modificati rispetto all'As-Is (${p.changed.slice(0, 4).join('; ')}${p.changed.length > 4 ? '; …' : ''}).`, 'novita');
   }
+  for (const s of slides.filter((x) => x.gantt)) {
+    const comps = s.gantt.rows.filter((r) => r.kind === 'componente');
+    const acts = s.gantt.rows.filter((r) => r.kind === 'attivita');
+    add(s.n, `Piano di progetto da ${s.gantt.from} a ${s.gantt.to}: ${comps.length} componenti, ${acts.length} attività.`, 'piano');
+    for (const c of comps.slice(0, 8)) if (c.from) add(s.n, `${c.text}: da ${c.from} a ${c.to}.`, 'piano');
+  }
   for (const c of comparisons) {
     if (c.added.length || c.removed.length) add(c.toBe[0], `${c.code} ${c.name}, To-Be contro As-Is: ${c.added.length} step in più, ${c.removed.length} in meno${c.lanesAdded.length ? `; nuovi attori: ${c.lanesAdded.join(', ')}` : ''}.`, 'confronto');
   }
@@ -482,7 +532,7 @@ function keyPointsOf(slides, procs, comparisons, sections) {
 // ---- Percorso di lettura (come negli appunti di studio) ---------------------------------------
 function readingPath(slides, sections, procs, comparisons, legend, glossary) {
   const steps = [];
-  const ctx = slides.filter((s) => s.kind === 'testo' && sections[0] && (s.section === sections[0].title || s.section === (sections[1] || {}).title)).map((s) => s.n).slice(0, 4);
+  const ctx = slides.filter((s) => s.kind === 'testo' && sections[0] && (s.n <= 6 || s.section === sections[0].title || s.section === (sections[1] || {}).title)).map((s) => s.n).slice(0, 4);
   if (ctx.length) steps.push({ title: 'Contesto: obiettivi e risultati', slides: ctx });
   const leg = slides.filter((s) => s.kind === 'legenda').map((s) => s.n);
   if (leg.length || glossary.length) steps.push({ title: 'Legenda e sigle', slides: leg, note: glossary.slice(0, 8).map((g) => g.term).join(', ') });
@@ -494,6 +544,10 @@ function readingPath(slides, sections, procs, comparisons, legend, glossary) {
   }
   const rest = slides.filter((s) => s.kind === 'scheda').map((s) => s.n);
   if (rest.length) steps.push({ title: 'Schede di dettaglio', slides: rest });
+  const plan = slides.filter((s) => s.kind === 'masterplan').map((s) => s.n);
+  if (plan.length) steps.push({ title: 'Piano di progetto', slides: plan });
+  const tables = slides.filter((s) => s.kind === 'tabella').map((s) => s.n);
+  if (tables.length) steps.push({ title: 'Tabelle e numeri', slides: tables, note: 'Cippi controlla che i totali tornino.' });
   return steps;
 }
 

@@ -169,3 +169,17 @@
   .cp-docname { max-width: 60vw; }
   .cp-app { padding: 0 10px 12px; }
 }
+
+/* ---- sfondo del layout, tabelle con stile, modifica delle celle, piano di progetto, scheda del documento ---- */
+.cp-shape.cp-bg { pointer-events: none; }
+.cp-table td.cp-th { font-weight: 700; }
+.cp-cellgrid { width: 100%; border-collapse: collapse; font-size: 12px; margin: 4px 0 6px; }
+.cp-cellgrid td { border: 1px solid var(--border); padding: 2px; vertical-align: top; }
+.cp-cellgrid td.head { background: var(--glass); font-weight: 600; }
+.cp-cellgrid input { width: 100%; min-width: 60px; font: inherit; padding: 3px 4px; }
+.cp-gantt ul { list-style: none; padding: 0; margin: 4px 0; }
+.cp-gantt li { padding: 2px 0 2px 10px; font-size: 12.5px; }
+.cp-gantt li.componente { padding-left: 0; margin-top: 6px; }
+.cp-doc > div { margin: 3px 0; }
+.cp-doc ul { margin: 2px 0 0 16px; padding: 0; }
+.cp-sim li { margin: 2px 0; }
