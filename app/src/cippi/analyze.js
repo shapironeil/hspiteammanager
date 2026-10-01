@@ -15,12 +15,20 @@ const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-
 const textOf = (s) => (s.paragraphs || []).map((p) => p.text).join('\n').trim();
 const oneLine = (s) => textOf(s).replace(/\s*\n\s*/g, ' ').trim();
 const cx = (s) => s.x + s.w / 2;
-// distanza di un punto dal segmento di un collegamento (x0,y0)-(x1,y1)
+// distanza di un punto da un collegamento (spezzata di punti, in % della slide)
 function segDist(p, e) {
-  const dx = e.x1 - e.x0; const dy = e.y1 - e.y0;
-  const t = dx || dy ? Math.max(0, Math.min(1, ((p.x - e.x0) * dx + (p.y - e.y0) * dy) / (dx * dx + dy * dy))) : 0;
-  return Math.hypot(e.x0 + t * dx - p.x, e.y0 + t * dy - p.y);
+  const pts = e.pts || [[e.x0, e.y0], [e.x1, e.y1]];
+  let best = Infinity;
+  for (let i = 1; i < pts.length; i++) {
+    const [x0, y0] = pts[i - 1]; const [x1, y1] = pts[i];
+    const dx = x1 - x0; const dy = y1 - y0;
+    const t = dx || dy ? Math.max(0, Math.min(1, ((p.x - x0) * dx + (p.y - y0) * dy) / (dx * dx + dy * dy))) : 0;
+    best = Math.min(best, Math.hypot(x0 + t * dx - p.x, y0 + t * dy - p.y));
+  }
+  return best;
 }
+// distanza dal primo tratto (dove si mettono le etichette Si/No)
+const firstLegDist = (p, e) => segDist(p, { pts: (e.pts || [[e.x0, e.y0], [e.x1, e.y1]]).slice(0, 2) });
 const cy = (s) => s.y + s.h / 2;
 const inside = (p, s, pad = 0) => p.x >= s.x - pad && p.x <= s.x + s.w + pad && p.y >= s.y - pad && p.y <= s.y + s.h + pad;
 const overlap = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
@@ -181,6 +189,8 @@ function flowOf(slide, legend, title) {
     nodes.push({ id: s.id, type, text: t, num: num ? Number(num[1]) : null, label: num ? t.slice(num[0].length) : t, fill: s.fill || null, cx: cx(s), cy: cy(s), x: s.x, y: s.y, w: s.w, h: s.h, z: s.z });
   }
   const real = (id) => alias[id] || id;
+  // ogni nodo conosce i suoi doppioni: una modifica (forma, colore) va applicata a tutti
+  for (const n of nodes) n.ids = [n.id, ...Object.keys(alias).filter((k) => alias[k] === n.id)];
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
   for (const n of nodes) {
     const lane = lanes.find((l) => n.cy >= l.y0 && n.cy <= l.y1);
@@ -209,26 +219,38 @@ function flowOf(slide, legend, title) {
   for (const c of shapes.filter((s) => s.kind === 'cxn')) {
     let from = c.from ? real(c.from) : null;
     let to = c.to ? real(c.to) : null;
-    const p0 = { x: c.flipH ? c.x + c.w : c.x, y: c.flipV ? c.y + c.h : c.y };
-    const p1 = { x: c.flipH ? c.x : c.x + c.w, y: c.flipV ? c.y : c.y + c.h };
+    const pts = c.pts || [[c.flipH ? c.x + c.w : c.x, c.flipV ? c.y + c.h : c.y], [c.flipH ? c.x : c.x + c.w, c.flipV ? c.y : c.y + c.h]];
+    const p0 = { x: pts[0][0], y: pts[0][1] };
+    const p1 = { x: pts[pts.length - 1][0], y: pts[pts.length - 1][1] };
     if (!from || !byId[from]) from = nearest(p0);
     if (!to || !byId[to]) to = nearest(p1);
     // freccia disegnata al contrario (punta all'inizio della linea)
-    if (c.line && c.line.head !== 'none' && c.line.tail === 'none') [from, to] = [to, from];
+    let path = pts;
+    if (c.line && c.line.head !== 'none' && c.line.tail === 'none') { [from, to] = [to, from]; path = [...pts].reverse(); }
     if (!from || !to || from === to) continue;
     if (!byId[from] || !byId[to] || byId[from].type === 'sistema' || byId[to].type === 'sistema') continue;
-    edges.push({ from, to, x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y });
+    edges.push({ from, to, pts: path });
   }
   // etichette Si/No: vicino all'inizio del collegamento che esce da una decisione
   for (const l of labels) {
     const p = { x: cx(l), y: cy(l) };
     const e = edges.filter((x) => byId[x.from] && byId[x.from].type === 'decisione' && !x.label)
-      .map((x) => ({ x, d: Math.min(segDist(p, x), Math.hypot(byId[x.from].cx - p.x, byId[x.from].cy - p.y) * 0.9) })).sort((a, b) => a.d - b.d)[0];
+      .map((x) => ({ x, d: Math.min(firstLegDist(p, x), segDist(p, x) + 1.5) })).sort((a, b) => a.d - b.d)[0];
     if (e && e.d < 7) e.x.label = /^no$/i.test(oneLine(l)) ? 'No' : 'Si';
+  }
+  // decisione con due uscite e una sola etichetta: l'altra e' il contrario
+  for (const d of nodes.filter((n) => n.type === 'decisione')) {
+    const out = edges.filter((x) => x.from === d.id);
+    if (out.length === 2 && out.filter((x) => x.label).length === 1) { const lab = out.find((x) => x.label).label; out.find((x) => !x.label).label = lab === 'Si' ? 'No' : 'Si'; }
+  }
+  // scritte libere appoggiate a una freccia (es. "Acquisto diretto"): diventano la descrizione del collegamento
+  for (const n of nodes.filter((x) => x.type === 'annotazione')) {
+    const e = edges.map((x) => ({ x, d: segDist({ x: n.cx, y: n.cy }, x) })).sort((a, b) => a.d - b.d)[0];
+    if (e && e.d < 4 && !e.x.note) { e.x.note = n.text; n.onEdge = true; }
   }
   const uniq = new Map();
   for (const e of edges) { const k = `${e.from}>${e.to}`; if (!uniq.has(k) || (e.label && !uniq.get(k).label)) uniq.set(k, e); }
-  const E = [...uniq.values()].map(({ from, to, label }) => ({ from, to, label: label || null }));
+  const E = [...uniq.values()].map(({ from, to, label, note }) => ({ from, to, label: label || null, ...(note ? { note } : {}) }));
   return {
     lanes: lanes.map(({ name, y0, y1 }) => ({ name, y0, y1 })),
     nodes: nodes.sort((a, b) => (a.num || 999) - (b.num || 999) || a.y - b.y || a.x - b.x).map(({ z, ...n }) => n),

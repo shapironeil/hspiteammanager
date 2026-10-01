@@ -515,3 +515,97 @@ details.detail pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/
 .app-brand { display: inline-flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
 .app-brand img { width: 34px; height: 34px; border-radius: 9px; }
 .app-brand strong { font-family: var(--serif); font-weight: 500; font-size: 18px; }
+
+/* ---- GestioneCelle: stile "Excel glass" (vetro bianco, verde, un tocco di nero) ----
+   Tutto dentro .cg: ridefinisce i colori del portale solo per GestioneCelle, nel portale e nell'app a se' (/celle/). */
+.cg {
+  --text: #0c1712; --muted: #4c5f55; --faint: #7a8c82; --line: rgba(12, 70, 40, 0.1);
+  --border: rgba(12, 70, 40, 0.13); --border-strong: rgba(12, 70, 40, 0.24);
+  --glass: rgba(255, 255, 255, 0.55); --glass-strong: rgba(255, 255, 255, 0.82); --glass-a: rgba(255, 255, 255, 0.78); --glass-b: rgba(244, 252, 247, 0.6); --glass-hi: rgba(255, 255, 255, 0.95);
+  --hover: rgba(33, 115, 70, 0.08); --well: rgba(12, 40, 25, 0.06); --field: rgba(255, 255, 255, 0.9); --option: #fff; --modal-bg: #f8fcf9;
+  --link: #127a45; --accent: #1f9d55; --accent-soft: #34c759; --accent-ink: #fff; --ok: #16834a; --warn: #a96b00; --danger: #d33b3b;
+  --shadow: 0 8px 26px rgba(10, 60, 35, 0.08); --blur: blur(22px) saturate(180%);
+  color: var(--text); color-scheme: light;
+  position: relative; padding: 18px 20px 26px; border-radius: 24px;
+  background: radial-gradient(120% 90% at 0% 0%, rgba(255, 255, 255, 0.96), rgba(236, 249, 241, 0.92) 55%, rgba(205, 238, 218, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28), inset 0 1px 0 #fff;
+  font-family: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+}
+.cg h1, .cg h2, .cg h3 { font-family: -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif; font-weight: 650; letter-spacing: -0.02em; color: #07110c; }
+.cg .page-head p { color: var(--muted); }
+.cg .glass { border-color: rgba(255, 255, 255, 0.9); border-radius: 18px; box-shadow: 0 6px 22px rgba(10, 60, 35, 0.07), inset 0 1px 0 #fff; }
+.cg .btn { background: rgba(255, 255, 255, 0.85); border-color: rgba(12, 70, 40, 0.14); color: #0c1712; border-radius: 10px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); }
+.cg .btn:hover { background: #fff; border-color: rgba(12, 70, 40, 0.28); }
+.cg .btn.primary { background: linear-gradient(180deg, #34c759, #1f9d55); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(31, 157, 85, 0.35); }
+.cg .icon-btn { color: #0c1712; }
+.cg .icon-btn:hover { background: rgba(255, 255, 255, 0.9); border-color: var(--border); }
+/* schede come il controllo segmentato di iPhone: binario chiaro, pillola bianca, testo nero */
+.cg .tabs { background: rgba(12, 40, 25, 0.07); border-color: transparent; border-radius: 12px; padding: 3px; }
+.cg .tab { border-radius: 9px; color: #34463c; font-weight: 500; padding: 6px 14px; }
+.cg .tab.active { background: #fff; color: #07110c; font-weight: 650; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.04); }
+.cg input[type="text"], .cg input[type="number"], .cg input[type="search"], .cg input[type="date"], .cg select, .cg textarea { background: var(--field); border-color: rgba(12, 70, 40, 0.16); color: #0c1712; border-radius: 10px; }
+.cg input:focus, .cg select:focus, .cg textarea:focus { border-color: #34c759; box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.22); }
+.cg .chip { background: rgba(255, 255, 255, 0.8); border-color: rgba(12, 70, 40, 0.14); color: #23362b; }
+.cg .chip.ok { color: #16834a; border-color: rgba(22, 131, 74, 0.35); background: rgba(52, 199, 89, 0.1); }
+.cg .tr-code { color: #fff; background: #0c1712; border-radius: 6px; padding: 0 6px; font-size: 11.5px; }
+.cg .tr-row.active { background: rgba(52, 199, 89, 0.16); box-shadow: inset 3px 0 0 #1f9d55; }
+.cg .tr-row:hover { background: rgba(255, 255, 255, 0.8); }
+.cg .tr-list .tr-list { border-left-color: rgba(31, 157, 85, 0.25); }
+.cg .project.glass:hover { border-color: #34c759; }
+/* tabella come un foglio Excel: intestazioni grigio-verdi, griglia sottile, righe numerate */
+.cg table { border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.cg th { background: linear-gradient(180deg, #f3faf5, #e4f2e9); color: #2f4a3a; font-weight: 600; border-bottom: 1px solid rgba(12, 70, 40, 0.18); border-right: 1px solid rgba(12, 70, 40, 0.08); position: sticky; top: 0; z-index: 1; }
+.cg td { border-top: 0; border-bottom: 1px solid rgba(12, 70, 40, 0.07); border-right: 1px solid rgba(12, 70, 40, 0.05); background: rgba(255, 255, 255, 0.55); }
+.cg .tr-click:hover td { background: rgba(52, 199, 89, 0.1); }
+
+/* scheda Modifica */
+.cg-editor { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr); gap: 14px; align-items: start; }
+.cg-left { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.cg-right { position: sticky; top: 12px; max-height: calc(100vh - 40px); overflow: auto; }
+.cg-left-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.cg-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--faint); font-weight: 600; margin-bottom: 2px; }
+.cg-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: rgba(12, 40, 25, 0.07); }
+.cg-seg button { border: 0; background: none; padding: 4px 11px; border-radius: 8px; font: inherit; font-size: 12.5px; color: #34463c; cursor: pointer; }
+.cg-seg button.on { background: #fff; color: #07110c; font-weight: 650; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12); }
+/* barra multifunzione stile Excel, in vetro, con un tocco di nero */
+.cg-ribbon { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; border-radius: 14px; background: linear-gradient(180deg, #121b16, #0b120e); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 6px 18px rgba(0, 0, 0, 0.18); }
+.cg-ribbon-group { display: flex; gap: 2px; padding-right: 6px; border-right: 1px solid rgba(255, 255, 255, 0.1); }
+.cg-ribbon-group:last-child { border-right: 0; }
+.cg-tool { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9px; border: 0; background: none; color: #e9f5ee; font: inherit; font-size: 12.5px; cursor: pointer; }
+.cg-tool svg { width: 15px; height: 15px; color: #4cd38a; }
+.cg-tool:hover:not([disabled]) { background: rgba(76, 211, 138, 0.16); }
+.cg-tool[disabled] { opacity: 0.35; cursor: default; }
+.cg-search { width: 100%; }
+.cg-cascade { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 10px; background: rgba(52, 199, 89, 0.12); border: 1px solid rgba(31, 157, 85, 0.3); color: #0f5f36; font-size: 12.5px; }
+.cg-cascade svg { width: 15px; height: 15px; flex: none; }
+.cg-cascade .grow { flex: 1; min-width: 0; }
+.cg-cascade b { font-weight: 650; }
+.cg-sheet { max-height: calc(100vh - 330px); min-height: 260px; overflow: auto; border-radius: 12px; border: 1px solid rgba(12, 70, 40, 0.14); background: rgba(255, 255, 255, 0.6); outline: none; }
+.cg-sheet:focus-visible { box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.3); }
+.cg-grid { min-width: 640px; }
+.cg-grid th, .cg-grid td { padding: 6px 8px; }
+.cg-grid .cg-rn { width: 38px; text-align: center; color: #6b7f74; background: linear-gradient(180deg, #f3faf5, #e8f3ec); font-size: 11.5px; font-variant-numeric: tabular-nums; border-right: 1px solid rgba(12, 70, 40, 0.14); }
+.cg-grid tbody tr { cursor: pointer; }
+.cg-grid tbody tr:hover td { background: rgba(52, 199, 89, 0.08); }
+.cg-grid tr.lv1 td { font-weight: 650; background: rgba(240, 249, 243, 0.85); }
+.cg-grid tr.lv3 td { color: #2a3d32; }
+.cg-grid tr.sel td { background: rgba(52, 199, 89, 0.18); }
+.cg-grid tr.sel td:nth-child(2) { box-shadow: inset 0 0 0 2px #1f9d55; }
+.cg-grid tr.changed td:nth-child(2) { background: rgba(255, 214, 10, 0.25); }
+.cg-code { font-family: var(--mono); font-size: 12px; background: #0c1712; color: #fff; padding: 1px 6px; border-radius: 6px; }
+.cg-was { margin-left: 6px; font-family: var(--mono); font-size: 11px; color: #8a6a00; text-decoration: line-through; }
+@media (max-width: 1000px) {
+  .cg-editor { grid-template-columns: 1fr; }
+  .cg-right { position: static; max-height: none; }
+  .cg-sheet { max-height: 55vh; }
+}
+@media (max-width: 760px) {
+  .cg { padding: 12px 10px 18px; border-radius: 18px; }
+  .cg-tool span { display: none; }
+}
+/* GestioneCelle come app a se': pagina chiara bianca e verde */
+.cg-page { background: linear-gradient(160deg, #f7fcf9, #e3f5ea 60%, #cdeedb); }
+.cg-page .backdrop { display: none; }
+.cg-page .app-window > .topbar { color: #0c1712; }
+.cg-page .app-window > .cg { box-shadow: 0 18px 50px rgba(10, 60, 35, 0.15), inset 0 1px 0 #fff; }

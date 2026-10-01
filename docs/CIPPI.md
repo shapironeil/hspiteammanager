@@ -77,16 +77,28 @@ Tre pannelli; sul telefono uno alla volta, con le schede in alto.
 - La struttura per sezioni; in Modifica anche sposta, duplica e togli.
 - Percorso di lettura, controlli, glossario (il significato delle sigle si scrive qui e vale per tutto il progetto), appunti, confronto con un modello.
 
+Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-rosso di PowerPoint, elementi compatti.
+
 **Pannello visione**:
-- La slide disegnata nel browser con forme, frecce, testi, immagini e tabelle, senza aprire PowerPoint.
+- La slide disegnata nel browser con forme, frecce (anche a gomito e ruotate, seguite come in PowerPoint), testi, immagini e tabelle, senza aprire PowerPoint. Ogni elemento si clicca e apre le sue caratteristiche.
 - I blocchi numerati nell'ordine di lettura, colorati per livello; gli step nuovi (verde) e modificati (giallo).
 - **Confronta con l'As-Is**: le due slide affiancate e l'elenco delle differenze.
 - La striscia delle miniature. Le frecce ← → della tastiera scorrono le slide.
 
-**Pannello punti chiave**:
-- I punti della slide (o di tutto il documento): punti chiave, note, domande, cose da fare, con la spunta "fatto".
-- La **struttura della slide** (blocchi e livelli) e, nei flussi, il dettaglio: attori, step con stato e sistemi, uscite delle decisioni, rimandi (si salta al processo citato), note. Se il processo esiste in GestioneCelle con lo stesso nome compare **In GestioneCelle**.
-- In **Modifica** i testi dei blocchi si correggono qui: una riga per paragrafo, due spazi all'inizio per scendere di un livello di elenco. L'anteprima si aggiorna subito e le modifiche si salvano da sole.
+- Sotto l'anteprima, i **punti chiave**: della slide o di tutto il documento (punti chiave, note, domande, cose da fare, con la spunta "fatto").
+
+**Pannello descrizione della slide** (a destra):
+- Nei flussi, in ordine: i **protagonisti** (le corsie: quante attività, decisioni, sistemi) e poi la **struttura della slide**: gli step in ordine con forma (▭ attività, ◇ decisione), stato, protagonista, sistemi, uscite delle decisioni. Poi rimandi (si salta al processo citato), note del flusso, il processo con il collegamento a GestioneCelle.
+- Nelle altre slide, i blocchi nell'ordine di lettura con il loro livello. In **Modifica** i testi si correggono qui: una riga per paragrafo, due spazi all'inizio per scendere di un livello di elenco.
+- In fondo il **contesto del documento**.
+
+**Finestra delle caratteristiche** (si apre cliccando uno step, un protagonista, un blocco o il processo; stile impostazioni, scura):
+- *Generale*: testo; **forma** (per esempio il rettangolo che diventa rombo: l'attività diventa una decisione); **stato** rispetto all'As-Is (nuovo, modificato, invariato: il colore segue la legenda della presentazione); protagonista. Forma, colore e testo cambiano anche nel `.pptx`.
+- *Tecnologia*: i sistemi disegnati accanto allo step (si possono rinominare) e le altre tecnologie o transazioni.
+- *Collegamenti*: da dove arriva e dove va, con le etichette Si/No e le scritte sulle frecce; si passa da uno step all'altro.
+- *Descrizione*: descrizione, input, output, responsabile, tempi, criticità, note. Restano in Cippi e valgono anche per le versioni successive.
+- *Processo*: codice, parti, protagonisti, sistemi, novità rispetto all'As-Is, e obiettivo e descrizione del processo.
+- *Contesto*: lo sfondo generale del documento (cliente, progetto, obiettivi, perimetro). Se manca si scrive qui; Cippi ne propone uno dalle prime slide.
 
 ## Creare, importare, salvare
 
@@ -106,7 +118,7 @@ Tre pannelli; sul telefono uno alla volta, con le schede in alto.
 | File di partenza di ogni versione | `data/cippi/sorgenti/<impronta>.pptx`: non si perde anche se lo si sposta in Esplora file. Entra nei backup. |
 | Analisi (rifatta da sola se cambia il modo di leggere) | `data/cippi/analisi/` |
 | Copia, versioni salvate, appunti | cartella del progetto, `Cippi/<nome documento>/` (`Appunti/` per PDF, Word, immagini). I modelli in `Cippi/Modelli/`. |
-| Documenti, punti, glossario | database: `cippi_docs`, `cippi_points`, `cippi_glossary` (migrazione 9) |
+| Documenti, punti, glossario, contesto, caratteristiche | database: `cippi_docs` (con `background`), `cippi_points`, `cippi_glossary`, `cippi_items` (migrazioni 9 e 10) |
 
 **Permessi:** vede e modifica un documento chi vede il progetto. Lo elimina chi l'ha creato o un Manager del progetto. I file nella cartella del progetto restano.
 
@@ -138,7 +150,7 @@ Tre pannelli; sul telefono uno alla volta, con le schede in alto.
 | `GET /api/cippi/docs/:id[?modello=ID]` | documento, analisi completa, punti, collegamenti a GestioneCelle, appunti, confronto con un modello |
 | `GET /api/cippi/docs/:id/slide/:n` | forme della slide di origine n (per l'anteprima) |
 | `GET /api/cippi/docs/:id/media?name=ppt/media/…` | immagini |
-| `PATCH /api/cippi/docs/:id` | `{name, description, status, shared, slides: [{src, texts: {idForma: [righe]}, note}], updatedAt}`. Il 409 avvisa se qualcun altro ha salvato nel frattempo. |
+| `PATCH /api/cippi/docs/:id` | `{name, description, status, shared, background, slides: [{src, texts: {idForma: [righe]}, geom: {idForma: forma}, fill: {idForma: colore}, note}], updatedAt}`. Il 409 avvisa se qualcun altro ha salvato nel frattempo. |
 | `DELETE /api/cippi/docs/:id` | elimina |
 | `GET /api/cippi/docs/:id/download` | `.pptx` con le modifiche |
 | `POST /api/cippi/docs/:id/salva-versione` | salva nella cartella del progetto e rianalizza |
@@ -149,6 +161,7 @@ Tre pannelli; sul telefono uno alla volta, con le schede in alto.
 | `DELETE /api/cippi/points/:id` | elimina un punto |
 | `PUT /api/cippi/docs/:id/appunti?name=` | appunti nella cartella del documento |
 | `PUT /api/cippi/glossario` | `{projectId, term, meaning}` |
+| `PUT /api/cippi/docs/:id/items` | `{key, data: {descrizione, tecnologia, input, output, responsabile, tempi, criticita, obiettivo, note}}`: caratteristiche di un elemento; la chiave è stabile tra le versioni (`nodo\|<codice processo>\|<variante>\|<testo dello step>`, `attore\|<nome>`, `processo\|<codice>\|<variante>`, `blocco\|<titolo slide>\|<testo>`). Dati vuoti = elimina |
 
 **Codice:**
 

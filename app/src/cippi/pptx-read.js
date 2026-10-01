@@ -161,6 +161,9 @@ function shapesOf(tree, ctx, map = (r) => r, groupId = null, out = []) {
       s.paragraphs = paragraphs(X.child(n, 'p:txBody'), ctx.theme);
       s.textbox = (X.child(nv, 'p:cNvSpPr') || { attrs: {} }).attrs.txBox === '1';
     }
+    // regolazioni della geometria (per i connettori a gomito: dove piegano)
+    const av = geom && X.child(geom, 'a:avLst');
+    if (av) for (const gd of X.children(av, 'a:gd')) { const m = /val\s+(-?\d+)/.exec(gd.attrs.fmla || ''); if (m) { s.adj = s.adj || {}; s.adj[gd.attrs.name] = Number(m[1]); } }
     if (kind === 'cxn') {
       const cn = X.child(nv, 'p:cNvCxnSpPr');
       const st = X.child(cn, 'a:stCxn'); const en = X.child(cn, 'a:endCxn');
@@ -233,6 +236,29 @@ function readLayout(files, part, theme) {
   return out;
 }
 
+// Percorso di un connettore in coordinate della slide (EMU): segmenti dritti o a gomito, con ribaltamenti e rotazione.
+// I connettori a gomito di PowerPoint sono spesso ruotati di 90/270 gradi: senza la rotazione le frecce andrebbero
+// da un'altra parte e i collegamenti tra le forme sarebbero sbagliati.
+function connectorPath(s) {
+  const { w, h } = s;
+  const a = (k, d) => (s.adj && s.adj[k] !== undefined ? s.adj[k] / 100000 : d);
+  let pts;
+  const g = s.geom || 'line';
+  if (/bentConnector2|curvedConnector2/.test(g)) pts = [[0, 0], [w, 0], [w, h]];
+  else if (/bentConnector3|curvedConnector3/.test(g)) { const xm = w * a('adj1', 0.5); pts = [[0, 0], [xm, 0], [xm, h], [w, h]]; }
+  else if (/bentConnector4|curvedConnector4/.test(g)) { const x1 = w * a('adj1', 0.5); const y2 = h * a('adj2', 0.5); pts = [[0, 0], [x1, 0], [x1, y2], [w, y2], [w, h]]; }
+  else if (/bentConnector5|curvedConnector5/.test(g)) { const x1 = w * a('adj1', 0.5); const y2 = h * a('adj2', 0.5); const x3 = w * a('adj3', 0.5); pts = [[0, 0], [x1, 0], [x1, y2], [x3, y2], [x3, h], [w, h]]; }
+  else pts = [[0, 0], [w, h]];
+  if (s.flipH) pts = pts.map(([x, y]) => [w - x, y]);
+  if (s.flipV) pts = pts.map(([x, y]) => [x, h - y]);
+  const rot = (s.rot || 0) * Math.PI / 180;
+  if (rot) {
+    const cx = w / 2; const cy = h / 2; const c = Math.cos(rot); const sn = Math.sin(rot);
+    pts = pts.map(([x, y]) => [cx + (x - cx) * c - (y - cy) * sn, cy + (x - cx) * sn + (y - cy) * c]);
+  }
+  return pts.map(([x, y]) => [s.x + x, s.y + y]);
+}
+
 // ---- Presentazione ----------------------------------------------------------------------------
 function readPptx(buf) {
   const files = readZip(buf);
@@ -255,6 +281,9 @@ function readPptx(buf) {
   const pct = (s) => {
     if (s.x === undefined) return s;
     const o = { ...s, x: +(s.x / W * 100).toFixed(3), y: +(s.y / H * 100).toFixed(3), w: +(s.w / W * 100).toFixed(3), h: +(s.h / H * 100).toFixed(3) };
+    if (s.kind === 'cxn' || (s.kind === 'sp' && /^(line|straightConnector1|bentConnector\d|curvedConnector\d)$/.test(s.geom || ''))) {
+      o.pts = connectorPath(s).map(([px, py]) => [+(px / W * 100).toFixed(3), +(py / H * 100).toFixed(3)]);
+    }
     return o;
   };
   const ids = X.children(X.child(pres, 'p:sldIdLst'), 'p:sldId');

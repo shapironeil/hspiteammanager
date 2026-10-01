@@ -26,9 +26,13 @@ const projects = require('./projects');
 const DIR = path.join(config.DATA_DIR, 'cippi');
 const SRC = path.join(DIR, 'sorgenti');
 const CACHE = path.join(DIR, 'analisi');
-const ANALYZER = 3; // si alza quando cambia l'analisi: le analisi salvate si rifanno
+const ANALYZER = 4; // si alza quando cambia l'analisi: le analisi salvate si rifanno
 const KINDS = ['chiave', 'nota', 'domanda', 'da-fare'];
 const STATUSES = ['bozza', 'in revisione', 'approvato'];
+// forme che si possono scegliere per uno step (attivita', decisione, inizio/fine, documento, sistema, nota)
+const GEOMS = ['rect', 'roundRect', 'flowChartProcess', 'flowChartDecision', 'diamond', 'flowChartTerminator', 'homePlate', 'flowChartDocument', 'flowChartMagneticDisk', 'ellipse', 'borderCallout1', 'flowChartPredefinedProcess', 'parallelogram'];
+// caratteristiche di un elemento (step, attore, processo, blocco): testi liberi
+const ITEM_FIELDS = ['descrizione', 'tecnologia', 'input', 'output', 'tempi', 'criticita', 'responsabile', 'obiettivo', 'note'];
 
 function readBody(req, limit = 200 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
@@ -236,7 +240,36 @@ route('GET', '/api/cippi/docs/:id', {}, (ctx) => {
     celle: celleLinks(p, analysis),
     appunti: appunti(p, doc),
     confronto,
+    background: doc.background || '',
+    backgroundSuggestion: doc.background ? '' : suggestBackground(analysis),
+    items: Object.fromEntries(db.all('SELECT key, data FROM cippi_items WHERE doc_id = ?', doc.id).map((r) => [r.key, JSON.parse(r.data)])),
+    geoms: GEOMS,
   });
+});
+
+// Contesto proposto: i testi delle prime slide di testo (obiettivi, ambito, risultati)
+function suggestBackground(a) {
+  const first = a.slides.filter((s) => s.kind === 'testo' || s.kind === 'scheda').slice(0, 3);
+  const out = [];
+  for (const s of first) {
+    out.push(s.title);
+    for (const b of s.blocks) if (b.role !== 'titolo' && b.role !== 'navigazione' && b.role !== 'immagine' && b.text) out.push(b.text.replace(/\s*\n\s*/g, ' ').trim());
+  }
+  return out.filter(Boolean).join('\n').slice(0, 3000);
+}
+
+// Caratteristiche di un elemento: la chiave e' stabile tra le versioni (codice del processo + testo dello step, ...)
+route('PUT', '/api/cippi/docs/:id/items', {}, async (ctx) => {
+  const { doc, canEdit } = openDoc(ctx.user, ctx.params.id);
+  if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
+  const b = await ctx.body();
+  const key = clean(b.key, 400, 'Elemento');
+  const data = {};
+  for (const f of ITEM_FIELDS) if (b.data && b.data[f] != null && String(b.data[f]).trim()) data[f] = String(b.data[f]).slice(0, 5000);
+  if (!Object.keys(data).length) db.run('DELETE FROM cippi_items WHERE doc_id = ? AND key = ?', doc.id, key);
+  else db.run(`INSERT INTO cippi_items(doc_id, key, data, updated_by, updated_at) VALUES(?,?,?,?,?)
+    ON CONFLICT(doc_id, key) DO UPDATE SET data = excluded.data, updated_by = excluded.updated_by, updated_at = excluded.updated_at`, doc.id, key, JSON.stringify(data), ctx.user.id, db.now());
+  ctx.json(200, { ok: true });
 });
 
 // Forme di una slide di origine (per l'anteprima nel pannello di visione)
@@ -274,6 +307,17 @@ function cleanSlides(list, max) {
       }
     }
     if (s.note) out.note = clean(s.note, 2000);
+    // forma (es. rettangolo -> rombo) e colore di riempimento delle forme
+    for (const k of ['geom', 'fill']) {
+      if (!s[k] || typeof s[k] !== 'object') continue;
+      const m = {};
+      for (const [id, v] of Object.entries(s[k])) {
+        if (!/^\d{1,7}$/.test(id)) continue;
+        if (k === 'geom' && GEOMS.includes(v)) m[id] = v;
+        if (k === 'fill' && /^[0-9A-Fa-f]{6}$/.test(v)) m[id] = v.toUpperCase();
+      }
+      if (Object.keys(m).length) out[k] = m;
+    }
     return out;
   });
 }
@@ -284,6 +328,7 @@ route('PATCH', '/api/cippi/docs/:id', {}, async (ctx) => {
   const sets = []; const vals = [];
   if (b.name !== undefined) { sets.push('name = ?'); vals.push(clean(b.name, 120, 'Nome')); }
   if (b.description !== undefined) { sets.push('description = ?'); vals.push(clean(b.description, 1000)); }
+  if (b.background !== undefined) { sets.push('background = ?'); vals.push(String(b.background || '').slice(0, 20000)); }
   if (b.status !== undefined) { if (!STATUSES.includes(b.status)) throw new HttpError(400, 'Stato non valido.'); sets.push('status = ?'); vals.push(b.status); }
   if (b.shared !== undefined) { if (!canManage || doc.kind !== 'modello') throw new HttpError(403, 'Solo chi gestisce il modello può condividerlo.'); sets.push('shared = ?'); vals.push(b.shared ? 1 : 0); }
   if (b.slides !== undefined) {

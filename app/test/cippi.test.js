@@ -99,6 +99,31 @@ test('modifica ed esportazione: ordine, testi, duplicati, slide tolte; nuova ver
   assert.ok(JSON.stringify(files).includes('Flusso acquisti.pptx'));
 });
 
+test('caratteristiche: contesto del documento, descrizioni degli elementi, forma e colore nel .pptx', async () => {
+  const full = (await luca.put(`/api/cippi/import?projectId=${pid}&name=caratteristiche.pptx`, pptx())).data.id;
+  let d = (await luca.get(`/api/cippi/docs/${full}`)).data;
+  assert.equal(d.background, '');
+  assert.match(d.backgroundSuggestion, /Obiettivi del progetto/, 'contesto proposto dalle prime slide');
+  assert.equal((await luca.patch(`/api/cippi/docs/${full}`, { background: 'Progetto acquisti per il cliente' })).status, 200);
+  const key = 'nodo|4.1.2.1|To-Be|revisione del budget';
+  assert.equal((await luca.put(`/api/cippi/docs/${full}/items`, { key, data: { input: 'Richiesta', tecnologia: 'SAP MM', ignoto: 'x' } })).status, 200);
+  assert.equal((await ospite.put(`/api/cippi/docs/${full}/items`, { key, data: { input: 'x' } })).status, 404);
+  d = (await luca.get(`/api/cippi/docs/${full}`)).data;
+  assert.equal(d.background, 'Progetto acquisti per il cliente');
+  assert.deepEqual(d.items[key], { input: 'Richiesta', tecnologia: 'SAP MM' });
+  // lo step 4 diventa un rombo verde (nuovo)
+  const n = d.analysis.slides[5].flow.nodes.find((x) => x.text.startsWith('4.'));
+  const list = d.list.map((x) => (x.src === 6 ? { ...x, geom: { [n.id]: 'flowChartDecision', 99: 'nonEsiste' }, fill: { [n.id]: '92d050' } } : x));
+  assert.equal((await luca.patch(`/api/cippi/docs/${full}`, { slides: list, updatedAt: d.updatedAt })).status, 200);
+  const out = readPptx((await luca.get(`/api/cippi/docs/${full}/download`)).data);
+  const shape = out.slides[5].shapes.find((x) => x.id === n.id);
+  assert.equal(shape.geom, 'flowChartDecision');
+  assert.equal(shape.fill, '92D050');
+  // svuotare le caratteristiche le toglie
+  await luca.put(`/api/cippi/docs/${full}/items`, { key, data: {} });
+  assert.equal((await luca.get(`/api/cippi/docs/${full}`)).data.items[key], undefined);
+});
+
 test('modelli: si salva la struttura, si crea un documento nuovo con le parti scelte e si misura la completezza', async () => {
   // il modello nasce dalla presentazione completa (re-importata)
   const full = (await luca.put(`/api/cippi/import?projectId=${pid}&name=completa.pptx`, pptx())).data.id;

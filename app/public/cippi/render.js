@@ -70,7 +70,7 @@ export function withTexts(shape, lines) {
   });
 }
 
-// Disegna una slide. opts: { media(name) -> url, texts: { id: righe }, onShape(shape, node) }
+// Disegna una slide. opts: { media(name) -> url, texts: { id: righe }, geom: { id: forma }, fill: { id: colore }, onShape(shape, node) }
 export function renderSlide(slide, opts = {}) {
   const root = el('div', { class: 'cp-slide' });
   root.style.aspectRatio = String(slide.ratio || 16 / 9);
@@ -94,13 +94,11 @@ export function renderSlide(slide, opts = {}) {
   for (const s of slide.shapes) {
     if (s.hidden || s.x === undefined || s.kind === 'group') continue;
     if (s.kind === 'cxn' || (s.kind === 'sp' && s.geom === 'line')) {
-      const x0 = (s.flipH ? s.x + s.w : s.x) * R; const y0 = s.flipV ? s.y + s.h : s.y;
-      const x1 = (s.flipH ? s.x : s.x + s.w) * R; const y1 = s.flipV ? s.y : s.y + s.h;
+      // percorso calcolato alla lettura (gomiti, ribaltamenti, rotazione); altrimenti diagonale del riquadro
+      const pts = s.pts || [[s.flipH ? s.x + s.w : s.x, s.flipV ? s.y + s.h : s.y], [s.flipH ? s.x : s.x + s.w, s.flipV ? s.y : s.y + s.h]];
       const color = hex(s.line && s.line.color) || '#555';
-      const bent = /bentConnector/.test(s.geom || '');
-      const mx = (x0 + x1) / 2;
       const path = sv('path', {
-        d: bent ? `M${x0} ${y0}H${mx}V${y1}H${x1}` : `M${x0} ${y0}L${x1} ${y1}`,
+        d: pts.map(([x, y], i) => `${i ? 'L' : 'M'}${(x * R).toFixed(2)} ${y.toFixed(2)}`).join(''),
         fill: 'none', stroke: color, 'stroke-width': Math.max(0.6, ((s.line && s.line.w) || 9525) / 12700),
         'vector-effect': 'non-scaling-stroke', 'stroke-dasharray': s.line && DASH[s.line.dash],
       });
@@ -113,8 +111,9 @@ export function renderSlide(slide, opts = {}) {
     Object.assign(node.style, { left: `${s.x}%`, top: `${s.y}%`, width: `${Math.max(s.w, 0.2)}%`, height: `${Math.max(s.h, 0.2)}%` });
     if (s.rot) node.style.transform = `rotate(${s.rot}deg)`;
     if (s.kind === 'sp') {
-      const [tag, attrs] = geometry(s.geom);
-      const fill = attrs.fillNone ? 'none' : hex(s.fill) || 'none';
+      const g = (opts.geom && opts.geom[s.id]) || s.geom;
+      const [tag, attrs] = geometry(g);
+      const fill = attrs.fillNone ? 'none' : hex((opts.fill && opts.fill[s.id]) || s.fill) || 'none';
       const stroke = s.line && s.line.color ? hex(s.line.color) : 'none';
       if (fill !== 'none' || stroke !== 'none') {
         const g = sv('svg', { viewBox: '0 0 100 100', preserveAspectRatio: 'none', class: 'cp-geom' });
@@ -122,7 +121,7 @@ export function renderSlide(slide, opts = {}) {
         g.append(sv(tag, { ...a, fill, stroke, 'stroke-width': Math.max(0.8, ((s.line && s.line.w) || 9525) / 12700), 'vector-effect': 'non-scaling-stroke', 'stroke-dasharray': s.line && DASH[s.line.dash] }));
         node.append(g);
       }
-      const t = textBox(s, opts.texts && opts.texts[s.id] ? withTexts(s, opts.texts[s.id]) : null);
+      const t = textBox({ ...s, geom: g }, opts.texts && opts.texts[s.id] ? withTexts(s, opts.texts[s.id]) : null);
       if (t) node.append(t);
     } else if (s.kind === 'pic') {
       const url = s.image && opts.media ? opts.media(s.image) : null;

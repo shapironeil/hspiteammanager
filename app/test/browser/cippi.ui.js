@@ -55,7 +55,26 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await page.click('.cp-struct-item:has-text("Processi To Be")');
     await page.waitForSelector('.cp-view .cp-st-nuovo');
     ok(await page.locator('.cp-view .cp-st-modificato').count() === 1, 'step nuovi e modificati evidenziati come nella legenda');
-    ok(await page.locator('.cp-steps li').count() === 4, 'dettaglio del flusso: step e decisioni');
+    ok(await page.locator('.cp-actor').count() === 2, 'descrizione della slide: prima i protagonisti (corsie)');
+    ok(await page.locator('.cp-step').count() === 6, 'poi la struttura: inizio, step, decisione, fine');
+    ok(await page.locator('.cp-view .cp-keypoints').count() === 1, 'punti chiave sotto l\'anteprima');
+    // finestra delle caratteristiche: il quadrato diventa un rombo, il contesto del documento
+    await page.click('.cp-step:has-text("4. Revisione del budget")');
+    await page.waitForSelector('.cs-sheet');
+    await page.click('.cs-choice:has-text("Decisione")');
+    await page.waitForSelector('.cs-choice.on:has-text("Decisione")');
+    await page.click('.cs-nav-item:has-text("Descrizione")');
+    await page.fill('.cs-field:has-text("Input") input', 'Richiesta di acquisto');
+    await page.click('.cs-btn.primary:has-text("Salva")');
+    await page.waitForSelector('.toast:has-text("Caratteristiche salvate")');
+    await page.click('.cs-nav-item:has-text("Contesto")');
+    await page.click('.cs-btn:has-text("Usa il testo proposto")');
+    await page.click('.cs-btn.primary:has-text("Salva")');
+    await page.waitForSelector('.toast:has-text("Contesto salvato")');
+    await page.screenshot({ path: path.join(OUT, 'cippi-caratteristiche.png') });
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('text=Modifiche salvate');
+    ok(await page.locator('.cp-step:has-text("4. Revisione del budget") .cp-shape-ico:has-text("◇")').count() === 1, 'finestra delle caratteristiche: forma cambiata (rettangolo → rombo), descrizione e contesto salvati');
     await page.click('button:has-text("Confronta con l\'As-Is")');
     await page.waitForSelector('.cp-stage.two .cp-frame:nth-child(2) .cp-slide');
     ok(/Approvazione del responsabile/.test(await page.textContent('.cp-diff')), 'confronto To-Be / As-Is affiancato con le differenze');
@@ -121,8 +140,8 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await m.goto(portal.base + '/cippi/#/doc/1?s=6');
     await m.waitForSelector('.cp-view .cp-slide');
     ok(!(await m.locator('.cp-tools').isVisible()), 'telefono: si vede solo il pannello di visione');
-    await m.click('.cp-tabs button:has-text("Punti chiave")');
-    ok(await m.locator('.cp-points').isVisible(), 'telefono: si passa ai punti chiave');
+    await m.click('.cp-tabs button:has-text("Descrizione")');
+    ok(await m.locator('.cp-points').isVisible(), 'telefono: si passa alla descrizione della slide');
     const overflow = await m.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     ok(overflow <= 1, 'telefono: niente scorrimento orizzontale');
     await m.screenshot({ path: path.join(OUT, 'cippi-telefono.png') });

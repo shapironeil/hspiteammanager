@@ -61,6 +61,41 @@ function replaceShapeText(xml, id, lines) {
   return xml.slice(0, start) + newSp + xml.slice(end);
 }
 
+// Trova la forma (p:sp) con quell'id: { start, end } nel testo XML della slide
+function shapeRange(xml, id) {
+  const at = xml.search(new RegExp(`<p:cNvPr\\b[^>]*\\bid="${String(id).replace(/\D/g, '')}"`));
+  if (at < 0) return null;
+  const start = Math.max(xml.lastIndexOf('<p:sp>', at), xml.lastIndexOf('<p:sp ', at));
+  if (start < 0 || xml.lastIndexOf('</p:sp>', at) > start) return null;
+  return { start, end: xml.indexOf('</p:sp>', at) };
+}
+// Cambia la forma geometrica (es. rettangolo -> rombo) mantenendo posizione, testo e stile
+function replaceShapeGeom(xml, id, prst) {
+  const r = shapeRange(xml, id);
+  if (!r) return xml;
+  let sp = xml.slice(r.start, r.end);
+  if (/<a:prstGeom\b/.test(sp)) sp = sp.replace(/<a:prstGeom\b[^>]*prst="[^"]*"[^>]*(\/>|>[\s\S]*?<\/a:prstGeom>)/, `<a:prstGeom prst="${prst}"><a:avLst/></a:prstGeom>`);
+  else if (/<a:custGeom\b/.test(sp)) sp = sp.replace(/<a:custGeom\b[\s\S]*?<\/a:custGeom>/, `<a:prstGeom prst="${prst}"><a:avLst/></a:prstGeom>`);
+  else sp = sp.replace(/(<a:xfrm\b[\s\S]*?<\/a:xfrm>)/, `$1<a:prstGeom prst="${prst}"><a:avLst/></a:prstGeom>`);
+  return xml.slice(0, r.start) + sp + xml.slice(r.end);
+}
+// Cambia il colore di riempimento (es. verde = step nuovo, giallo = modificato, come dice la legenda)
+function replaceShapeFill(xml, id, hex) {
+  const r = shapeRange(xml, id);
+  if (!r) return xml;
+  let sp = xml.slice(r.start, r.end);
+  const spPr = /<p:spPr\b[^>]*>([\s\S]*?)<\/p:spPr>/.exec(sp);
+  if (!spPr) return xml;
+  let inner = spPr[1].replace(/<a:(solidFill|gradFill|noFill|pattFill)\b[\s\S]*?<\/a:\1>|<a:noFill\/>/, '\u0000');
+  const fill = `<a:solidFill><a:srgbClr val="${hex}"/></a:solidFill>`;
+  // il riempimento va dopo la geometria e prima della linea
+  if (inner.includes('\u0000')) inner = inner.replace('\u0000', fill);
+  else if (/<a:ln\b/.test(inner)) inner = inner.replace(/<a:ln\b/, `${fill}<a:ln`);
+  else inner += fill;
+  sp = sp.replace(spPr[0], spPr[0].replace(spPr[1], inner));
+  return xml.slice(0, r.start) + sp + xml.slice(r.end);
+}
+
 function build(srcBuf, slides) {
   const zip = readZip(srcBuf);
   const files = new Map([...zip].map(([k, f]) => [k, f]));
@@ -99,9 +134,11 @@ function build(srcBuf, slides) {
       presRels.push({ Id: rid, Type: REL_SLIDE, Target: posix.relative('ppt', part) });
       entry = { id: String(++maxId), rid, part, srcId: orig.id };
     }
-    if (s.texts && Object.keys(s.texts).length) {
+    if ((s.texts && Object.keys(s.texts).length) || s.geom || s.fill) {
       let x = txt(part);
-      for (const [id, lines] of Object.entries(s.texts)) if (Array.isArray(lines)) x = replaceShapeText(x, id, lines);
+      for (const [id, lines] of Object.entries(s.texts || {})) if (Array.isArray(lines)) x = replaceShapeText(x, id, lines);
+      for (const [id, prst] of Object.entries(s.geom || {})) if (/^[A-Za-z0-9]+$/.test(prst)) x = replaceShapeGeom(x, id, prst);
+      for (const [id, hex] of Object.entries(s.fill || {})) if (/^[0-9A-F]{6}$/i.test(hex)) x = replaceShapeFill(x, id, hex);
       put(part, x);
     }
     order.push(entry);
@@ -163,4 +200,4 @@ function build(srcBuf, slides) {
   return writeZip(entries);
 }
 
-module.exports = { build, replaceShapeText };
+module.exports = { build, replaceShapeText, replaceShapeGeom, replaceShapeFill };

@@ -12,6 +12,7 @@ import { renderSlide } from '/cippi/render.js';
 
 const root = document.getElementById('app');
 const enc = encodeURIComponent;
+const nkey = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 const KIND = {
   copertina: 'Copertina', titolo: 'Titolo', indice: 'Indice', divisore: 'Divisore di sezione', testo: 'Testo', legenda: 'Legenda',
   flusso: 'Flusso', mappa: 'Mappa dei processi', scheda: 'Scheda', tabella: 'Tabella', schema: 'Schema', chiusura: 'Chiusura', immagine: 'Immagine',
@@ -187,7 +188,7 @@ async function viewDoc(id, startAt) {
   const doc = await get(`/api/cippi/docs/${id}`);
   const A = doc.analysis;
   const R = {
-    list: doc.list.map((x) => ({ ...x, texts: { ...(x.texts || {}) } })), cur: Math.min(Math.max(0, (startAt || 1) - 1), doc.list.length - 1),
+    list: doc.list.map((x) => ({ ...x, texts: { ...(x.texts || {}) }, geom: { ...(x.geom || {}) }, fill: { ...(x.fill || {}) } })), cur: Math.min(Math.max(0, (startAt || 1) - 1), doc.list.length - 1),
     mode: store('cippi.modo') === 'modifica' && doc.canEdit ? 'modifica' : 'revisione',
     show: { blocks: store('cippi.blocchi') !== false, flow: store('cippi.stati') !== false, notes: !!store('cippi.note') },
     scope: 'slide', compare: null, updatedAt: doc.updatedAt, saving: null, panel: 'visione',
@@ -205,7 +206,8 @@ async function viewDoc(id, startAt) {
     clearTimeout(R.saving);
     R.saving = setTimeout(async () => {
       try {
-        const r = await patch(`/api/cippi/docs/${id}`, { slides: R.list.map(({ src, texts, note }) => ({ src, ...(texts && Object.keys(texts).length ? { texts } : {}), ...(note ? { note } : {}) })), updatedAt: R.updatedAt });
+        const has = (o) => o && Object.keys(o).length;
+        const r = await patch(`/api/cippi/docs/${id}`, { slides: R.list.map(({ src, texts, note, geom, fill }) => ({ src, ...(has(texts) ? { texts } : {}), ...(has(geom) ? { geom } : {}), ...(has(fill) ? { fill } : {}), ...(note ? { note } : {}) })), updatedAt: R.updatedAt });
         R.updatedAt = r.updatedAt;
         savedMark.textContent = 'Modifiche salvate';
         doc.edited = true;
@@ -253,9 +255,9 @@ async function viewDoc(id, startAt) {
   // ---- tre pannelli
   const tools = h('aside', { class: 'cp-panel cp-tools', 'aria-label': 'Pannello strumenti' });
   const view = h('main', { class: 'cp-panel cp-view', 'aria-label': 'Pannello visione' });
-  const pts = h('aside', { class: 'cp-panel cp-points', 'aria-label': 'Punti chiave' });
-  const tabs = h('div', { class: 'cp-tabs' }, ['strumenti', 'visione', 'punti'].map((t) => h('button', { type: 'button', 'data-p': t, onclick: () => { R.panel = t; layout(); } }, { strumenti: 'Strumenti', visione: 'Visione', punti: 'Punti chiave' }[t])));
-  const shell = h('div', { class: 'cp-review' }, tools, view, pts);
+  const desc = h('aside', { class: 'cp-panel cp-points', 'aria-label': 'Descrizione della slide' });
+  const tabs = h('div', { class: 'cp-tabs' }, ['strumenti', 'visione', 'punti'].map((t) => h('button', { type: 'button', 'data-p': t, onclick: () => { R.panel = t; layout(); } }, { strumenti: 'Strumenti', visione: 'Visione', punti: 'Descrizione' }[t])));
+  const shell = h('div', { class: 'cp-review' }, tools, view, desc);
   const layout = () => {
     shell.dataset.panel = R.panel;
     tabs.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.p === R.panel));
@@ -343,13 +345,15 @@ async function viewDoc(id, startAt) {
   }
 
   // ---- VISIONE
-  async function drawSlideInto(box, src, texts, { overlay = true } = {}) {
+  const overridesOf = (x) => ({ texts: x.texts, geom: x.geom, fill: x.fill });
+  async function drawSlideInto(box, src, over, { overlay = true } = {}) {
     const data = await slideData(src);
     const sInfo = A.slides[src - 1];
     const blocks = new Map((sInfo.blocks || []).map((b) => [String(b.id), b]));
-    const nodes = new Map(((sInfo.flow && sInfo.flow.nodes) || []).map((n) => [String(n.id), n]));
+    const nodes = new Map();
+    for (const n of (sInfo.flow && sInfo.flow.nodes) || []) for (const k of n.ids || [n.id]) nodes.set(String(k), n);
     const slide = renderSlide(data, {
-      media, texts,
+      media, ...(over || {}),
       onShape: (s, node) => {
         if (!overlay) return;
         const b = blocks.get(String(s.id));
@@ -358,9 +362,13 @@ async function viewDoc(id, startAt) {
           node.append(h('span', { class: 'cp-badge', title: `${ROLE[b.role] || b.role} · livello ${b.level}` }, `${b.order}`));
         }
         const n = nodes.get(String(s.id));
-        if (R.show.flow && n && n.status && n.status !== 'invariato') node.classList.add(`cp-st-${n.status}`);
-        if (R.mode === 'modifica' && b) node.classList.add('cp-editable');
-        if (b || n) node.addEventListener('click', () => focusBlock(String(s.id)));
+        const st = n ? statusOf(n) : null;
+        if (R.show.flow && st && st !== 'invariato') node.classList.add(`cp-st-${st}`);
+        if (b || (n && n.type !== 'annotazione')) {
+          node.classList.add('cp-clickable');
+          node.title = 'Apri le caratteristiche';
+          node.addEventListener('click', () => (n ? openSheet({ kind: 'nodo', node: n }) : openSheet({ kind: 'blocco', block: b })));
+        }
       },
     });
     box.replaceChildren(slide);
@@ -393,8 +401,10 @@ async function viewDoc(id, startAt) {
         h('div', {}, h('h4', {}, `Solo nell'As-Is (${cmp.removed.length})`), h('ul', {}, cmp.removed.map((t) => h('li', { class: 'rem' }, t))))),
       cmp.lanesAdded.length || cmp.lanesRemoved.length ? h('p', { class: 'small' }, `Attori: ${cmp.lanesAdded.map((l) => `+ ${l}`).concat(cmp.lanesRemoved.map((l) => `− ${l}`)).join(' · ')}`) : null) : null;
     const strip = h('div', { class: 'cp-strip', 'aria-label': 'Miniature' }, R.list.map((y, i) => h('button', { type: 'button', class: 'cp-mini' + (i === R.cur ? ' on' : ''), 'data-i': i, 'data-src': y.src, title: `${i + 1}. ${A.slides[y.src - 1].title || KIND[A.slides[y.src - 1].kind]}`, onclick: () => go(i) }, h('span', {}, String(i + 1)))));
-    view.replaceChildren(head, main, diff, notes, strip);
-    await drawSlideInto(a, x.src, x.texts);
+    const kp = h('section', { class: 'cp-keypoints', 'aria-label': 'Punti chiave' });
+    view.replaceChildren(head, main, diff, notes, strip, kp);
+    drawKeyPoints(kp);
+    await drawSlideInto(a, x.src, overridesOf(x));
     if (b) await drawSlideInto(b, R.compare, null);
     // miniature disegnate solo quando si vedono
     const io = new IntersectionObserver((entries) => {
@@ -402,7 +412,7 @@ async function viewDoc(id, startAt) {
         if (!e.isIntersecting) continue;
         io.unobserve(e.target);
         const i = Number(e.target.dataset.i);
-        slideData(R.list[i].src).then((d) => { e.target.prepend(renderSlide(d, { media, texts: R.list[i].texts })); }).catch(() => {});
+        slideData(R.list[i].src).then((d) => { e.target.prepend(renderSlide(d, { media, ...overridesOf(R.list[i]) })); }).catch(() => {});
       }
     }, { root: strip, rootMargin: '300px' });
     strip.querySelectorAll('.cp-mini').forEach((m) => io.observe(m));
@@ -410,19 +420,11 @@ async function viewDoc(id, startAt) {
     if (on) on.scrollIntoView({ inline: 'center', block: 'nearest' });
   }
 
-  // ---- PUNTI CHIAVE + struttura della slide
-  function focusBlock(sid) {
-    R.panel = R.panel === 'visione' && innerWidth < 900 ? 'punti' : R.panel;
-    layout();
-    const row = pts.querySelector(`[data-block="${sid}"]`);
-    if (row) { row.scrollIntoView({ block: 'center', behavior: 'smooth' }); row.classList.add('flash'); setTimeout(() => row.classList.remove('flash'), 1200); const t = row.querySelector('textarea'); if (t) t.focus(); }
-  }
-  const toLines = (txt) => txt.split('\n').map((l) => { const m = /^(\s*)(.*)$/.exec(l); return { text: m[2], lvl: Math.floor(m[1].replace(/\t/g, '  ').length / 2) }; });
-  const fromParas = (ps) => (ps || []).map((p) => `${'  '.repeat(p.lvl || 0)}${p.text}`).join('\n');
-  function drawPoints() {
+  // ---- PUNTI CHIAVE (sotto l'anteprima)
+  function drawKeyPoints(box) {
     const x = R.list[R.cur];
-    const s = info(R.cur);
     const here = doc.points.filter((p) => (R.scope === 'tutti' ? true : p.slide === x.src));
+    const redraw = () => drawKeyPoints(box);
     const addKind = h('select', { name: 'kind', 'aria-label': 'Tipo' }, Object.entries(POINT).map(([k, v]) => h('option', { value: k }, v)));
     const addText = h('input', { type: 'text', name: 'text', maxlength: '2000', placeholder: 'Aggiungi un punto, una nota, una domanda…', 'aria-label': 'Testo del punto' });
     const addForm = doc.canEdit ? h('form', { class: 'cp-add', onsubmit: async (e) => {
@@ -431,79 +433,283 @@ async function viewDoc(id, startAt) {
       try {
         const r = await post(`/api/cippi/docs/${id}/points`, { slide: x.src, kind: addKind.value, text: addText.value });
         doc.points.push({ id: r.id, slide: x.src, kind: addKind.value, text: addText.value, status: 'aperto', auto: false, author: state.user.name });
-        drawPoints();
+        redraw();
       } catch (err) { toastError(err); }
-    } }, addKind, addText, h('button', { class: 'btn sm primary', type: 'submit' }, icon('plus'))) : null;
+    } }, addKind, addText, h('button', { class: 'btn sm primary', type: 'submit', 'aria-label': 'Aggiungi' }, icon('plus'))) : null;
     const pointRow = (p) => h('li', { class: `cp-pt k-${p.kind}` + (p.status === 'fatto' ? ' done' : '') },
       h('input', { type: 'checkbox', checked: p.status === 'fatto', disabled: !doc.canEdit, title: 'Fatto', 'aria-label': 'Fatto',
-        onchange: async (e) => { try { await patch(`/api/cippi/points/${p.id}`, { status: e.target.checked ? 'fatto' : 'aperto' }); p.status = e.target.checked ? 'fatto' : 'aperto'; drawPoints(); } catch (err) { toastError(err); } } }),
+        onchange: async (e) => { try { await patch(`/api/cippi/points/${p.id}`, { status: e.target.checked ? 'fatto' : 'aperto' }); p.status = e.target.checked ? 'fatto' : 'aperto'; redraw(); } catch (err) { toastError(err); } } }),
       h('div', { class: 'grow' },
-        h('span', { class: 'chip' + (p.kind === 'domanda' || p.kind === 'da-fare' ? ' warn' : '') }, POINT[p.kind] || p.kind),
-        R.scope === 'tutti' && p.slide ? h('button', { type: 'button', class: 'linklike small', onclick: () => { const i = posOfSrc(p.slide); if (i >= 0) go(i); } }, ` slide ${posOfSrc(p.slide) + 1 || '–'}`) : null,
-        h('div', { class: 'cp-pt-text' }, p.text),
-        h('div', { class: 'small muted' }, p.auto ? 'proposto da Cippi' : p.author)),
-      doc.canEdit ? h('button', { class: 'icon-btn', type: 'button', title: 'Elimina', 'aria-label': 'Elimina', onclick: async () => { try { await del(`/api/cippi/points/${p.id}`); doc.points = doc.points.filter((y) => y !== p); drawPoints(); } catch (err) { toastError(err); } } }, icon('close')) : null);
-
-    // struttura dei blocchi (in Modifica: testi correggibili)
-    const blocks = (s.blocks || []).filter((b) => b.role !== 'navigazione');
-    const blockRow = (b) => {
-      const editable = R.mode === 'modifica' && doc.canEdit && b.paragraphs && b.id;
-      const current = x.texts && x.texts[b.id] ? fromParas(x.texts[b.id].map((l) => (typeof l === 'string' ? { text: l } : l))) : fromParas(b.paragraphs);
-      return h('li', { class: `cp-blk lv${Math.min(3, b.level)}`, 'data-block': String(b.id) },
-        h('div', { class: 'row', style: 'gap:6px' }, h('span', { class: 'cp-badge static' }, String(b.order)), h('span', { class: 'chip' }, ROLE[b.role] || b.role), h('span', { class: 'small muted' }, `livello ${b.level}`),
-          x.texts && x.texts[b.id] ? h('button', { type: 'button', class: 'linklike small', onclick: () => { delete x.texts[b.id]; save(); drawView(); drawPoints(); } }, 'ripristina') : null),
-        editable ? h('textarea', { rows: String(Math.min(10, Math.max(1, current.split('\n').length))), 'aria-label': `Testo del blocco ${b.order}`, oninput: (e) => { x.texts[b.id] = toLines(e.target.value); save(); drawView(); } }, current)
-          : b.role === 'tabella' ? h('div', { class: 'small cp-blk-text' }, (b.rows || []).slice(0, 8).map((r) => h('div', {}, r.join(' · '))))
-            : h('div', { class: 'cp-blk-text' }, (b.paragraphs || [{ text: b.text }]).map((p) => h('div', { style: `padding-left:${(p.lvl || 0) * 14}px` + (p.bold ? ';font-weight:600' : '') }, (p.lvl ? '• ' : '') + p.text))));
-    };
-    const flow = s.flow ? (() => {
-      const f = s.flow;
-      const byId = new Map(f.nodes.map((n) => [n.id, n]));
-      const steps = f.nodes.filter((n) => n.type === 'step' || n.type === 'decisione');
-      const pr = procOf(x.src);
-      const links = doc.celle.filter((c) => pr && c.code === pr.code && c.name === pr.name);
-      return h('div', { class: 'cp-flow' },
-        pr ? h('div', { class: 'small' }, h('b', {}, `${pr.variant || ''} ${pr.code || ''} ${pr.name}`), pr.parts > 1 ? ` · ${pr.slides.length} parti` : '') : null,
-        links.map((l) => h('a', { class: 'btn xs', href: `/celle/#/celle?mappa=${l.mapId}&voce=${l.nodeId}`, target: '_blank', rel: 'noopener' }, icon('tree'), `In GestioneCelle: ${l.map}`)),
-        f.lanes.length ? h('div', { class: 'small' }, h('b', {}, 'Attori: '), f.lanes.map((l) => l.name).join(' · ')) : null,
-        h('ol', { class: 'cp-steps' }, steps.map((n) => h('li', { 'data-block': String(n.id), class: `st-${n.status || 'invariato'}` },
-          h('div', {}, h('b', {}, n.text), n.status && n.status !== 'invariato' ? h('span', { class: 'chip ' + (n.status === 'nuovo' ? 'ok' : 'warn') }, n.status) : null),
-          h('div', { class: 'small muted' }, [n.lane, (n.systems || []).join(', ')].filter(Boolean).join(' · ')),
-          n.type === 'decisione' ? h('div', { class: 'small' }, f.edges.filter((e) => e.from === n.id).map((e) => h('div', {}, `${e.label || '→'} ${(byId.get(e.to) || {}).text || ''}`))) : null))),
-        f.nodes.filter((n) => n.type === 'rimando').length ? h('div', { class: 'small' }, h('b', {}, 'Rimanda a: '), f.nodes.filter((n) => n.type === 'rimando').map((n) => {
-          const target = A.processes.find((p) => p.code === n.code && p.variant === (pr && pr.variant));
-          const i = target ? posOfSrc(target.slides[0]) : -1;
-          return i >= 0 ? h('button', { type: 'button', class: 'linklike', onclick: () => go(i) }, `${n.text} `) : h('span', { class: 'muted' }, `${n.text} `);
-        })) : null,
-        f.nodes.filter((n) => n.type === 'nota').map((n) => h('div', { class: 'cp-note', 'data-block': String(n.id) }, n.text)));
-    })() : null;
-
-    const pointsPart = [
+        h('div', { class: 'cp-pt-meta' }, h('span', { class: 'chip' + (p.kind === 'domanda' || p.kind === 'da-fare' ? ' warn' : '') }, POINT[p.kind] || p.kind),
+          R.scope === 'tutti' && p.slide ? h('button', { type: 'button', class: 'linklike small', onclick: () => { const i = posOfSrc(p.slide); if (i >= 0) go(i); } }, `slide ${posOfSrc(p.slide) + 1 || '–'}`) : null,
+          h('span', { class: 'small muted' }, p.auto ? 'proposto da Cippi' : p.author)),
+        h('div', { class: 'cp-pt-text' }, p.text)),
+      doc.canEdit ? h('button', { class: 'icon-btn', type: 'button', title: 'Elimina', 'aria-label': 'Elimina', onclick: async () => { try { await del(`/api/cippi/points/${p.id}`); doc.points = doc.points.filter((y) => y !== p); redraw(); } catch (err) { toastError(err); } } }, icon('close')) : null);
+    box.replaceChildren(
       h('div', { class: 'cp-pts-head' }, h('h2', {}, 'Punti chiave'),
         h('div', { class: 'cp-seg small' },
-          h('button', { type: 'button', class: R.scope === 'slide' ? 'on' : '', onclick: () => { R.scope = 'slide'; drawPoints(); } }, 'Questa slide'),
-          h('button', { type: 'button', class: R.scope === 'tutti' ? 'on' : '', onclick: () => { R.scope = 'tutti'; drawPoints(); } }, `Tutti (${doc.points.length})`))),
+          h('button', { type: 'button', class: R.scope === 'slide' ? 'on' : '', onclick: () => { R.scope = 'slide'; redraw(); } }, `Questa slide (${doc.points.filter((p) => p.slide === x.src).length})`),
+          h('button', { type: 'button', class: R.scope === 'tutti' ? 'on' : '', onclick: () => { R.scope = 'tutti'; redraw(); } }, `Tutti (${doc.points.length})`))),
       addForm,
-      h('ul', { class: 'cp-pts' }, here.length ? here.map(pointRow) : h('li', { class: 'muted small' }, R.scope === 'slide' ? 'Nessun punto su questa slide.' : 'Nessun punto.')),
-    ];
-    const structPart = [
-      h('h3', { class: 'cp-h3' }, R.mode === 'modifica' ? 'Testi della slide (modifica)' : 'Struttura della slide'),
-      R.mode === 'modifica' ? h('p', { class: 'small muted' }, 'Una riga per paragrafo; due spazi all\'inizio = un livello di elenco più in basso. Le modifiche si salvano da sole e finiscono nel .pptx.') : null,
-      flow,
-      blocks.length && !(s.kind === 'flusso' && R.mode !== 'modifica') ? h('ol', { class: 'cp-blocks' }, blocks.map(blockRow)) : (s.kind === 'flusso' ? null : h('p', { class: 'muted small' }, 'Nessun blocco di testo.')),
-      R.mode === 'modifica' && doc.canEdit ? h('label', { class: 'field' }, h('span', { class: 'field-label' }, 'Nota sulla slide (resta in Cippi)'),
-        h('textarea', { rows: '2', maxlength: '2000', oninput: (e) => { x.note = e.target.value; save(); } }, x.note || '')) : (x.note ? h('div', { class: 'cp-note' }, x.note) : null),
-    ];
-    // in Modifica prima i testi da correggere, in Revisione prima i punti chiave
-    pts.replaceChildren(...(R.mode === 'modifica' ? [...structPart, ...pointsPart] : [...pointsPart, ...structPart]));
+      h('ul', { class: 'cp-pts' }, here.length ? here.map(pointRow) : h('li', { class: 'muted small' }, R.scope === 'slide' ? 'Nessun punto su questa slide.' : 'Nessun punto.')));
   }
 
-  function drawAll() { drawTools(); drawView().catch(toastError); drawPoints(); }
+  // ---- DESCRIZIONE DELLA SLIDE (pannello a destra)
+  const toLines = (txt) => txt.split('\n').map((l) => { const m = /^(\s*)(.*)$/.exec(l); return { text: m[2], lvl: Math.floor(m[1].replace(/\t/g, '  ').length / 2) }; });
+  const fromParas = (ps) => (ps || []).map((p) => `${'  '.repeat(p.lvl || 0)}${p.text}`).join('\n');
+  const legendFill = (meaning) => ((A.legend || []).find((l) => l.meaning === meaning) || {}).fill || { nuovo: '92D050', modificato: 'FFFF00' }[meaning];
+  // stato di uno step: quello scelto in Cippi (colore cambiato) oppure quello letto dalla legenda
+  function statusOf(n) {
+    const x = R.list[R.cur];
+    const f = x.fill && x.fill[n.id];
+    if (!f) return n.status || null;
+    if (f === legendFill('nuovo')) return 'nuovo';
+    if (f === legendFill('modificato')) return 'modificato';
+    return 'invariato';
+  }
+  const geomOf = (n) => { const x = R.list[R.cur]; return (x.geom && x.geom[n.id]) || null; };
+  const typeOf = (n) => { const g = geomOf(n); return g ? (/Decision|diamond/.test(g) ? 'decisione' : /Terminator/.test(g) ? 'fine' : 'step') : n.type; };
+  const nodeText = (n) => { const x = R.list[R.cur]; const t = x.texts && x.texts[n.id]; return t ? t.map((l) => (typeof l === 'string' ? l : l.text)).join(' ') : n.text; };
+  const SHAPES = [['rect', '▭', 'Attività'], ['flowChartDecision', '◇', 'Decisione'], ['flowChartTerminator', '⬭', 'Inizio / fine'], ['flowChartPredefinedProcess', '▤', 'Sottoprocesso'], ['flowChartDocument', '🗎', 'Documento'], ['roundRect', '▢', 'Attività (arrotondata)']];
+  const shapeIcon = (n) => (typeOf(n) === 'decisione' ? '◇' : typeOf(n) === 'fine' || n.type === 'inizio' ? '⬭' : '▭');
+  // modifiche a una forma della slide corrente (su tutti i suoi doppioni)
+  function setShape(n, kind, value) {
+    const x = R.list[R.cur];
+    x[kind] = x[kind] || {};
+    for (const k of n.ids || [n.id]) { if (value) x[kind][k] = value; else delete x[kind][k]; }
+    save(); drawView(); drawDesc();
+  }
+
+  function drawDesc() {
+    const x = R.list[R.cur];
+    const s = info(R.cur);
+    const pr = procOf(x.src);
+    const head = h('div', { class: 'cp-desc-head' }, h('h2', {}, 'Descrizione della slide'),
+      h('div', { class: 'small muted' }, h('span', { class: `cp-kind k-${s.kind}` }, KIND[s.kind] || s.kind), ` ${s.title || ''}`));
+    const parts = [head];
+    if (s.flow) {
+      const f = s.flow;
+      const steps = f.nodes.filter((n) => ['step', 'decisione', 'inizio', 'fine'].includes(n.type));
+      // 1. protagonisti
+      parts.push(h('h3', { class: 'cp-h3' }, `Protagonisti (${f.lanes.length})`),
+        f.lanes.length ? h('ul', { class: 'cp-actors' }, f.lanes.map((l) => {
+          const mine = steps.filter((n) => n.lane === l.name && n.type !== 'inizio' && n.type !== 'fine');
+          const sys = [...new Set(mine.flatMap((n) => n.systems || []))];
+          return h('li', { class: 'cp-actor', onclick: () => openSheet({ kind: 'attore', lane: l, steps: mine }) },
+            h('span', { class: 'cp-avatar' }, l.name.split(/[\s/]+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()),
+            h('div', { class: 'grow' }, h('b', {}, l.name), h('div', { class: 'small muted' }, `${mine.length} attività${mine.filter((n) => typeOf(n) === 'decisione').length ? ` · ${mine.filter((n) => typeOf(n) === 'decisione').length} decisioni` : ''}${sys.length ? ` · ${sys.join(', ')}` : ''}`)),
+            doc.items[`attore|${nkey(l.name)}`] ? h('span', { class: 'dot', title: 'Ha una descrizione' }) : null);
+        })) : h('p', { class: 'small muted' }, 'Nessuna corsia: il flusso non dice chi fa cosa.'));
+      // 2. struttura
+      const byId = new Map(f.nodes.map((n) => [n.id, n]));
+      parts.push(h('h3', { class: 'cp-h3' }, `Struttura della slide (${steps.length})`),
+        h('ol', { class: 'cp-steps' }, steps.map((n) => {
+          const st = statusOf(n);
+          return h('li', { class: `st-${st || 'invariato'}`, 'data-block': String(n.id) },
+            h('button', { type: 'button', class: 'cp-step', onclick: () => openSheet({ kind: 'nodo', node: n }) },
+              h('span', { class: 'cp-shape-ico', title: typeOf(n) }, shapeIcon(n)),
+              h('span', { class: 'grow' }, h('b', {}, nodeText(n)),
+                h('span', { class: 'small muted' }, ` ${[n.lane, (n.systems || []).join(', ')].filter(Boolean).join(' · ')}`)),
+              st && st !== 'invariato' ? h('span', { class: 'chip ' + (st === 'nuovo' ? 'ok' : 'warn') }, st) : null),
+            typeOf(n) === 'decisione' ? h('div', { class: 'small cp-exits' }, f.edges.filter((e) => e.from === n.id).map((e) => h('div', {}, h('b', {}, e.label || '→'), ` ${(byId.get(e.to) || {}).text || ''}`))) : null,
+            R.mode === 'modifica' && doc.canEdit && (n.type === 'step' || n.type === 'decisione') ? h('div', { class: 'cp-quick' },
+              h('button', { type: 'button', class: 'btn xs', title: 'Cambia la forma', onclick: () => setShape(n, 'geom', typeOf(n) === 'decisione' ? 'rect' : 'flowChartDecision') }, typeOf(n) === 'decisione' ? '◇ → ▭' : '▭ → ◇'),
+              ['nuovo', 'modificato', 'invariato'].map((k) => h('button', { type: 'button', class: 'btn xs' + ((st || 'invariato') === k ? ' on' : ''), onclick: () => setShape(n, 'fill', k === 'invariato' ? 'FFFFFF' : legendFill(k)) }, k))) : null);
+        })));
+      const refs = f.nodes.filter((n) => n.type === 'rimando');
+      if (refs.length) {
+        parts.push(h('h3', { class: 'cp-h3' }, 'Rimanda a'), h('div', { class: 'cp-refs' }, refs.map((n) => {
+          const target = A.processes.find((p) => p.code === n.code && p.variant === (pr && pr.variant));
+          const i = target ? posOfSrc(target.slides[0]) : -1;
+          return i >= 0 ? h('button', { type: 'button', class: 'btn xs', onclick: () => go(i) }, n.text) : h('span', { class: 'chip', title: 'Non è in questa presentazione' }, n.text);
+        })));
+      }
+      const notes = f.nodes.filter((n) => n.type === 'nota');
+      if (notes.length) parts.push(h('h3', { class: 'cp-h3' }, 'Note del flusso'), notes.map((n) => h('div', { class: 'cp-note' }, n.text)));
+      if (pr) {
+        const links = doc.celle.filter((c) => c.code === pr.code && c.name === pr.name);
+        parts.push(h('div', { class: 'cp-proc' },
+          h('div', {}, h('b', {}, `${pr.variant || ''} ${pr.code || ''} ${pr.name}`), pr.parts > 1 ? h('span', { class: 'small muted' }, ` · ${pr.slides.length} parti`) : null),
+          h('div', { class: 'row', style: 'gap:6px;flex-wrap:wrap' },
+            h('button', { type: 'button', class: 'btn xs primary', onclick: () => openSheet({ kind: 'processo', proc: pr }) }, 'Caratteristiche del processo'),
+            links.map((l) => h('a', { class: 'btn xs', href: `/celle/#/celle?mappa=${l.mapId}&voce=${l.nodeId}`, target: '_blank', rel: 'noopener' }, icon('tree'), `GestioneCelle: ${l.map}`)))));
+      }
+    } else {
+      const blocks = (s.blocks || []).filter((b) => b.role !== 'navigazione');
+      parts.push(h('h3', { class: 'cp-h3' }, R.mode === 'modifica' ? 'Testi della slide (modifica)' : `Struttura della slide (${blocks.length})`),
+        R.mode === 'modifica' ? h('p', { class: 'small muted' }, 'Una riga per paragrafo; due spazi all\'inizio = un livello di elenco più in basso. Le modifiche si salvano da sole.') : null,
+        blocks.length ? h('ol', { class: 'cp-blocks' }, blocks.map((b) => {
+          const editable = R.mode === 'modifica' && doc.canEdit && b.paragraphs && b.id;
+          const current = x.texts && x.texts[b.id] ? fromParas(x.texts[b.id].map((l) => (typeof l === 'string' ? { text: l } : l))) : fromParas(b.paragraphs);
+          return h('li', { class: `cp-blk lv${Math.min(3, b.level)}`, 'data-block': String(b.id) },
+            h('div', { class: 'cp-blk-head' }, h('span', { class: 'cp-badge static' }, String(b.order)), h('span', { class: 'chip' }, ROLE[b.role] || b.role), h('span', { class: 'small muted' }, `livello ${b.level}`),
+              h('span', { class: 'grow' }),
+              x.texts && x.texts[b.id] ? h('button', { type: 'button', class: 'linklike small', onclick: () => { delete x.texts[b.id]; save(); drawView(); drawDesc(); } }, 'ripristina') : null,
+              h('button', { type: 'button', class: 'icon-btn sm', title: 'Caratteristiche', 'aria-label': 'Caratteristiche', onclick: () => openSheet({ kind: 'blocco', block: b }) }, icon('more'))),
+            editable ? h('textarea', { rows: String(Math.min(10, Math.max(1, current.split('\n').length))), 'aria-label': `Testo del blocco ${b.order}`, oninput: (e) => { x.texts[b.id] = toLines(e.target.value); save(); drawView(); } }, current)
+              : b.role === 'tabella' ? h('div', { class: 'small cp-blk-text' }, (b.rows || []).slice(0, 8).map((r) => h('div', {}, r.join(' · '))))
+                : h('div', { class: 'cp-blk-text' }, (b.paragraphs || [{ text: b.text }]).map((p) => h('div', { style: `padding-left:${(p.lvl || 0) * 12}px` + (p.bold ? ';font-weight:600' : '') }, (p.lvl ? '• ' : '') + p.text))));
+        })) : h('p', { class: 'muted small' }, 'Nessun blocco di testo.'));
+    }
+    if (R.mode === 'modifica' && doc.canEdit) {
+      parts.push(h('label', { class: 'field' }, h('span', { class: 'field-label' }, 'Nota sulla slide (resta in Cippi)'),
+        h('textarea', { rows: '2', maxlength: '2000', oninput: (e) => { x.note = e.target.value; save(); } }, x.note || '')));
+    } else if (x.note) parts.push(h('div', { class: 'cp-note' }, x.note));
+    // contesto generale del documento
+    parts.push(h('button', { type: 'button', class: 'cp-context', onclick: () => openSheet({ kind: 'contesto' }, 'contesto') },
+      h('b', {}, 'Contesto del documento'),
+      h('span', { class: 'small muted' }, doc.background ? `${doc.background.slice(0, 140)}${doc.background.length > 140 ? '…' : ''}` : 'Non ancora scritto: aggiungilo (Cippi propone un testo dalle prime slide).')));
+    desc.replaceChildren(...parts);
+  }
+
+  // ---- FINESTRA DELLE CARATTERISTICHE (stile impostazioni, scura) ------------------------------
+  // ref: { kind: 'nodo'|'attore'|'processo'|'blocco'|'contesto', ... }. Le caratteristiche si salvano in Cippi
+  // (chiave stabile tra le versioni); forma, colore e testi finiscono anche nel .pptx.
+  const FIELD_LABEL = { descrizione: 'Descrizione', tecnologia: 'Tecnologia e transazioni', input: 'Input', output: 'Output', responsabile: 'Responsabile', tempi: 'Tempi', criticita: 'Criticità', obiettivo: 'Obiettivo', note: 'Note' };
+  function keyOf(ref) {
+    const s = info(R.cur);
+    const pr = procOf(R.list[R.cur].src);
+    if (ref.kind === 'nodo') return `nodo|${pr ? `${pr.code || nkey(pr.name)}|${pr.variant || ''}` : `slide|${nkey(s.title)}`}|${nkey(ref.node.text.replace(/^\d+\s*\.\s*/, ''))}`;
+    if (ref.kind === 'attore') return `attore|${nkey(ref.lane.name)}`;
+    if (ref.kind === 'processo') return `processo|${ref.proc.code || nkey(ref.proc.name)}|${ref.proc.variant || ''}`;
+    if (ref.kind === 'blocco') return `blocco|${nkey(s.title)}|${nkey(ref.block.text).slice(0, 80)}`;
+    return 'documento';
+  }
+  function openSheet(ref, section) {
+    const s = info(R.cur);
+    const f = s.flow;
+    const pr = procOf(R.list[R.cur].src);
+    const SECTIONS = {
+      nodo: [['generale', 'Generale'], ['tecnologia', 'Tecnologia'], ['collegamenti', 'Collegamenti'], ['descrizione', 'Descrizione'], ['processo', 'Processo'], ['contesto', 'Contesto']],
+      attore: [['generale', 'Generale'], ['descrizione', 'Descrizione'], ['contesto', 'Contesto']],
+      processo: [['generale', 'Generale'], ['descrizione', 'Descrizione'], ['contesto', 'Contesto']],
+      blocco: [['generale', 'Generale'], ['descrizione', 'Descrizione'], ['contesto', 'Contesto']],
+      contesto: [['contesto', 'Contesto del documento']],
+    }[ref.kind];
+    let cur = section && SECTIONS.some(([k]) => k === section) ? section : SECTIONS[0][0];
+    const title = ref.kind === 'nodo' ? nodeText(ref.node) : ref.kind === 'attore' ? ref.lane.name : ref.kind === 'processo' ? `${ref.proc.code || ''} ${ref.proc.name}` : ref.kind === 'blocco' ? (ROLE[ref.block.role] || ref.block.role) : doc.name;
+    const sub = { nodo: { step: 'Attività', decisione: 'Decisione', inizio: 'Inizio', fine: 'Fine', rimando: 'Rimando a un processo', nota: 'Nota', sistema: 'Sistema', connettore: 'Connettore' }[ref.node ? typeOf(ref.node) : ''] || 'Elemento', attore: 'Protagonista', processo: `Processo ${ref.proc ? ref.proc.variant || '' : ''}`, blocco: `Blocco di testo · livello ${ref.block ? ref.block.level : ''}`, contesto: 'Documento' }[ref.kind];
+    const ro = !doc.canEdit;
+    const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    const nav = h('nav', { class: 'cs-nav' });
+    const main = h('section', { class: 'cs-main' });
+    const back = h('div', { class: 'cs-back', onmousedown: (e) => { if (e.target === back) close(); } },
+      h('div', { class: 'cs-sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': title }, nav, main));
+    document.addEventListener('keydown', onKey);
+    document.body.append(back);
+
+    const fieldEl = (label, input, hint) => h('label', { class: 'cs-field' }, h('span', {}, label), input, hint ? h('small', {}, hint) : null);
+    const metaForm = (key, fields) => {
+      const data = { ...(doc.items[key] || {}) };
+      const inputs = {};
+      const box = h('div', { class: 'cs-group' }, fields.map((k) => fieldEl(FIELD_LABEL[k], inputs[k] = h(k === 'descrizione' || k === 'note' || k === 'tecnologia' || k === 'obiettivo' ? 'textarea' : 'input', { type: 'text', rows: '3', value: data[k] || '', disabled: ro, maxlength: '5000' }, k === 'descrizione' || k === 'note' || k === 'tecnologia' || k === 'obiettivo' ? data[k] || '' : null))));
+      const saveBtn = ro ? null : h('button', { type: 'button', class: 'cs-btn primary', onclick: async () => {
+        const next = { ...(doc.items[key] || {}) };
+        for (const k of fields) next[k] = inputs[k].value;
+        try { await api('PUT', `/api/cippi/docs/${id}/items`, { key, data: next }); doc.items[key] = Object.fromEntries(Object.entries(next).filter(([, v]) => String(v).trim())); toast('Caratteristiche salvate.'); drawDesc(); } catch (err) { toastError(err); }
+      } }, 'Salva');
+      return [box, h('div', { class: 'cs-actions' }, saveBtn)];
+    };
+    const row = (k, v) => h('div', { class: 'cs-row' }, h('span', {}, k), h('b', {}, v == null || v === '' ? '—' : v));
+
+    function body() {
+      const n = ref.node;
+      if (cur === 'contesto') {
+        const ta = h('textarea', { rows: '12', disabled: ro, placeholder: 'Il contesto del documento: cliente, progetto, obiettivi, perimetro, chi è coinvolto…' }, doc.background || '');
+        return [h('p', { class: 'cs-help' }, 'Lo sfondo generale di tutto il documento: vale per ogni slide e ogni processo. Si scrive una volta e si vede da ovunque.'),
+          !doc.background && doc.backgroundSuggestion && !ro ? h('div', { class: 'cs-suggest' }, h('b', {}, 'Proposta di Cippi (dalle prime slide)'), h('p', {}, doc.backgroundSuggestion.slice(0, 600) + (doc.backgroundSuggestion.length > 600 ? '…' : '')),
+            h('button', { type: 'button', class: 'cs-btn', onclick: () => { ta.value = doc.backgroundSuggestion; } }, 'Usa il testo proposto')) : null,
+          fieldEl('Contesto', ta),
+          h('div', { class: 'cs-actions' }, ro ? null : h('button', { type: 'button', class: 'cs-btn primary', onclick: async () => {
+            try { const r = await patch(`/api/cippi/docs/${id}`, { background: ta.value }); doc.background = ta.value; R.updatedAt = r.updatedAt || R.updatedAt; toast('Contesto salvato.'); drawDesc(); } catch (err) { toastError(err); }
+          } }, 'Salva'))];
+      }
+      if (cur === 'descrizione') {
+        const fields = ref.kind === 'processo' ? ['obiettivo', 'descrizione', 'responsabile', 'tempi', 'criticita', 'note'] : ref.kind === 'attore' ? ['descrizione', 'responsabile', 'note'] : ref.kind === 'blocco' ? ['descrizione', 'note'] : ['descrizione', 'input', 'output', 'responsabile', 'tempi', 'criticita', 'note'];
+        return [h('p', { class: 'cs-help' }, 'Le caratteristiche restano in Cippi e valgono anche per le versioni successive del documento.'), ...metaForm(keyOf(ref), fields)];
+      }
+      if (ref.kind === 'nodo' && cur === 'generale') {
+        const st = statusOf(n) || 'invariato';
+        const editable = !ro && (n.type === 'step' || n.type === 'decisione' || n.type === 'rimando' || n.type === 'nota');
+        const ta = h('textarea', { rows: '3', disabled: !editable, onchange: (e) => { const x = R.list[R.cur]; for (const k of n.ids || [n.id]) x.texts[k] = toLines(e.target.value); save(); drawView(); drawDesc(); } }, nodeText(n));
+        return [
+          h('div', { class: 'cs-group' }, fieldEl('Testo', ta, editable ? 'Cambia il testo nella slide (anche nel .pptx).' : null)),
+          n.type === 'step' || n.type === 'decisione' ? h('div', { class: 'cs-group' }, h('div', { class: 'cs-label' }, 'Forma'),
+            h('div', { class: 'cs-choices' }, SHAPES.map(([g, ico, label]) => h('button', { type: 'button', class: 'cs-choice' + ((geomOf(n) || (n.type === 'decisione' ? 'flowChartDecision' : 'rect')) === g ? ' on' : ''), disabled: ro,
+              onclick: () => { setShape(n, 'geom', g); render(); } }, h('span', { class: 'ico' }, ico), label))),
+            h('small', { class: 'cs-hint' }, 'Per esempio un quadrato che diventa rombo: l\'attività diventa una decisione.')) : null,
+          n.type === 'step' || n.type === 'decisione' ? h('div', { class: 'cs-group' }, h('div', { class: 'cs-label' }, 'Stato rispetto all\'As-Is'),
+            h('div', { class: 'cs-choices' }, [['nuovo', 'Nuovo nel To-Be'], ['modificato', 'Modificato'], ['invariato', 'Invariato']].map(([k, label]) => h('button', { type: 'button', class: `cs-choice st-${k}` + (st === k ? ' on' : ''), disabled: ro,
+              onclick: () => { setShape(n, 'fill', k === 'invariato' ? 'FFFFFF' : legendFill(k)); render(); } }, h('span', { class: 'sw' }), label))),
+            h('small', { class: 'cs-hint' }, 'Il colore segue la legenda della presentazione.')) : null,
+          h('div', { class: 'cs-group' }, row('Protagonista', n.lane), row('Numero', n.num), row('Tipo', sub), row('Slide', `${R.cur + 1} · ${s.title}`)),
+        ];
+      }
+      if (ref.kind === 'nodo' && cur === 'tecnologia') {
+        const sys = f ? f.nodes.filter((x) => x.type === 'sistema' && x.attachedTo === n.id) : [];
+        return [
+          h('p', { class: 'cs-help' }, 'I sistemi disegnati accanto allo step (i cilindri) e le altre tecnologie, transazioni o strumenti usati.'),
+          h('div', { class: 'cs-group' }, h('div', { class: 'cs-label' }, 'Sistemi nella slide'),
+            sys.length ? sys.map((y) => fieldEl('Sistema', h('input', { type: 'text', value: nodeText(y), disabled: ro, onchange: (e) => { const x = R.list[R.cur]; for (const k of y.ids || [y.id]) x.texts[k] = [e.target.value]; save(); drawView(); } }))) : h('p', { class: 'cs-muted' }, 'Nessun sistema disegnato accanto a questo step.')),
+          ...metaForm(keyOf(ref), ['tecnologia']),
+        ];
+      }
+      if (ref.kind === 'nodo' && cur === 'collegamenti') {
+        const byId = new Map(f.nodes.map((y) => [y.id, y]));
+        const link = (e, other) => h('button', { type: 'button', class: 'cs-link', onclick: () => { ref = { kind: 'nodo', node: other }; cur = 'generale'; render(); } },
+          e.label ? h('span', { class: 'cs-pill' }, e.label) : null, h('span', {}, other.text), e.note ? h('small', {}, e.note) : null);
+        const ins = f.edges.filter((e) => e.to === n.id && byId.get(e.from));
+        const outs = f.edges.filter((e) => e.from === n.id && byId.get(e.to));
+        return [
+          h('div', { class: 'cs-group' }, h('div', { class: 'cs-label' }, `Arriva da (${ins.length})`), ins.length ? ins.map((e) => link(e, byId.get(e.from))) : h('p', { class: 'cs-muted' }, 'Nessuna freccia in entrata.')),
+          h('div', { class: 'cs-group' }, h('div', { class: 'cs-label' }, `Va verso (${outs.length})`), outs.length ? outs.map((e) => link(e, byId.get(e.to))) : h('p', { class: 'cs-muted' }, 'Nessuna freccia in uscita.')),
+        ];
+      }
+      if ((ref.kind === 'nodo' && cur === 'processo') || (ref.kind === 'processo' && cur === 'generale')) {
+        const p = ref.kind === 'processo' ? ref.proc : pr;
+        if (!p) return [h('p', { class: 'cs-muted' }, 'Questa slide non appartiene a un processo con codice.')];
+        const cmp = A.comparisons.find((c) => c.code === p.code);
+        return [
+          h('div', { class: 'cs-group' }, row('Codice', p.code), row('Nome', p.name), row('Versione', p.variant), row('Parti', `${p.slides.length} (slide ${p.slides.map((k) => posOfSrc(k) + 1).join(', ')})`),
+            row('Protagonisti', p.lanes.join(', ')), row('Step e decisioni', `${p.steps} · ${p.decisions} decisioni`), row('Sistemi', Object.entries(p.systems).map(([k, v]) => `${k} (${v})`).join(', '))),
+          p.new.length || p.changed.length ? h('div', { class: 'cs-group' }, h('div', { class: 'cs-label' }, 'Novità rispetto all\'As-Is'),
+            p.new.map((t) => h('div', { class: 'cs-li add' }, `+ ${t}`)), p.changed.map((t) => h('div', { class: 'cs-li mod' }, `~ ${t}`))) : null,
+          cmp ? h('div', { class: 'cs-group' }, h('div', { class: 'cs-label' }, 'Confronto con l\'As-Is'), row('Step solo nel To-Be', cmp.added.length), row('Step solo nell\'As-Is', cmp.removed.length)) : null,
+          ref.kind === 'nodo' ? h('div', { class: 'cs-actions' }, h('button', { type: 'button', class: 'cs-btn', onclick: () => { ref = { kind: 'processo', proc: p }; cur = 'generale'; render(); } }, 'Caratteristiche del processo')) : null,
+        ];
+      }
+      if (ref.kind === 'attore' && cur === 'generale') {
+        return [h('div', { class: 'cs-group' }, row('Nome', ref.lane.name), row('Attività in questa slide', ref.steps.length)),
+          h('div', { class: 'cs-group' }, h('div', { class: 'cs-label' }, 'Che cosa fa'), ref.steps.map((y) => h('button', { type: 'button', class: 'cs-link', onclick: () => { ref = { kind: 'nodo', node: y }; cur = 'generale'; render(); } }, h('span', {}, nodeText(y)), (y.systems || []).length ? h('small', {}, y.systems.join(', ')) : null)))];
+      }
+      if (ref.kind === 'blocco' && cur === 'generale') {
+        const b = ref.block;
+        const x = R.list[R.cur];
+        const current = x.texts && x.texts[b.id] ? fromParas(x.texts[b.id].map((l) => (typeof l === 'string' ? { text: l } : l))) : fromParas(b.paragraphs || [{ text: b.text }]);
+        return [h('div', { class: 'cs-group' }, row('Ruolo', ROLE[b.role] || b.role), row('Livello', b.level), row('Ordine di lettura', b.order)),
+          h('div', { class: 'cs-group' }, fieldEl('Testo', h('textarea', { rows: '6', disabled: ro || !b.paragraphs, onchange: (e) => { x.texts[b.id] = toLines(e.target.value); save(); drawView(); drawDesc(); } }, current), 'Una riga per paragrafo; due spazi all\'inizio = un livello di elenco più in basso.'))];
+      }
+      return [];
+    }
+    function render() {
+      const t = ref.kind === 'nodo' ? nodeText(ref.node) : title;
+      nav.replaceChildren(h('div', { class: 'cs-nav-title' }, h('small', {}, sub), h('b', {}, t)),
+        ...SECTIONS.map(([k, label]) => h('button', { type: 'button', class: 'cs-nav-item' + (cur === k ? ' on' : ''), onclick: () => { cur = k; render(); } }, label)),
+        doc.items[keyOf(ref)] ? h('div', { class: 'cs-nav-foot' }, '● con descrizione') : null);
+      main.replaceChildren(h('header', { class: 'cs-head' }, h('h2', {}, (SECTIONS.find(([k]) => k === cur) || [])[1]),
+        h('button', { type: 'button', class: 'cs-close', 'aria-label': 'Chiudi', onclick: close }, icon('close'))),
+      h('div', { class: 'cs-body' }, body()));
+    }
+    render();
+  }
+
+  function drawAll() { drawTools(); drawView().catch(toastError); drawDesc(); }
   drawAll();
   // frecce della tastiera per scorrere le slide
   const onKey = (e) => {
     if (!document.body.contains(shell)) return document.removeEventListener('keydown', onKey);
-    if (/input|textarea|select/i.test(document.activeElement.tagName) || document.querySelector('.modal-back')) return;
+    if (/input|textarea|select/i.test(document.activeElement.tagName) || document.querySelector('.modal-back, .cs-back')) return;
     if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); go(R.cur + 1); }
     if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(R.cur - 1); }
   };
