@@ -6,6 +6,8 @@ Perché esiste: gli agenti avevano usato due cartelle con convenzioni diverse (`
 
 **Non modificare questi file**: le schede vive sono in `docs/MEMORIA/<formato>/`.
 
+**Attenzione (da sistemare nel codice)**: `app/src/cippi/impronta.js` legge tutti i `*.impronta.json` sotto `docs/MEMORIA`, archivio compreso, quindi oggi vede due volte il kick-off (`admiring-hopper/MEMORIA/pptx/kickoff-txt-biosiris.impronta.json` e quello vivo). Serve far saltare le cartelle `_archivio/` (o che iniziano con `_`) in `modelliNoti`; finché non è fatto, nel pannello Documento di Cippi il kick-off può comparire due volte, la seconda con la scheda nell'archivio.
+
 ## Cosa c'è
 
 | Cartella | Agente | Sessione | Ramo | Commit | File | Dove è finito |

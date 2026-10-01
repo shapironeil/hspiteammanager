@@ -35,7 +35,7 @@
     "nota": "la scheda originale dice solo che il tema dichiara Aptos / Aptos Display e che accent1 è 156082: l'ordine maggiore/minore è quello standard di Office 2023, da verificare sul file; gli altri colori del tema non sono stati rilevati. Nelle slide tutto è Titillium Web e i blu del brand sono 164194 e 2F5496"
   },
   "layout": {
-    "disponibili": 24,
+    "quanti": 24,
     "master": 4,
     "usati": { "Diapositiva titolo": [1], "Titolo e contenuto": [2, 3], "1_Layout personalizzato": [4], "Layout personalizzato": [5] },
     "nonUsati": 18,

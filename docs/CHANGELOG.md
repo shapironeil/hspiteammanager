@@ -2,6 +2,9 @@
 
 La versione del portale sta in `version.json` (unica fonte) e compare nella pagina di accesso ("v0.10.0 beta") e in Sistema. Ogni app del catalogo ha la sua versione in `app/catalogo/<id>/app.json` e le sue novità in **App e programmi → Novità**.
 
+## 0.10.1 — 1 ottobre 2026
+- Cippi: le schede archiviate in `docs/MEMORIA/_archivio/` non contano più come modelli noti (il kick-off compariva due volte in "Somiglia a").
+
 ## 0.10.0 — 1 ottobre 2026 (integrazione del lavoro di quattro agenti)
 
 Porta in `main` tutto il lavoro rimasto sui rami (dettagli e diagnosi in `docs/REPORT/2026-10-01-integrazione.md`).

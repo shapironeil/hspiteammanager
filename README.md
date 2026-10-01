@@ -2,7 +2,7 @@
 
 Portale interno (beta) per il team HSPI: account con ruoli, progetti con le persone autorizzate, **Esplora file** con cartelle vere (personali e di progetto), **Verbale Studio** integrato, **GestioneCelle** per le mappe dei processi, **Cippi** per le presentazioni PowerPoint (lettura, revisione, modelli), programmi che si aprono dal portale con la loro guida, scambio file, log e pannello di controllo. Si installa anche sul telefono come app.
 
-> **Stato:** v0.10.0 beta — in locale sul PC che lo ospita. Da usare con dati di prova finché non sono decisi i punti in `docs/PROGETTI-E-DATI.md`. Le novità di ogni versione sono in `docs/CHANGELOG.md`; le regole per chi sviluppa (agenti compresi) in `docs/REGOLE-AGENTI.md`; la memoria dei file analizzati in `docs/MEMORIA/`.
+> **Stato:** v0.10.1 beta — in locale sul PC che lo ospita. Da usare con dati di prova finché non sono decisi i punti in `docs/PROGETTI-E-DATI.md`. Le novità di ogni versione sono in `docs/CHANGELOG.md`; le regole per chi sviluppa (agenti compresi) in `docs/REGOLE-AGENTI.md`; la memoria dei file analizzati in `docs/MEMORIA/`.
 
 ## Avvio rapido (Windows)
 

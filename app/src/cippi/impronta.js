@@ -112,7 +112,8 @@ function modelliNoti(dir) {
     try { entries = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
     for (const e of entries) {
       const p = path.join(d, e.name);
-      if (e.isDirectory()) walk(p);
+      // le cartelle che iniziano con "_" (per esempio _archivio: le schede vecchie) non sono modelli vivi
+      if (e.isDirectory()) { if (!e.name.startsWith('_')) walk(p); continue; }
       else if (/\.impronta\.json$/i.test(e.name)) {
         try {
           const j = JSON.parse(fs.readFileSync(p, 'utf8'));

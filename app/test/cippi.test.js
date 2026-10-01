@@ -211,6 +211,8 @@ test('kick-off nel portale: modello noto riconosciuto, sfondo del layout, trova 
   const kid = r.data.id;
   const d = (await luca.get(`/api/cippi/docs/${kid}`)).data;
   assert.ok(d.impronta && d.impronta.somiglianze.some((x) => x.id === 'kickoff-txt-biosiris' && x.punteggio >= 60), 'somiglia al kick-off in memoria: ' + JSON.stringify(d.impronta && d.impronta.somiglianze));
+  assert.ok(!d.impronta.somiglianze.some((x) => /_archivio/.test(x.scheda || '')), 'le schede archiviate (_archivio) non contano come modelli vivi');
+  assert.equal(d.impronta.somiglianze.filter((x) => x.id === 'kickoff-txt-biosiris').length, 1, 'il modello compare una volta sola');
   assert.equal(d.analysis.meta.company, 'Fornitore di prova S.p.A.');
   const sl = (await luca.get(`/api/cippi/docs/${kid}/slide/3`)).data;
   assert.ok(sl.background.some((s) => (s.paragraphs || []).some((p) => p.text === 'RISERVATO')), 'la slide porta con sé le forme del layout');

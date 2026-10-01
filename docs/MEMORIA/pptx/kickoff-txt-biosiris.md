@@ -195,5 +195,5 @@ Le funzioni proposte il 01/10/2026 sono state approvate e realizzate in Cippi 0.
 - `admiring-hopper`, commit `fff10ab` (stessa scheda, aggiornata; `docs/REPORT/2026-10-01-cippi-kickoff.md`; `docs/CIPPI.md`): misure con Cippi 0.2.0, esportazione valida, limiti che restano, nomi reali delle funzioni.
 - `kickoff-txt-biosiris.impronta.json` (admiring-hopper, `e5ab667`): colori completi del tema, layout disponibili, forme del layout, segnali per parte, larghezze della tabella, glossario atteso, blocco `cippi`.
 - `app/src/cippi/impronta.js` (admiring-hopper, `fff10ab`): quali campi dell'impronta vengono confrontati.
-- `cool-noether`, commit `74c4dad` (`docx/kit-aq-id2610.conoscenza.json`, `fascicoli/fascicolo-aq-id2610.md`) e `8314b5a` (`xlsx/piano-di-lavoro-txt-biosiris.md`): aziende del RTI, catena dei documenti, sinergia con il piano di lavoro.
-- `awesome-cray`, commit `51e11c0` (`pptx/sal-presentazione.md`): confronto con la famiglia grafica del SAL R-CAP.AC.
+- `cool-noether`, commit `74c4dad` (`../docx/kit-aq-id2610.conoscenza.json`, `../fascicoli/fascicolo-aq-id2610.md`) e `8314b5a` (`../xlsx/piano-di-lavoro-txt-biosiris.md`): aziende del RTI, catena dei documenti, sinergia con il piano di lavoro.
+- `awesome-cray`, commit `51e11c0` (`sal-presentazione.md`, stessa cartella): confronto con la famiglia grafica del SAL R-CAP.AC.
