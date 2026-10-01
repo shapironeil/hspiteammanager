@@ -1,8 +1,8 @@
 # HSPI Team Manager
 
-Portale interno (beta) per il team HSPI: account con ruoli, progetti con le persone autorizzate, programmi che si aprono dal portale con la loro guida, scambio file, log e pannello di controllo.
+Portale interno (beta) per il team HSPI: account con ruoli, progetti con le persone autorizzate, **Esplora file** con cartelle vere (personali e di progetto), **Verbale Studio** integrato, programmi che si aprono dal portale con la loro guida, scambio file, log e pannello di controllo. Si installa anche sul telefono come app.
 
-> **Stato:** v0.3 — in locale sul PC che lo ospita. Da usare con dati di prova finché non sono decisi i punti in `docs/PROGETTI-E-DATI.md`.
+> **Stato:** v0.5 — in locale sul PC che lo ospita. Da usare con dati di prova finché non sono decisi i punti in `docs/PROGETTI-E-DATI.md`.
 
 ## Avvio rapido (Windows)
 
@@ -23,8 +23,10 @@ Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Scarica i
 |---|:-:|:-:|:-:|
 | Home, annunci | ✓ | ✓ + pubblica annunci | ✓ |
 | Progetti: solo quelli di cui si è membri | ✓ | ✓ + crea e sceglie le persone | ✓ tutti |
+| Esplora file: i miei file e le cartelle dei miei progetti (cartelle, caricamento, anteprima, modifica testi, versioni, cestino, ricerca) | ✓ | ✓ | ✓ tutti i progetti |
+| Verbale Studio: verbali dei progetti di cui si è membri | ✓ | ✓ + addestra l'AI del progetto | ✓ + importazione, gestione AI locale |
 | Programmi: apri dal portale e leggi la guida | ✓ | ✓ + modifica descrizione e guida | ✓ |
-| File: carica, invia, ricevi | ✓ | ✓ | ✓ + tutti i file |
+| File inviati: carica, invia, ricevi | ✓ | ✓ | ✓ + tutti i file |
 | Profilo, avatar, cambio password, segnala un problema | ✓ | ✓ | ✓ |
 | Team (elenco persone e ultimo accesso) | | ✓ | ✓ |
 | Account (approva, crea, ruoli e qualifiche, disabilita, reimposta password) | | | ✓ |
@@ -32,12 +34,18 @@ Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Scarica i
 | Errori e bug | | | ✓ |
 | Sistema (link di accesso, spazio, impostazioni) | | | ✓ |
 
+## Prove automatiche
+
+Dalla cartella `app`: `node --test --test-concurrency=1 test/*.test.js` (API: account, Esplora file, Verbale Studio, sicurezza). Usano una cartella temporanea, mai i dati veri.
+Prove nel browser (solo sul PC di sviluppo, serve Playwright): `node test/browser/explorer.ui.js`, `verbali.ui.js`, `pwa.ui.js`.
+
 ## Documentazione
 
 | File | Contenuto |
 |---|---|
 | `docs/PROGETTI-E-DATI.md` | Come sono trattati i file dei progetti, permessi, decisioni aperte |
-| `docs/INTEGRAZIONE-APP.md` | Archivio unico: importazione una tantum, come le app usano i file dei progetti |
+| `docs/INTEGRAZIONE-APP.md` | Archivio unico, Verbale Studio nel portale, importazione dal vecchio programma, API di Esplora file |
+| `docs/TELEFONO.md` | Usare e installare il portale dal telefono con Tailscale (HTTPS) |
 | `docs/DIPENDENZE.md` | Albero delle dipendenze, struttura delle cartelle, regole per aggiungere cose |
 | `docs/ACCESSO-RETE.md` | Come far entrare i colleghi: stessa Wi-Fi, Tailscale, cosa evitare |
 | `docs/ARCHITETTURA.md` | Architettura, moduli, modello dati, decisioni aperte |

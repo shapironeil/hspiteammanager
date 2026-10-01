@@ -35,6 +35,10 @@ avvia.bat
     ├── src/routes/programs.js       catalogo programmi
     ├── src/routes/files.js          file personali e invii
     ├── src/routes/projects.js       progetti, membri, file locali dei progetti
+    ├── src/routes/explorer.js       Esplora file: spazi personali e di progetto
+    │   └── src/explorer.js          cartelle vere, indice, versioni, cestino, streaming
+    ├── src/routes/verbali.js        Verbale Studio (/api/vs/)
+    │   └── src/verbali/             archivio.js, importa.js, ollama.js, docx.js, testi.js
     └── src/routes/admin.js          home, annunci, log, errori, sistema
         │
         ├── src/storage.js           unico modulo che tocca i file su disco
@@ -54,6 +58,8 @@ app/public/index.html
 └── js/app.js                        avvio, login, menu laterale, navigazione
     ├── js/views-main.js             Home, Programmi, File, Profilo
     ├── js/views-projects.js         Progetti: elenco, scheda, file
+    ├── js/explorer.js               Esplora file (anche dentro la scheda progetto)
+    ├── js/pwa.js + /sw.js           app installabile: il service worker non salva mai i dati
     ├── js/tour.js                   guida a popup del primo accesso
     ├── js/views-admin.js            Team/Account, Log, Errori e bug, Sistema
     ├── js/ui.js                     elementi, icone, finestre, avvisi, formati
@@ -77,11 +83,15 @@ hspiteammanager/
 ├── docs/                documentazione
 ├── scripts/             script di servizio (primo download)
 └── data/                creata al primo avvio, MAI su GitHub
-    ├── portale.db       database: account, programmi, log, impostazioni
-    └── storage/         file caricati (programmi e file personali)
+    ├── portale.db       database: account, programmi, log, impostazioni, indice dei file
+    ├── storage/         file caricati (programmi e file inviati)
+    ├── personale/       "I miei file" di ogni persona (Esplora file)
+    └── verbali/         template, preimpostazioni e impostazioni di Verbale Studio
 ```
 
-`data/` contiene tutto ciò che è tuo e non rigenerabile. Per fare un backup basta copiare quella cartella a portale fermo.
+`data/` e `progetti/` contengono tutto ciò che è tuo e non rigenerabile. Per fare un backup basta copiare quelle due cartelle a portale fermo.
+
+Verbale Studio nel portale (`app/public/verbali/`) è l'interfaccia dell'app originale adattata: nessuna libreria esterna, AI solo locale (Ollama sul PC del portale, facoltativo).
 
 ## 5. Regole per aggiungere cose
 

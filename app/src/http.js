@@ -71,6 +71,16 @@ function clientIp(req) {
   return String(req.socket.remoteAddress || '').replace(/^::ffff:/, '');
 }
 const isLoopback = (ip) => ip === '127.0.0.1' || ip === '::1';
+// "Dal PC che ospita il portale" = connessione da 127.0.0.1 E nessun intermediario.
+// Con "tailscale serve" (HTTPS per i telefoni) le richieste dei colleghi arrivano anch'esse da 127.0.0.1,
+// ma portano le intestazioni del proxy e un nome host diverso da localhost: non sono locali.
+function isLocalRequest(req, ip) {
+  if (!isLoopback(ip)) return false;
+  const hd = req.headers;
+  if (hd['x-forwarded-for'] || hd['x-forwarded-host'] || hd['forwarded'] || hd['tailscale-user-login'] || hd['x-real-ip']) return false;
+  const host = String(hd.host || '').replace(/:\d+$/, '').replace(/^\[|\]$/g, '').toLowerCase();
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+}
 
 function serveFile(res, baseDir, relPath, cache) {
   const file = path.resolve(baseDir, '.' + path.sep + relPath);
@@ -106,7 +116,7 @@ async function handle(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const pathname = url.pathname;
   const ctx = { req, res, query: url.searchParams, ip: clientIp(req), user: null, params: {} };
-  ctx.isLocal = isLoopback(ctx.ip);
+  ctx.isLocal = isLocalRequest(req, ctx.ip);
   ctx.json = (status, data, headers) => sendJson(res, status, data, headers);
   ctx.body = () => readJson(req);
 

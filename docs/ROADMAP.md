@@ -26,7 +26,11 @@
 - [x] Logo personalizzato dalla cartella `images/`
 - [x] v0.3: Progetti con membri e link a OneDrive, programmi come web app da `apptools`, tema chiaro/scuro, sfondo statico, guida a popup, `carica-su-github.bat`
 - [x] v0.4: anteprima dei file nei progetti, nuova cartella, sostituzione con storico, importazione una tantum, `aggiorna.bat` che allinea la cartella di lavoro
-- [ ] Adattare Verbale Studio all'archivio unico (serve il suo codice; vedi `INTEGRAZIONE-APP.md`)
+- [x] v0.5: Esplora file (cartelle vere personali e di progetto, indice nel database, ricerca, versioni, cestino, modifica testi)
+- [x] v0.5: Verbale Studio dentro il portale, archivio nelle cartelle dei progetti, importazione dal vecchio programma
+- [x] v0.5: app installabile sul telefono (PWA) e guida Tailscale (`TELEFONO.md`)
+- [ ] Provare l'importazione con i dati veri di Verbale Studio sul PC del portale
+- [ ] Backup periodico della cartella `data/` e di `progetti/` (oggi: versioni e cestino, nessuna copia esterna)
 - [ ] Decidere come trattare i file aziendali dei progetti (vedi `PROGETTI-E-DATI.md`)
 - [ ] Decidere come collegare gli altri PC: porta aperta dall'IT, oppure altra strada approvata
 - [ ] Prova con i primi colleghi
