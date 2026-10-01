@@ -273,7 +273,7 @@ const MIGRATIONS = [
   DELETE FROM programs WHERE name = 'Verbale Studio' AND description = 'App per la redazione dei verbali.'
     AND file_id IS NULL AND folder IS NULL AND (url IS NULL OR url = '');
   `,
-  // 9 - Cippi: presentazioni (documenti e modelli), punti chiave della revisione, glossario del progetto
+  // 9 - MPoint (allora Cippi): presentazioni (documenti e modelli), punti chiave della revisione, glossario del progetto
   `
   CREATE TABLE cippi_docs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -319,7 +319,7 @@ const MIGRATIONS = [
     PRIMARY KEY (project_id, term)
   );
   `,
-  // 10 - Cippi: contesto generale del documento e caratteristiche degli elementi (step, attori, processi, blocchi)
+  // 10 - MPoint (allora Cippi): contesto generale del documento e caratteristiche degli elementi (step, attori, processi, blocchi)
   `
   ALTER TABLE cippi_docs ADD COLUMN background TEXT NOT NULL DEFAULT '';
   CREATE TABLE cippi_items (
@@ -331,19 +331,30 @@ const MIGRATIONS = [
     PRIMARY KEY (doc_id, key)
   );
   `,
-  // 11 - Cippi: modifiche a livello di documento (trova e sostituisci anche nei layout: piè di pagina, scritte fisse)
+  // 11 - MPoint (allora Cippi): modifiche a livello di documento (trova e sostituisci anche nei layout: piè di pagina, scritte fisse)
   `
   ALTER TABLE cippi_docs ADD COLUMN edits TEXT NOT NULL DEFAULT '{}';
   `,
   // 12 - MPoint: file recenti per persona (ultima apertura di ogni documento), per la schermata iniziale
   `
-  CREATE TABLE cippi_recenti (
+  CREATE TABLE mpoint_recenti (
     user_id INTEGER NOT NULL,
     doc_id INTEGER NOT NULL,
     opened_at TEXT NOT NULL,
     PRIMARY KEY (user_id, doc_id)
   );
-  CREATE INDEX idx_cippi_recenti_user ON cippi_recenti(user_id, opened_at);
+  CREATE INDEX idx_mpoint_recenti_user ON mpoint_recenti(user_id, opened_at);
+  `,
+  // 13 - MPoint: le tabelle prendono il nome dell'app (prima si chiamava Cippi); i dati restano, gli indici si rifanno
+  `
+  ALTER TABLE cippi_docs RENAME TO mpoint_docs;
+  ALTER TABLE cippi_points RENAME TO mpoint_points;
+  ALTER TABLE cippi_glossary RENAME TO mpoint_glossary;
+  ALTER TABLE cippi_items RENAME TO mpoint_items;
+  DROP INDEX IF EXISTS idx_cippi_docs_project;
+  CREATE INDEX idx_mpoint_docs_project ON mpoint_docs(project_id, kind);
+  DROP INDEX IF EXISTS idx_cippi_points_doc;
+  CREATE INDEX idx_mpoint_points_doc ON mpoint_points(doc_id, slide);
   `,
 ];
 

@@ -47,6 +47,6 @@ Ogni agente chiude il lavoro con una nota (nel messaggio finale e, per le modifi
 - Tutto in italiano: nomi, commenti, messaggi, documentazione.
 - Nessuna dipendenza npm, nessuna libreria esterna nell'interfaccia (vedi `docs/DIPENDENZE.md`).
 - Le migrazioni del database si aggiungono **in fondo** a `MIGRATIONS` in `app/src/db.js`, numerate di seguito, mai modificate; chi integra rinumera se due agenti hanno usato lo stesso numero.
-- Quando cambia l'analisi di MPoint si alza `ANALYZER` in `app/src/routes/cippi.js`.
+- Quando cambia l'analisi di MPoint si alza `ANALYZER` in `app/src/routes/mpoint.js`.
 - Ogni app ha la sua versione in `app/catalogo/<id>/app.json` con la voce in `novita`; il portale ha `version.json`.
 - Nessun file di un cliente nel repository: le prove usano presentazioni, fogli e documenti inventati.

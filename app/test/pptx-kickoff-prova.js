@@ -6,7 +6,7 @@
 // forme (funzionalità · piattaforma · finalità), un masterplan a Gantt incollato come immagine SVG, la tabella
 // del contratto con la riga del totale a celle unite, un logo fisso nel layout, un carattere di prova e un testo
 // ridotto dall'adattamento automatico.
-const { sp, pic, tbl, title, packDeck, resetIds } = require('../src/cippi/pptx-new');
+const { sp, pic, tbl, title, packDeck, resetIds } = require('../src/mpoint/pptx-new');
 
 const THEME = { colors: { accent1: '225546', accent2: 'A9D7B6', accent3: '318B71', accent4: '42BA97', accent5: '1482AB', accent6: '264457', dk2: '335B74', lt2: 'DFE3E5' }, fonts: { major: 'Poppins', minor: 'Poppins' } };
 

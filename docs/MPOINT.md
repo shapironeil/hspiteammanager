@@ -1,6 +1,6 @@
 # MPoint (prima MPoint) — presentazioni del team
 
-> **Nomi interni.** Dal 1° ottobre 2026 l'app si chiama MPoint. Restano con il nome vecchio, perché non si vedono: la cartella del motore `app/src/cippi/`, le rotte `/api/cippi/…`, le tabelle `cippi_docs`, `cippi_points`, `cippi_glossary`, `cippi_items`, le prove `app/test/cippi.test.js` e `app/test/browser/cippi.ui.js`. La pagina è `/mpoint/`; `/mpoint/` rimanda lì.
+> **Nome.** Dal 1° ottobre 2026 l'app si chiama MPoint, anche dentro: motore `app/src/mpoint/`, rotte `/api/mpoint/…`, tabelle `mpoint_docs`, `mpoint_points`, `mpoint_glossary`, `mpoint_items`, `mpoint_recenti`, cartella `MPoint/` nei progetti, `data/mpoint/`, prove `app/test/mpoint.test.js` e `app/test/browser/mpoint.ui.js`. La pagina è `/mpoint/`; il vecchio indirizzo `/cippi/` rimanda lì.
 
 MPoint è l'app del portale per le presentazioni PowerPoint, come i documenti di chiusura progetto con i flussi To-Be. Si apre da **App e programmi** (non sta nel menu laterale: vive nel suo ambiente) oppure all'indirizzo `/mpoint/`; il bottone in alto a sinistra richiama il menu del portale. Si può installare come app del browser o scaricare sul PC con HSPI Client (vedi `docs/APP.md`).
 
@@ -119,13 +119,13 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
 
 All'apertura MPoint mostra, nell'ordine:
 
-1. **Recenti**: gli ultimi documenti aperti dalla persona (l'ultima apertura di ognuno sta in `cippi_recenti`, per persona); se sono meno di otto, si completano con gli ultimi documenti aggiornati nel team ("aggiornato il…" invece di "aperto da te il…").
+1. **Recenti**: gli ultimi documenti aperti dalla persona (l'ultima apertura di ognuno sta in `mpoint_recenti`, per persona); se sono meno di otto, si completano con gli ultimi documenti aggiornati nel team ("aggiornato il…" invece di "aperto da te il…").
 2. **Cartelle dei progetti**: una scheda per ogni progetto visibile, con quanti documenti e modelli ha, quanti PowerPoint nella cartella del progetto sono ancora **da importare** e l'ultimo aggiornamento. La scheda apre la cartella dentro MPoint (`#/progetto/<id>`).
 3. **Modelli**: quelli del team (dei progetti visibili e condivisi).
 
 La casella **Cerca** filtra documenti e modelli per nome, progetto e autore.
 
-La **cartella di un progetto** mostra i suoi documenti, poi i file `.pptx` presenti nella cartella del progetto (indice di Esplora file, cestino e versioni esclusi): quelli già importati rimandano al loro documento ("Apri in MPoint"), gli altri si importano con un clic (`POST /api/cippi/import-progetto`, il file resta dov'è). "Apri in Esplora file" porta alla cartella nel portale. I pulsanti Importa, Crea da zero e Nuovo da modello hanno già il progetto scelto.
+La **cartella di un progetto** mostra i suoi documenti, poi i file `.pptx` presenti nella cartella del progetto (indice di Esplora file, cestino e versioni esclusi): quelli già importati rimandano al loro documento ("Apri in MPoint"), gli altri si importano con un clic (`POST /api/mpoint/import-progetto`, il file resta dov'è). "Apri in Esplora file" porta alla cartella nel portale. I pulsanti Importa, Crea da zero e Nuovo da modello hanno già il progetto scelto.
 
 ## Creare, importare, salvare
 
@@ -144,11 +144,11 @@ La **cartella di un progetto** mostra i suoi documenti, poi i file `.pptx` prese
 
 | Cosa | Dove |
 |---|---|
-| File di partenza di ogni versione | `data/cippi/sorgenti/<impronta>.pptx`: non si perde anche se lo si sposta in Esplora file. Entra nei backup. |
-| Analisi (rifatta da sola se cambia il modo di leggere) | `data/cippi/analisi/` |
+| File di partenza di ogni versione | `data/mpoint/sorgenti/<impronta>.pptx`: non si perde anche se lo si sposta in Esplora file. Entra nei backup. |
+| Analisi (rifatta da sola se cambia il modo di leggere) | `data/mpoint/analisi/` |
 | Copia, versioni salvate, appunti | cartella del progetto, `MPoint/<nome documento>/` (`Appunti/` per PDF, Word, immagini). I modelli in `MPoint/Modelli/`. |
-| Documenti, punti, glossario, contesto, caratteristiche | database: `cippi_docs` (con `background`), `cippi_points`, `cippi_glossary`, `cippi_items` (migrazioni 9 e 10) |
-| Documenti, punti, glossario | database: `cippi_docs`, `cippi_points`, `cippi_glossary` (migrazione 9); le regole di sostituzione nei layout in `cippi_docs.edits` (migrazione 10) |
+| Documenti, punti, glossario, contesto, caratteristiche | database: `mpoint_docs` (con `background`), `mpoint_points`, `mpoint_glossary`, `mpoint_items` (migrazioni 9 e 10) |
+| Documenti, punti, glossario | database: `mpoint_docs`, `mpoint_points`, `mpoint_glossary` (migrazione 9); le regole di sostituzione nei layout in `mpoint_docs.edits` (migrazione 10) |
 | Modelli noti (memoria dei file analizzati) | `docs/MEMORIA/<formato>/<template>.impronta.json`, letti dal repository accanto alla cartella `app` |
 
 **Permessi:** vede e modifica un documento chi vede il progetto. Lo elimina chi l'ha creato o un Manager del progetto. I file nella cartella del progetto restano.
@@ -174,51 +174,51 @@ La **cartella di un progetto** mostra i suoi documenti, poi i file `.pptx` prese
 
 | Metodo e indirizzo | Cosa |
 |---|---|
-| `GET /api/cippi` | `recent` (ultimi documenti aperti dalla persona), `projects` (cartelle dei progetti con il riepilogo: documenti, modelli, file, da importare, ultimo aggiornamento), documenti e modelli visibili |
-| `PUT /api/cippi/import?projectId=&name=[&nome=]` | importa un `.pptx` (il corpo è il file) |
-| `POST /api/cippi/import-progetto` `{projectId, path}` | importa un `.pptx` della cartella del progetto |
-| `GET /api/cippi/file-progetto?projectId=` | `.pptx` presenti nella cartella del progetto, con `docId` se già importati |
-| `POST /api/cippi/nuovo` `{projectId, name}` | crea da zero |
-| `GET /api/cippi/docs/:id[?modello=ID]` | documento, analisi completa, punti, collegamenti a GestioneCelle, appunti, confronto con un modello |
-| `GET /api/cippi/docs/:id/slide/:n` | forme della slide di origine n (per l'anteprima) |
-| `GET /api/cippi/docs/:id/media?name=ppt/media/…` | immagini |
-| `PATCH /api/cippi/docs/:id` | `{name, description, status, shared, background, slides: [{src, texts: {idForma: [righe]}, geom: {idForma: forma}, fill: {idForma: colore}, note}], updatedAt}`. Il 409 avvisa se qualcun altro ha salvato nel frattempo. |
-| `DELETE /api/cippi/docs/:id` | elimina |
-| `GET /api/cippi/docs/:id/download` | `.pptx` con le modifiche |
-| `POST /api/cippi/docs/:id/salva-versione` | salva nella cartella del progetto e rianalizza |
-| `POST /api/cippi/docs/:id/modello` | salva come modello |
-| `POST /api/cippi/models/:id/nuovo` | `{projectId, name, parts: [{part, count}], vuoto}`: crea da un modello |
-| `POST /api/cippi/docs/:id/points` | aggiunge un punto: `{slide, kind: chiave\|nota\|domanda\|da-fare, text}` |
-| `PATCH /api/cippi/points/:id` | modifica un punto |
-| `DELETE /api/cippi/points/:id` | elimina un punto |
-| `PUT /api/cippi/docs/:id/appunti?name=` | appunti nella cartella del documento |
-| `PUT /api/cippi/glossario` | `{projectId, term, meaning}` |
-| `PUT /api/cippi/docs/:id/items` | `{key, data: {descrizione, tecnologia, input, output, responsabile, tempi, criticita, obiettivo, note}}`: caratteristiche di un elemento; la chiave è stabile tra le versioni (`nodo\|<codice processo>\|<variante>\|<testo dello step>`, `attore\|<nome>`, `processo\|<codice>\|<variante>`, `blocco\|<titolo slide>\|<testo>`). Dati vuoti = elimina |
-| `POST /api/cippi/docs/:id/sostituisci` | `{find, replace, matchCase, whole, layouts, anteprima}`: trova e sostituisci in tutte le slide (testi e celle) e, con `layouts`, nei layout e nei master. Risponde `{count, layoutCount, slides}`; con `anteprima` conta e basta |
-| `PATCH /api/cippi/docs/:id` (in più) | per slide `cells: {idTabella: {"riga,colonna": [righe]}}` e `tableRows: {idTabella: [{after, cells}]}`; a livello di documento `edits: {replace: [...]}` |
-| `GET /api/cippi/docs/:id` (in più) | `impronta` (modelli noti che somigliano), `edits`, `analysis.meta` esteso (azienda, co-autori, ultime modifiche), `analysis.fontsUsed` |
-| `GET /api/cippi/docs/:id/slide/:n` (in più) | `background`: le forme fisse del layout e del master |
+| `GET /api/mpoint` | `recent` (ultimi documenti aperti dalla persona), `projects` (cartelle dei progetti con il riepilogo: documenti, modelli, file, da importare, ultimo aggiornamento), documenti e modelli visibili |
+| `PUT /api/mpoint/import?projectId=&name=[&nome=]` | importa un `.pptx` (il corpo è il file) |
+| `POST /api/mpoint/import-progetto` `{projectId, path}` | importa un `.pptx` della cartella del progetto |
+| `GET /api/mpoint/file-progetto?projectId=` | `.pptx` presenti nella cartella del progetto, con `docId` se già importati |
+| `POST /api/mpoint/nuovo` `{projectId, name}` | crea da zero |
+| `GET /api/mpoint/docs/:id[?modello=ID]` | documento, analisi completa, punti, collegamenti a GestioneCelle, appunti, confronto con un modello |
+| `GET /api/mpoint/docs/:id/slide/:n` | forme della slide di origine n (per l'anteprima) |
+| `GET /api/mpoint/docs/:id/media?name=ppt/media/…` | immagini |
+| `PATCH /api/mpoint/docs/:id` | `{name, description, status, shared, background, slides: [{src, texts: {idForma: [righe]}, geom: {idForma: forma}, fill: {idForma: colore}, note}], updatedAt}`. Il 409 avvisa se qualcun altro ha salvato nel frattempo. |
+| `DELETE /api/mpoint/docs/:id` | elimina |
+| `GET /api/mpoint/docs/:id/download` | `.pptx` con le modifiche |
+| `POST /api/mpoint/docs/:id/salva-versione` | salva nella cartella del progetto e rianalizza |
+| `POST /api/mpoint/docs/:id/modello` | salva come modello |
+| `POST /api/mpoint/models/:id/nuovo` | `{projectId, name, parts: [{part, count}], vuoto}`: crea da un modello |
+| `POST /api/mpoint/docs/:id/points` | aggiunge un punto: `{slide, kind: chiave\|nota\|domanda\|da-fare, text}` |
+| `PATCH /api/mpoint/points/:id` | modifica un punto |
+| `DELETE /api/mpoint/points/:id` | elimina un punto |
+| `PUT /api/mpoint/docs/:id/appunti?name=` | appunti nella cartella del documento |
+| `PUT /api/mpoint/glossario` | `{projectId, term, meaning}` |
+| `PUT /api/mpoint/docs/:id/items` | `{key, data: {descrizione, tecnologia, input, output, responsabile, tempi, criticita, obiettivo, note}}`: caratteristiche di un elemento; la chiave è stabile tra le versioni (`nodo\|<codice processo>\|<variante>\|<testo dello step>`, `attore\|<nome>`, `processo\|<codice>\|<variante>`, `blocco\|<titolo slide>\|<testo>`). Dati vuoti = elimina |
+| `POST /api/mpoint/docs/:id/sostituisci` | `{find, replace, matchCase, whole, layouts, anteprima}`: trova e sostituisci in tutte le slide (testi e celle) e, con `layouts`, nei layout e nei master. Risponde `{count, layoutCount, slides}`; con `anteprima` conta e basta |
+| `PATCH /api/mpoint/docs/:id` (in più) | per slide `cells: {idTabella: {"riga,colonna": [righe]}}` e `tableRows: {idTabella: [{after, cells}]}`; a livello di documento `edits: {replace: [...]}` |
+| `GET /api/mpoint/docs/:id` (in più) | `impronta` (modelli noti che somigliano), `edits`, `analysis.meta` esteso (azienda, co-autori, ultime modifiche), `analysis.fontsUsed` |
+| `GET /api/mpoint/docs/:id/slide/:n` (in più) | `background`: le forme fisse del layout e del master |
 
 **Codice:**
 
 | File | Cosa fa |
 |---|---|
-| `app/src/cippi/pptx-read.js` | lettura del `.pptx` |
-| `app/src/cippi/pptx-extra.js` | sezioni native, metadati estesi, tabelle con celle unite, forme personalizzate, testo ridotto |
-| `app/src/cippi/gantt-svg.js` | il masterplan dall'immagine SVG |
-| `app/src/cippi/analyze.js` | struttura, flussi, controlli, modello |
-| `app/src/cippi/struttura.js` | pillole, tabelle disegnate, sezioni native, indice, numeri e totali, caratteri |
-| `app/src/cippi/glossario-pa.js` | glossario preimpostato della pubblica amministrazione |
-| `app/src/cippi/impronta.js` | impronta della presentazione e riconoscimento dei modelli noti |
-| `app/src/cippi/pptx-write.js` | esportazione |
-| `app/src/cippi/pptx-edit.js` | celle e righe delle tabelle, trova e sostituisci, pulizia del pacchetto |
-| `app/src/cippi/pptx-new.js` | presentazione base e presentazioni di prova |
-| `app/src/routes/cippi.js` | API |
+| `app/src/mpoint/pptx-read.js` | lettura del `.pptx` |
+| `app/src/mpoint/pptx-extra.js` | sezioni native, metadati estesi, tabelle con celle unite, forme personalizzate, testo ridotto |
+| `app/src/mpoint/gantt-svg.js` | il masterplan dall'immagine SVG |
+| `app/src/mpoint/analyze.js` | struttura, flussi, controlli, modello |
+| `app/src/mpoint/struttura.js` | pillole, tabelle disegnate, sezioni native, indice, numeri e totali, caratteri |
+| `app/src/mpoint/glossario-pa.js` | glossario preimpostato della pubblica amministrazione |
+| `app/src/mpoint/impronta.js` | impronta della presentazione e riconoscimento dei modelli noti |
+| `app/src/mpoint/pptx-write.js` | esportazione |
+| `app/src/mpoint/pptx-edit.js` | celle e righe delle tabelle, trova e sostituisci, pulizia del pacchetto |
+| `app/src/mpoint/pptx-new.js` | presentazione base e presentazioni di prova |
+| `app/src/routes/mpoint.js` | API |
 | `app/public/mpoint/` | interfaccia |
 
 **Prove:**
 
-- `app/test/cippi.test.js`;
-- `app/test/browser/cippi.ui.js`.
+- `app/test/mpoint.test.js`;
+- `app/test/browser/mpoint.ui.js`.
 
 Usano presentazioni inventate (`app/test/pptx-prova.js`, flusso To-Be/As-Is; `app/test/pptx-kickoff-prova.js`, kick-off con sezioni native, pillole, tabelle, Gantt): nessun file di un cliente sta nel repository.

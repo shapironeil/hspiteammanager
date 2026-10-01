@@ -1,6 +1,6 @@
 'use strict';
 // Costruzione di una presentazione PowerPoint da zero (senza librerie): forme, testi, connettori, pacchetto .pptx.
-// La usa Cippi per "Crea da zero" (presentazione base con la struttura tipica dei documenti di processo del team)
+// La usa MPoint per "Crea da zero" (presentazione base con la struttura tipica dei documenti di processo del team)
 // e la usano i test per avere presentazioni di prova senza file veri dei clienti.
 const { writeZip } = require('../celle/zip');
 
@@ -103,7 +103,7 @@ function packDeck(list, { title = 'Presentazione', author = 'HSPI', sections = n
 }
 
 // Presentazione base: titolo, indice, sezione, testo con elenco, legenda dei colori, flusso a corsie d'esempio, chiusura.
-// Ogni slide e' un esempio da riscrivere: in Cippi si modifica nella modalita' Revisione → Modifica.
+// Ogni slide e' un esempio da riscrivere: in MPoint si modifica nella modalita' Revisione → Modifica.
 function baseDeck(name = 'Nuova presentazione') {
   resetIds();
   const flow = () => {

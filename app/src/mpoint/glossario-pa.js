@@ -1,5 +1,5 @@
 'use strict';
-// Cippi: glossario preimpostato delle sigle piu' comuni nei documenti per la pubblica amministrazione e nei progetti
+// MPoint: glossario preimpostato delle sigle piu' comuni nei documenti per la pubblica amministrazione e nei progetti
 // del team. Serve quando il documento usa una sigla senza spiegarla: il significato si propone, poi il glossario del
 // progetto (scritto a mano) ha sempre la precedenza. Le voci con lettere minuscole (PagoPA, AppIO) si cercano
 // cosi' come sono scritte.

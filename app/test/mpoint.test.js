@@ -1,5 +1,5 @@
 'use strict';
-// Cippi: importazione e lettura della struttura, revisione (punti chiave, glossario), modifica ed esportazione,
+// MPoint: importazione e lettura della struttura, revisione (punti chiave, glossario), modifica ed esportazione,
 // modelli e nuovi documenti da modello, archivio nella cartella del progetto, collegamento con GestioneCelle, permessi.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
@@ -8,8 +8,8 @@ const { startPortal, setupHacker, addUser } = require('./helpers');
 const { pptx } = require('./pptx-prova');
 const { kickoff } = require('./pptx-kickoff-prova');
 const { readZip } = require('../src/celle/zip');
-const { readPptx } = require('../src/cippi/pptx-read');
-const { analyze } = require('../src/cippi/analyze');
+const { readPptx } = require('../src/mpoint/pptx-read');
+const { analyze } = require('../src/mpoint/analyze');
 
 let portal; let hacker; let mario; let luca; let ospite; let pid; let docId; let modelId;
 
@@ -45,93 +45,93 @@ test('lettura: tipi di slide, sezioni dall\'indice, legenda, flussi, confronto T
 });
 
 test('importazione: archivio nella cartella del progetto, punti chiave automatici, solo per chi vede il progetto', async () => {
-  const r = await luca.put(`/api/cippi/import?projectId=${pid}&name=${encodeURIComponent('Flusso acquisti.pptx')}`, pptx());
+  const r = await luca.put(`/api/mpoint/import?projectId=${pid}&name=${encodeURIComponent('Flusso acquisti.pptx')}`, pptx());
   assert.equal(r.status, 201, JSON.stringify(r.data));
   docId = r.data.id;
-  const d = (await luca.get(`/api/cippi/docs/${docId}`)).data;
+  const d = (await luca.get(`/api/mpoint/docs/${docId}`)).data;
   assert.equal(d.name, 'Flusso acquisti');
   assert.equal(d.list.length, 9);
   assert.equal(d.analysis.processes.length, 2);
   assert.ok(d.points.some((p) => p.auto && /Prenotazione di Spesa/.test(p.text)), 'punti chiave proposti dall\'analisi');
-  const files = (await luca.get(`/api/explorer/p${pid}/list?path=${encodeURIComponent('Cippi/Flusso acquisti')}`)).data;
+  const files = (await luca.get(`/api/explorer/p${pid}/list?path=${encodeURIComponent('MPoint/Flusso acquisti')}`)).data;
   assert.ok(JSON.stringify(files).includes('Flusso acquisti.pptx'), 'copia nella cartella del progetto, visibile in Esplora file');
-  assert.equal((await ospite.get(`/api/cippi/docs/${docId}`)).status, 404, 'chi non e\' nel progetto non lo vede');
-  assert.equal((await ospite.put(`/api/cippi/import?projectId=${pid}&name=x.pptx`, pptx())).status, 404);
-  assert.equal((await luca.put(`/api/cippi/import?projectId=${pid}&name=x.ppt`, pptx())).status, 400, 'solo .pptx');
-  assert.equal((await luca.put(`/api/cippi/import?projectId=${pid}&name=x.pptx`, Buffer.from('non sono un pptx, solo testo lungo abbastanza per passare il controllo della dimensione minima del file caricato'))).status, 400);
-  const list = (await luca.get('/api/cippi')).data;
+  assert.equal((await ospite.get(`/api/mpoint/docs/${docId}`)).status, 404, 'chi non e\' nel progetto non lo vede');
+  assert.equal((await ospite.put(`/api/mpoint/import?projectId=${pid}&name=x.pptx`, pptx())).status, 404);
+  assert.equal((await luca.put(`/api/mpoint/import?projectId=${pid}&name=x.ppt`, pptx())).status, 400, 'solo .pptx');
+  assert.equal((await luca.put(`/api/mpoint/import?projectId=${pid}&name=x.pptx`, Buffer.from('non sono un pptx, solo testo lungo abbastanza per passare il controllo della dimensione minima del file caricato'))).status, 400);
+  const list = (await luca.get('/api/mpoint')).data;
   assert.equal(list.docs.length, 1);
   assert.equal(list.docs[0].counts.flusso, 2);
   // anteprima: forme della slide e immagini
-  const sl = (await luca.get(`/api/cippi/docs/${docId}/slide/6`)).data;
+  const sl = (await luca.get(`/api/mpoint/docs/${docId}/slide/6`)).data;
   assert.ok(sl.shapes.some((s) => s.kind === 'cxn'));
-  assert.equal((await luca.get(`/api/cippi/docs/${docId}/media?name=../../etc/passwd`)).status, 404);
+  assert.equal((await luca.get(`/api/mpoint/docs/${docId}/media?name=../../etc/passwd`)).status, 404);
 });
 
 test('schermata iniziale: file recenti per persona, cartelle dei progetti con il riepilogo, PowerPoint della cartella da importare', async () => {
   // Luca ha aperto il documento (GET): e' il primo dei suoi recenti; Mario non ha aperto niente
-  const home = (await luca.get('/api/cippi')).data;
+  const home = (await luca.get('/api/mpoint')).data;
   assert.equal(home.recent[0].id, docId, 'ultimo aperto per primo');
   assert.ok(home.recent[0].openedAt);
-  assert.deepEqual((await mario.get('/api/cippi')).data.recent, [], 'i recenti sono per persona');
+  assert.deepEqual((await mario.get('/api/mpoint')).data.recent, [], 'i recenti sono per persona');
   const folder = home.projects.find((p) => p.id === pid);
   assert.equal(folder.name, 'Acquisti');
   assert.equal(folder.docs, 1);
-  assert.equal(folder.files, 1, 'la copia in Cippi/<nome>/ conta tra i PowerPoint della cartella');
+  assert.equal(folder.files, 1, 'la copia in MPoint/<nome>/ conta tra i PowerPoint della cartella');
   assert.equal(folder.daImportare, 0, 'la copia e\' gia\' un documento di MPoint');
   assert.ok(folder.updatedAt && 'client' in folder && 'status' in folder);
   // un PowerPoint caricato in Esplora file compare nella cartella, da importare
   const up = await hacker.put(`/api/explorer/p${pid}/file?path=&name=${encodeURIComponent('Dalla cartella.pptx')}`, pptx());
   assert.equal(up.status, 201, JSON.stringify(up.data));
-  let files = (await luca.get(`/api/cippi/file-progetto?projectId=${pid}`)).data;
+  let files = (await luca.get(`/api/mpoint/file-progetto?projectId=${pid}`)).data;
   const f = files.find((x) => x.name === 'Dalla cartella.pptx');
   assert.ok(f && f.docId === null, 'non ancora importato');
-  assert.equal(files.find((x) => x.path === 'Cippi/Flusso acquisti/Flusso acquisti.pptx').docId, docId, 'la copia rimanda al suo documento');
-  assert.equal((await luca.get('/api/cippi')).data.projects.find((p) => p.id === pid).daImportare, 1);
+  assert.equal(files.find((x) => x.path === 'MPoint/Flusso acquisti/Flusso acquisti.pptx').docId, docId, 'la copia rimanda al suo documento');
+  assert.equal((await luca.get('/api/mpoint')).data.projects.find((p) => p.id === pid).daImportare, 1);
   // importato con un clic dalla cartella: ora rimanda al documento e non e' piu' da importare
-  const imp = await luca.post('/api/cippi/import-progetto', { projectId: pid, path: f.path });
+  const imp = await luca.post('/api/mpoint/import-progetto', { projectId: pid, path: f.path });
   assert.equal(imp.status, 201, JSON.stringify(imp.data));
-  files = (await luca.get(`/api/cippi/file-progetto?projectId=${pid}`)).data;
+  files = (await luca.get(`/api/mpoint/file-progetto?projectId=${pid}`)).data;
   assert.equal(files.find((x) => x.name === 'Dalla cartella.pptx').docId, imp.data.id);
-  const after = (await luca.get('/api/cippi')).data;
+  const after = (await luca.get('/api/mpoint')).data;
   assert.equal(after.projects.find((p) => p.id === pid).daImportare, 0);
   assert.equal(after.projects.find((p) => p.id === pid).docs, 2);
   // chi non e' nel progetto non vede la cartella
-  assert.equal((await ospite.get('/api/cippi')).data.projects.length, 0);
+  assert.equal((await ospite.get('/api/mpoint')).data.projects.length, 0);
   // il documento eliminato sparisce dai recenti
-  assert.equal((await luca.get(`/api/cippi/docs/${imp.data.id}`)).status, 200);
-  assert.equal((await luca.get('/api/cippi')).data.recent[0].id, imp.data.id);
-  assert.equal((await luca.del(`/api/cippi/docs/${imp.data.id}`)).status, 200);
-  assert.ok(!(await luca.get('/api/cippi')).data.recent.some((r) => r.id === imp.data.id));
+  assert.equal((await luca.get(`/api/mpoint/docs/${imp.data.id}`)).status, 200);
+  assert.equal((await luca.get('/api/mpoint')).data.recent[0].id, imp.data.id);
+  assert.equal((await luca.del(`/api/mpoint/docs/${imp.data.id}`)).status, 200);
+  assert.ok(!(await luca.get('/api/mpoint')).data.recent.some((r) => r.id === imp.data.id));
 });
 
 test('revisione: punti chiave, domande, glossario del progetto', async () => {
-  const p = await luca.post(`/api/cippi/docs/${docId}/points`, { slide: 6, kind: 'domanda', text: 'Chi approva sopra soglia?' });
+  const p = await luca.post(`/api/mpoint/docs/${docId}/points`, { slide: 6, kind: 'domanda', text: 'Chi approva sopra soglia?' });
   assert.equal(p.status, 201);
-  assert.equal((await mario.patch(`/api/cippi/points/${p.data.id}`, { status: 'fatto' })).status, 200);
-  assert.equal((await ospite.patch(`/api/cippi/points/${p.data.id}`, { status: 'aperto' })).status, 404);
-  await luca.put('/api/cippi/glossario', { projectId: pid, term: 'sap', meaning: 'Gestionale aziendale' });
-  const d = (await luca.get(`/api/cippi/docs/${docId}`)).data;
+  assert.equal((await mario.patch(`/api/mpoint/points/${p.data.id}`, { status: 'fatto' })).status, 200);
+  assert.equal((await ospite.patch(`/api/mpoint/points/${p.data.id}`, { status: 'aperto' })).status, 404);
+  await luca.put('/api/mpoint/glossario', { projectId: pid, term: 'sap', meaning: 'Gestionale aziendale' });
+  const d = (await luca.get(`/api/mpoint/docs/${docId}`)).data;
   assert.equal(d.points.find((x) => x.id === p.data.id).status, 'fatto');
   assert.equal(d.analysis.glossary.find((g) => g.term === 'SAP').meaning, 'Gestionale aziendale');
 });
 
 test('modifica ed esportazione: ordine, testi, duplicati, slide tolte; nuova versione nella cartella del progetto', async () => {
-  const d = (await luca.get(`/api/cippi/docs/${docId}`)).data;
+  const d = (await luca.get(`/api/mpoint/docs/${docId}`)).data;
   const titleId = d.analysis.slides[2].blocks.find((b) => b.role === 'titolo').id;
   const list = [{ src: 1 }, { src: 3, texts: { [titleId]: ['Obiettivi rivisti'] } }, { src: 6 }, { src: 6 }, { src: 9 }];
-  const r = await luca.patch(`/api/cippi/docs/${docId}`, { slides: list, updatedAt: d.updatedAt, status: 'in revisione' });
+  const r = await luca.patch(`/api/mpoint/docs/${docId}`, { slides: list, updatedAt: d.updatedAt, status: 'in revisione' });
   assert.equal(r.status, 200, JSON.stringify(r.data));
-  assert.equal((await mario.patch(`/api/cippi/docs/${docId}`, { slides: list, updatedAt: d.updatedAt })).status, 409, 'chi salva su una versione vecchia viene avvisato');
-  const dl = await luca.get(`/api/cippi/docs/${docId}/download`);
+  assert.equal((await mario.patch(`/api/mpoint/docs/${docId}`, { slides: list, updatedAt: d.updatedAt })).status, 409, 'chi salva su una versione vecchia viene avvisato');
+  const dl = await luca.get(`/api/mpoint/docs/${docId}/download`);
   assert.equal(dl.status, 200);
   const out = readPptx(dl.data);
   assert.equal(out.slides.length, 5);
   assert.ok(out.slides[1].shapes.some((s) => (s.paragraphs || []).some((x) => x.text === 'Obiettivi rivisti')));
-  const v = await luca.post(`/api/cippi/docs/${docId}/salva-versione`);
+  const v = await luca.post(`/api/mpoint/docs/${docId}/salva-versione`);
   assert.equal(v.status, 200, JSON.stringify(v.data));
   assert.equal(v.data.version, 2);
-  const after2 = (await luca.get(`/api/cippi/docs/${docId}`)).data;
+  const after2 = (await luca.get(`/api/mpoint/docs/${docId}`)).data;
   assert.equal(after2.list.length, 5);
   assert.equal(after2.analysis.slides[1].title, 'Obiettivi rivisti', 'la nuova versione e\' la base: l\'analisi si rifa\'');
   const files = (await luca.get(`/api/explorer/${v.data.space}/list?path=${encodeURIComponent(path.posix.dirname(v.data.path))}`)).data;
@@ -139,51 +139,51 @@ test('modifica ed esportazione: ordine, testi, duplicati, slide tolte; nuova ver
 });
 
 test('caratteristiche: contesto del documento, descrizioni degli elementi, forma e colore nel .pptx', async () => {
-  const full = (await luca.put(`/api/cippi/import?projectId=${pid}&name=caratteristiche.pptx`, pptx())).data.id;
-  let d = (await luca.get(`/api/cippi/docs/${full}`)).data;
+  const full = (await luca.put(`/api/mpoint/import?projectId=${pid}&name=caratteristiche.pptx`, pptx())).data.id;
+  let d = (await luca.get(`/api/mpoint/docs/${full}`)).data;
   assert.equal(d.background, '');
   assert.match(d.backgroundSuggestion, /Obiettivi del progetto/, 'contesto proposto dalle prime slide');
-  assert.equal((await luca.patch(`/api/cippi/docs/${full}`, { background: 'Progetto acquisti per il cliente' })).status, 200);
+  assert.equal((await luca.patch(`/api/mpoint/docs/${full}`, { background: 'Progetto acquisti per il cliente' })).status, 200);
   const key = 'nodo|4.1.2.1|To-Be|revisione del budget';
-  assert.equal((await luca.put(`/api/cippi/docs/${full}/items`, { key, data: { input: 'Richiesta', tecnologia: 'SAP MM', ignoto: 'x' } })).status, 200);
-  assert.equal((await ospite.put(`/api/cippi/docs/${full}/items`, { key, data: { input: 'x' } })).status, 404);
-  d = (await luca.get(`/api/cippi/docs/${full}`)).data;
+  assert.equal((await luca.put(`/api/mpoint/docs/${full}/items`, { key, data: { input: 'Richiesta', tecnologia: 'SAP MM', ignoto: 'x' } })).status, 200);
+  assert.equal((await ospite.put(`/api/mpoint/docs/${full}/items`, { key, data: { input: 'x' } })).status, 404);
+  d = (await luca.get(`/api/mpoint/docs/${full}`)).data;
   assert.equal(d.background, 'Progetto acquisti per il cliente');
   assert.deepEqual(d.items[key], { input: 'Richiesta', tecnologia: 'SAP MM' });
   // lo step 4 diventa un rombo verde (nuovo)
   const n = d.analysis.slides[5].flow.nodes.find((x) => x.text.startsWith('4.'));
   const list = d.list.map((x) => (x.src === 6 ? { ...x, geom: { [n.id]: 'flowChartDecision', 99: 'nonEsiste' }, fill: { [n.id]: '92d050' } } : x));
-  assert.equal((await luca.patch(`/api/cippi/docs/${full}`, { slides: list, updatedAt: d.updatedAt })).status, 200);
-  const out = readPptx((await luca.get(`/api/cippi/docs/${full}/download`)).data);
+  assert.equal((await luca.patch(`/api/mpoint/docs/${full}`, { slides: list, updatedAt: d.updatedAt })).status, 200);
+  const out = readPptx((await luca.get(`/api/mpoint/docs/${full}/download`)).data);
   const shape = out.slides[5].shapes.find((x) => x.id === n.id);
   assert.equal(shape.geom, 'flowChartDecision');
   assert.equal(shape.fill, '92D050');
   // svuotare le caratteristiche le toglie
-  await luca.put(`/api/cippi/docs/${full}/items`, { key, data: {} });
-  assert.equal((await luca.get(`/api/cippi/docs/${full}`)).data.items[key], undefined);
+  await luca.put(`/api/mpoint/docs/${full}/items`, { key, data: {} });
+  assert.equal((await luca.get(`/api/mpoint/docs/${full}`)).data.items[key], undefined);
 });
 
 test('modelli: si salva la struttura, si crea un documento nuovo con le parti scelte e si misura la completezza', async () => {
   // il modello nasce dalla presentazione completa (re-importata)
-  const full = (await luca.put(`/api/cippi/import?projectId=${pid}&name=completa.pptx`, pptx())).data.id;
-  const m = await luca.post(`/api/cippi/docs/${full}/modello`, { name: 'Project Closure', description: 'Chiusura progetto di processo' });
+  const full = (await luca.put(`/api/mpoint/import?projectId=${pid}&name=completa.pptx`, pptx())).data.id;
+  const m = await luca.post(`/api/mpoint/docs/${full}/modello`, { name: 'Project Closure', description: 'Chiusura progetto di processo' });
   assert.equal(m.status, 201, JSON.stringify(m.data));
   modelId = m.data.id;
-  const md = (await luca.get(`/api/cippi/docs/${modelId}`)).data;
+  const md = (await luca.get(`/api/mpoint/docs/${modelId}`)).data;
   assert.equal(md.kind, 'modello');
   assert.deepEqual(md.template.parts.map((p) => p.kind), ['titolo', 'indice', 'testo', 'divisore', 'legenda', 'flusso', 'divisore', 'flusso', 'chiusura']);
-  assert.equal((await ospite.get(`/api/cippi/docs/${modelId}`)).status, 404, 'modello non condiviso: solo nel progetto');
-  assert.equal((await luca.patch(`/api/cippi/docs/${modelId}`, { shared: true })).status, 200, 'chi l\'ha creato lo condivide');
-  assert.equal((await ospite.get(`/api/cippi/docs/${modelId}`)).status, 200, 'condiviso: lo vedono tutti');
+  assert.equal((await ospite.get(`/api/mpoint/docs/${modelId}`)).status, 404, 'modello non condiviso: solo nel progetto');
+  assert.equal((await luca.patch(`/api/mpoint/docs/${modelId}`, { shared: true })).status, 200, 'chi l\'ha creato lo condivide');
+  assert.equal((await ospite.get(`/api/mpoint/docs/${modelId}`)).status, 200, 'condiviso: lo vedono tutti');
   // documento nuovo: titolo, testo (due volte, svuotato) e flusso
-  const n = await luca.post(`/api/cippi/models/${modelId}/nuovo`, { projectId: pid, name: 'Nuovo flusso', vuoto: true, parts: [{ part: 0 }, { part: 2, count: 2 }, { part: 5 }] });
+  const n = await luca.post(`/api/mpoint/models/${modelId}/nuovo`, { projectId: pid, name: 'Nuovo flusso', vuoto: true, parts: [{ part: 0 }, { part: 2, count: 2 }, { part: 5 }] });
   assert.equal(n.status, 201, JSON.stringify(n.data));
-  const nd = (await luca.get(`/api/cippi/docs/${n.data.id}`)).data;
+  const nd = (await luca.get(`/api/mpoint/docs/${n.data.id}`)).data;
   assert.equal(nd.list.length, 4);
   assert.equal(nd.analysis.slides[1].title, 'Titolo della slide', 'testi svuotati in segnaposto');
   assert.ok(nd.confronto && nd.confronto.percent < 100, 'mancano parti rispetto al modello');
   assert.ok(nd.confronto.missingParts.some((p) => p.kind === 'legenda'));
-  assert.equal((await ospite.post(`/api/cippi/models/${modelId}/nuovo`, { projectId: pid, name: 'x' })).status, 404, 'nel progetto altrui no');
+  assert.equal((await ospite.post(`/api/mpoint/models/${modelId}/nuovo`, { projectId: pid, name: 'x' })).status, 404, 'nel progetto altrui no');
 });
 
 test('sinergia con GestioneCelle: i processi dei flussi si collegano alle voci con lo stesso nome', async () => {
@@ -191,15 +191,15 @@ test('sinergia con GestioneCelle: i processi dei flussi si collegano alle voci c
   const macro = (await luca.post(`/api/celle/maps/${mapId}/nodes`, { level: 1, name: 'Acquisti' })).data;
   const proc = await luca.post(`/api/celle/maps/${mapId}/nodes`, { level: 2, parentId: macro.id, name: 'Prenotazione di spesa' });
   assert.equal(proc.status, 201, JSON.stringify(proc.data));
-  const d = (await luca.get(`/api/cippi/docs/${docId}`)).data;
+  const d = (await luca.get(`/api/mpoint/docs/${docId}`)).data;
   assert.ok(d.celle.some((c) => c.mapId === mapId && c.code === '4.1.2.1'), JSON.stringify(d.celle));
 });
 
 test('eliminazione: chi l\'ha creato o il Manager del progetto', async () => {
-  const other = (await luca.put(`/api/cippi/import?projectId=${pid}&name=altro.pptx`, pptx())).data.id;
-  assert.equal((await ospite.del(`/api/cippi/docs/${other}`)).status, 404);
-  assert.equal((await mario.del(`/api/cippi/docs/${other}`)).status, 200);
-  assert.equal((await luca.get(`/api/cippi/docs/${other}`)).status, 404);
+  const other = (await luca.put(`/api/mpoint/import?projectId=${pid}&name=altro.pptx`, pptx())).data.id;
+  assert.equal((await ospite.del(`/api/mpoint/docs/${other}`)).status, 404);
+  assert.equal((await mario.del(`/api/mpoint/docs/${other}`)).status, 200);
+  assert.equal((await luca.get(`/api/mpoint/docs/${other}`)).status, 404);
 });
 
 // ---- Presentazioni di kick-off: sezioni native, schede, tabelle, masterplan, impronta, modifiche per funzione ----
@@ -243,24 +243,24 @@ test('kick-off: sezioni native, copertina, indice a due livelli senza falsi avvi
 });
 
 test('kick-off nel portale: modello noto riconosciuto, sfondo del layout, trova e sostituisci, celle e righe delle tabelle, esportazione pulita', async () => {
-  const r = await luca.put(`/api/cippi/import?projectId=${pid}&name=${encodeURIComponent('Kick-off prova.pptx')}`, kickoff());
+  const r = await luca.put(`/api/mpoint/import?projectId=${pid}&name=${encodeURIComponent('Kick-off prova.pptx')}`, kickoff());
   assert.equal(r.status, 201, JSON.stringify(r.data));
   const kid = r.data.id;
-  const d = (await luca.get(`/api/cippi/docs/${kid}`)).data;
+  const d = (await luca.get(`/api/mpoint/docs/${kid}`)).data;
   assert.ok(d.impronta && d.impronta.somiglianze.some((x) => x.id === 'kickoff-txt-biosiris' && x.punteggio >= 60), 'somiglia al kick-off in memoria: ' + JSON.stringify(d.impronta && d.impronta.somiglianze));
   assert.ok(!d.impronta.somiglianze.some((x) => /_archivio/.test(x.scheda || '')), 'le schede archiviate (_archivio) non contano come modelli vivi');
   assert.equal(d.impronta.somiglianze.filter((x) => x.id === 'kickoff-txt-biosiris').length, 1, 'il modello compare una volta sola');
   assert.equal(d.analysis.meta.company, 'Fornitore di prova S.p.A.');
-  const sl = (await luca.get(`/api/cippi/docs/${kid}/slide/3`)).data;
+  const sl = (await luca.get(`/api/mpoint/docs/${kid}/slide/3`)).data;
   assert.ok(sl.background.some((s) => (s.paragraphs || []).some((p) => p.text === 'RISERVATO')), 'la slide porta con sé le forme del layout');
   // trova e sostituisci: nelle slide (piè di pagina di ogni slide) e nel layout (scritta fissa)
-  const s1 = await luca.post(`/api/cippi/docs/${kid}/sostituisci`, { find: 'Kick-off Progetto Prova', replace: 'SAL 1 Progetto Prova', layouts: true });
+  const s1 = await luca.post(`/api/mpoint/docs/${kid}/sostituisci`, { find: 'Kick-off Progetto Prova', replace: 'SAL 1 Progetto Prova', layouts: true });
   assert.equal(s1.status, 200, JSON.stringify(s1.data));
   assert.deepEqual([s1.data.count, s1.data.slides], [5, [3, 4, 5, 6, 7]]);
-  const s2 = (await luca.post(`/api/cippi/docs/${kid}/sostituisci`, { find: 'riservato', replace: 'PUBBLICO', layouts: true })).data;
+  const s2 = (await luca.post(`/api/mpoint/docs/${kid}/sostituisci`, { find: 'riservato', replace: 'PUBBLICO', layouts: true })).data;
   assert.deepEqual([s2.count, s2.layoutCount], [0, 1], 'la scritta del layout si conta nel file');
-  assert.equal((await luca.post(`/api/cippi/docs/${kid}/sostituisci`, { find: 'xyz-non-esiste', replace: 'a', anteprima: true })).data.count, 0);
-  const after = (await luca.get(`/api/cippi/docs/${kid}`)).data;
+  assert.equal((await luca.post(`/api/mpoint/docs/${kid}/sostituisci`, { find: 'xyz-non-esiste', replace: 'a', anteprima: true })).data.count, 0);
+  const after = (await luca.get(`/api/mpoint/docs/${kid}`)).data;
   assert.equal(after.edits.replace.length, 1);
   assert.ok(after.list[2].texts && Object.values(after.list[2].texts).some((l) => JSON.stringify(l).includes('SAL 1 Progetto Prova')), 'nelle slide è una modifica dei testi');
   // celle della tabella e una riga nuova; una cella della tabella disegnata (forma) tramite i testi
@@ -269,9 +269,9 @@ test('kick-off nel portale: modello noto riconosciuto, sfondo del layout, trova 
   const list = after.list.map((x) => ({ ...x }));
   list[6] = { ...list[6], cells: { [tbl.id]: { '1,1': ['Sviluppo e manutenzione evolutiva (rivista)'] } }, tableRows: { [tbl.id]: [{ after: 2, cells: ['EL', 'E-learning', '€ 10,00'] }] } };
   list[3] = { ...list[3], texts: { ...(list[3].texts || {}), [drawn.ids[1][1]]: ['SPID'] } };
-  const p = await luca.patch(`/api/cippi/docs/${kid}`, { slides: list, updatedAt: after.updatedAt });
+  const p = await luca.patch(`/api/mpoint/docs/${kid}`, { slides: list, updatedAt: after.updatedAt });
   assert.equal(p.status, 200, JSON.stringify(p.data));
-  const dl = await luca.get(`/api/cippi/docs/${kid}/download`);
+  const dl = await luca.get(`/api/mpoint/docs/${kid}/download`);
   assert.equal(dl.status, 200);
   const out = readPptx(dl.data);
   const t2 = out.slides[6].shapes.find((s) => s.kind === 'table');
@@ -283,9 +283,9 @@ test('kick-off nel portale: modello noto riconosciuto, sfondo del layout, trova 
   assert.ok(out.slides[2].shapes.some((s) => s.ph && s.ph.type === 'ftr' && s.paragraphs[0].text === 'SAL 1 Progetto Prova'), 'piè di pagina sostituito nelle slide');
   assert.ok(out.slides[2].background.some((s) => (s.paragraphs || []).some((x) => x.text === 'PUBBLICO')), 'scritta del layout sostituita nel file');
   // esportazione pulita: tolta la slide del masterplan, la sua immagine SVG non resta nel pacchetto
-  const p2 = await luca.patch(`/api/cippi/docs/${kid}`, { slides: list.filter((x) => x.src !== 6), updatedAt: p.data.updatedAt });
+  const p2 = await luca.patch(`/api/mpoint/docs/${kid}`, { slides: list.filter((x) => x.src !== 6), updatedAt: p.data.updatedAt });
   assert.equal(p2.status, 200);
-  const names = [...readZip((await luca.get(`/api/cippi/docs/${kid}/download`)).data).keys()];
+  const names = [...readZip((await luca.get(`/api/mpoint/docs/${kid}/download`)).data).keys()];
   assert.ok(!names.some((n) => /image1\.svg$/.test(n)), 'niente media orfani');
   assert.ok(names.some((n) => n === 'ppt/slides/slide1.xml'));
 });

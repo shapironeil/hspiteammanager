@@ -3,7 +3,7 @@
 // Ha la struttura tipica dei documenti di processo del team: copertina con titolo e data, indice, sezioni con
 // divisore, slide di testo con elenchi, legenda dei colori, flussi a corsie (To-Be e As-Is dello stesso processo,
 // con step numerati, decisioni Si/No, sistemi SAP, rimandi ad altri processi, note) e chiusura.
-const { sp, cxn, title, packDeck, resetIds } = require('../src/cippi/pptx-new');
+const { sp, cxn, title, packDeck, resetIds } = require('../src/mpoint/pptx-new');
 
 function flowSlide(heading, { variant }) {
   const parts = [title(heading)];

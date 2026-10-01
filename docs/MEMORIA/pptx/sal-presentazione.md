@@ -20,7 +20,7 @@ Il file originale non sta nel repository: resta nella cartella del progetto (Esp
 
 ## 2. Impronta di riconoscimento
 
-Impronta leggibile da un programma: `sal-presentazione.impronta.json` (creata nell'unificazione dalla voce di `modelli.json`, con tutti i campi originali più quelli letti da `app/src/cippi/impronta.js`). Segnali forti, in ordine:
+Impronta leggibile da un programma: `sal-presentazione.impronta.json` (creata nell'unificazione dalla voce di `modelli.json`, con tutti i campi originali più quelli letti da `app/src/mpoint/impronta.js`). Segnali forti, in ordine:
 
 1. nome del file `AAAA.MM.GG_Template_Presentazione_Sal_Vn.nn.pptx` (data, "Template", oggetto, versione con la V maiuscola; regex `^\d{4}\.\d{2}\.\d{2}_Template_Presentazione_Sal_V\d+\.\d+\.pptx$`);
 2. **4 master** e **24 layout**, molti doppioni ("Titolo e contenuto" ×3, "Diapositiva titolo" ×2, "Layout personalizzato" ×3);
@@ -134,5 +134,5 @@ Riconoscimento con l'impronta: non misurato; con il confronto attuale il templat
 - `awesome-cray`, sessione `session_01WbrSz86BeYisrNNoJc7Eh5`, commit `51e11c0`, `docs/memoria/modelli/sal-presentazione.md`: sintesi, impronta, struttura delle slide, master, convenzioni, quirk, funzioni di MPoint da usare, cosa manca.
 - `awesome-cray`, commit `51e11c0`, `docs/memoria/modelli.json` (voce `sal-presentazione`): regex del nome del file, formato, master/layout, layout con testo, carattere, colori, immagini con dimensioni, slide tipiche, elenchi `funzioni` e `mancanti`.
 - `awesome-cray`, commit `51e11c0`, `docs/memoria/README.md` e `docs/memoria/fascicolo-sal.md`: regole della memoria, convenzione del nome del file, contesto comune (progetto, programma, RTI, identità visiva).
-- `docs/MPOINT.md` e `docs/REPORT/2026-10-01-cippi-kickoff.md` (admiring-hopper, `fff10ab`): nomi reali delle funzioni e novità di MPoint 0.2.0; `app/src/cippi/impronta.js`: cosa confronta il riconoscimento.
+- `docs/MPOINT.md` e `docs/REPORT/2026-10-01-cippi-kickoff.md` (admiring-hopper, `fff10ab`): nomi reali delle funzioni e novità di MPoint 0.2.0; `app/src/mpoint/impronta.js`: cosa confronta il riconoscimento.
 - Versioni al momento dell'analisi (MPoint 0.1.0, portale 0.8.1): dal commit `8b07add`, base del ramo `claude/awesome-cray-8lgn1k`.

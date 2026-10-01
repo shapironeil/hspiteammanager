@@ -59,7 +59,7 @@ Ogni scheda `<template>.md` ha queste 10 sezioni, nello stesso ordine, con gli s
 | 9 | Da classificare | tutto ciò che c'era nelle analisi originali e non trova posto sopra: niente si perde |
 | 10 | Fonti | quale informazione viene da quale agente/file/commit |
 
-L'impronta `<template>.impronta.json` sta accanto alla scheda e tiene almeno i campi `template`, `formato` (`pptx`, `xlsx`, `docx`), `app` e `provenienza`. Per le presentazioni MPoint (`app/src/cippi/impronta.js`) legge anche `tema.colori`, `tema.caratteri`, `layout.usati`, `layout.pieDiPaginaRegex`, `sezioniNative`, `partiNellOrdine[].segnali`, `metadati.company`: questi nomi non si cambiano.
+L'impronta `<template>.impronta.json` sta accanto alla scheda e tiene almeno i campi `template`, `formato` (`pptx`, `xlsx`, `docx`), `app` e `provenienza`. Per le presentazioni MPoint (`app/src/mpoint/impronta.js`) legge anche `tema.colori`, `tema.caratteri`, `layout.usati`, `layout.pieDiPaginaRegex`, `sezioniNative`, `partiNellOrdine[].segnali`, `metadati.company`: questi nomi non si cambiano.
 
 ### Come si aggiunge un template
 
@@ -100,7 +100,7 @@ Un fascicolo è un insieme di documenti che vanno insieme (stesso progetto o ste
 
 Per i `.pptx` l'impronta (`*.impronta.json`) tiene: dimensione della slide, colori del tema, caratteri del tema, nomi dei layout, nomi delle sezioni native, testo del piè di pagina, nomi delle forme ricorrenti, tipi di slide nell'ordine, azienda in `docProps/app.xml`. Un file "corrisponde" se coincidono tema (colori e caratteri), layout usati e piè di pagina; le sezioni e l'ordine delle parti dicono quanto è completo rispetto al template.
 
-Questa è la base per la funzione proposta a MPoint "riconosci il modello noto all'importazione" (vedi la scheda del template). Dalla versione 0.2.0 MPoint la fa davvero: `app/src/cippi/impronta.js` confronta la presentazione importata con ogni `*.impronta.json` di formato `pptx` e con i modelli salvati, e mostra "Somiglia a: … (NN%)" nel pannello Documento. L'analisi del fascicolo SAL (awesome-cray) propone di confrontare anche le immagini per dimensione, i layout con testo fisso e il carattere usato davvero nelle slide: oggi il codice non lo fa (`CONFLITTI.md`, voce 4).
+Questa è la base per la funzione proposta a MPoint "riconosci il modello noto all'importazione" (vedi la scheda del template). Dalla versione 0.2.0 MPoint la fa davvero: `app/src/mpoint/impronta.js` confronta la presentazione importata con ogni `*.impronta.json` di formato `pptx` e con i modelli salvati, e mostra "Somiglia a: … (NN%)" nel pannello Documento. L'analisi del fascicolo SAL (awesome-cray) propone di confrontare anche le immagini per dimensione, i layout con testo fisso e il carattere usato davvero nelle slide: oggi il codice non lo fa (`CONFLITTI.md`, voce 4).
 
 Per i `.xlsx` l'impronta tiene: nomi dei fogli, la riga delle intestazioni fisse, la riga delle iniziali dei mesi, le celle unite di anni e trimestri, la presenza di barre a colore (celle piene senza valore), l'assenza di tabelle, convalide e formati condizionali, il tipo delle formule, lo schema del nome del file. Un file "corrisponde" se tornano le intestazioni fisse, le iniziali dei mesi e le barre a colore (`punteggioMinimo` nell'impronta).
 

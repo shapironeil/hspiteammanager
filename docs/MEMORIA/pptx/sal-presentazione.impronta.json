@@ -1,7 +1,7 @@
 {
   "template": "sal-presentazione",
   "formato": "pptx",
-  "app": "cippi",
+  "app": "mpoint",
   "tipoDocumento": "presentazione di stato avanzamento lavori (SAL)",
   "fornitore": "RTI non nominato nel file, per un'Amministrazione regionale; progetto R-CAP.AC (PN Capacità per la Coesione 2021-2027)",
   "fileVisti": [
@@ -67,7 +67,7 @@
     ]
   },
   "sinergie": { "docx": "sal-verbale: stesso fascicolo SAL, stesso brand (striscia loghi 2146x136, Titillium Web), stesso oggetto dati 'SAL'" },
-  "cippi": { "versioneAnalisi": "0.1.0 (portale 0.8.1)", "punteggio": null, "note": "agenda e titolo della slide 2 trovati con la regola 'testo più grande in alto'; l'esportazione toglie changesInfos; l'immagine alpha 0 va ignorata nell'anteprima" },
+  "mpoint": { "versioneAnalisi": "0.1.0 (portale 0.8.1)", "punteggio": null, "note": "agenda e titolo della slide 2 trovati con la regola 'testo più grande in alto'; l'esportazione toglie changesInfos; l'immagine alpha 0 va ignorata nell'anteprima" },
   "provenienza": {
     "agente": "awesome-cray",
     "sessione": "session_01WbrSz86BeYisrNNoJc7Eh5",

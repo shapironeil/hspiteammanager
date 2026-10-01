@@ -1,5 +1,5 @@
 'use strict';
-// Cippi: scrittura di una presentazione PowerPoint a partire da quella di origine (o da un modello).
+// MPoint: scrittura di una presentazione PowerPoint a partire da quella di origine (o da un modello).
 //
 // build(sorgente, slides, modifiche) -> Buffer .pptx
 //   slides = [{ src: numero della slide di origine (1..), texts: { <id forma>: ['riga', { text, lvl }] },

@@ -1,7 +1,7 @@
 {
   "template": "kickoff-txt-biosiris",
   "formato": "pptx",
-  "app": "cippi",
+  "app": "mpoint",
   "tipoDocumento": "kick-off di progetto",
   "fornitore": "TXT e-solutions S.p.A. (con HSPI, Deda Next, Webgenesys, RPC Net)",
   "fileVisti": [
@@ -44,7 +44,7 @@
   },
   "glossarioAtteso": ["AQ", "SAC", "PMO", "SPID", "CIE", "PagoPA", "AppIO", "PDND", "SEND", "FESR", "PSR", "PSP", "PAC", "PRIU", "SAL", "FTE", "GG", "DSS", "OMS", "IAM", "TIC", "Consip"],
   "metadati": { "company": "TXT e-solutions S.p.A.", "applicazione": "Microsoft Office PowerPoint 16", "coAutori": true, "registroRevisioni": true },
-  "cippi": {
+  "mpoint": {
     "versioneAnalisi": "0.1.0 / ANALYZER 3",
     "tipiRiconosciuti": { "1": "testo (atteso copertina)", "2": "indice", "3": "testo", "4": "testo", "5": "schema (atteso scheda)", "6": "testo (atteso scheda)", "7": "scheda", "8": "scheda", "9": "scheda", "10": "scheda", "11": "testo (atteso scheda)", "12": "testo (atteso masterplan)", "13": "tabella" },
     "punteggio": 77,

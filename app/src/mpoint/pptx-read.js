@@ -2,7 +2,7 @@
 // Lettura di un file PowerPoint (.pptx) senza librerie: slide nell'ordine della presentazione, layout, colori del tema,
 // e per ogni slide TUTTI gli elementi (forme, testi con i livelli dei punti elenco, immagini, tabelle, connettori
 // con le forme che collegano, gruppi) con posizione e dimensione in percentuale della slide.
-// Il risultato e' un oggetto JSON puro: lo usano analyze.js (struttura, flussi, punti chiave) e la pagina di Cippi
+// Il risultato e' un oggetto JSON puro: lo usano analyze.js (struttura, flussi, punti chiave) e la pagina di MPoint
 // (anteprima delle slide). E' codice puro, senza accesso al portale: puo' girare anche nel motore di HSPI Client.
 const posix = require('node:path').posix;
 const { readZip } = require('../celle/zip');

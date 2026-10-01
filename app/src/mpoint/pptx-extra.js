@@ -1,5 +1,5 @@
 'use strict';
-// Cippi: letture aggiuntive dal pacchetto .pptx, senza librerie. Le usa pptx-read.js:
+// MPoint: letture aggiuntive dal pacchetto .pptx, senza librerie. Le usa pptx-read.js:
 //   - sezioni native di PowerPoint (p14:sectionLst), quelle del riquadro "Sezioni" di PowerPoint;
 //   - metadati estesi: azienda, applicazione, co-autori, registro delle revisioni (chi ha toccato quale slide e quando),
 //     caratteri dichiarati e caratteri usati davvero nelle slide;

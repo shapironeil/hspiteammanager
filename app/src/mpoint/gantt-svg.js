@@ -1,5 +1,5 @@
 'use strict';
-// Cippi: lettura di un piano di progetto (masterplan, Gantt) incollato nella slide come immagine SVG.
+// MPoint: lettura di un piano di progetto (masterplan, Gantt) incollato nella slide come immagine SVG.
 // PowerPoint, Excel e gli strumenti di planning esportano il Gantt come SVG con i testi ancora leggibili:
 // anni e mesi in alto, a sinistra le righe (componenti in maiuscolo, attività sotto), le barre come rettangoli o
 // frecce colorate. Da qui si ricava una struttura: righe con il periodo (da mese a mese), senza inventare nulla.

@@ -1,5 +1,5 @@
 'use strict';
-// Prova nel browser di MPoint (prima Cippi) (desktop e telefono): importazione, modalita' Revisione con i tre pannelli, ordine di
+// Prova nel browser di MPoint (prima MPoint) (desktop e telefono): importazione, modalita' Revisione con i tre pannelli, ordine di
 // lettura, confronto To-Be/As-Is, punti chiave, modifica di un testo, salvataggio della versione, modello e nuovo
 // documento da modello, crea da zero.
 const path = require('node:path');
@@ -18,7 +18,7 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
   const portal = await startPortal();
   const errors = [];
   let browser;
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hspi-cippi-'));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hspi-mpoint-'));
   try {
     const hacker = await setupHacker(portal.base);
     const pid = (await hacker.post('/api/projects', { name: 'Acquisti' })).data.id;

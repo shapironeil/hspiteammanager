@@ -17,7 +17,8 @@
       "items": [
         "Schermata iniziale nuova: prima i file recenti (gli ultimi che hai aperto tu, poi gli ultimi aggiornati nel team), poi le cartelle dei progetti, poi i modelli. Ricerca per nome in alto.",
         "Cartella di un progetto dentro MPoint: i suoi documenti, i PowerPoint presenti nella cartella del progetto (quelli caricati in Esplora file si importano con un clic, quelli già importati si aprono) e i modelli; collegamento alla cartella in Esplora file.",
-        "Importa, Crea da zero e Nuovo da modello dalla cartella hanno già il progetto scelto."
+        "Importa, Crea da zero e Nuovo da modello dalla cartella hanno già il progetto scelto.",
+        "Il nome Cippi non c'è più da nessuna parte: nella cartella del progetto i documenti stanno in MPoint/ (le cartelle Cippi/ esistenti vengono rinominate da sole al primo avvio, senza perdere versioni)."
       ]
     },
     {

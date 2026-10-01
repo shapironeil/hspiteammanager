@@ -231,7 +231,7 @@
     "fasi sempre sovrapposte"
   ],
   "sinergie": {
-    "cippi": "la slide Masterplan del kick-off (template kickoff-txt-biosiris, slide 12) è la versione grafica di questo piano: stesse componenti, fasi raggruppate in tre macro-fasi, anni 2026-2028"
+    "mpoint": "la slide Masterplan del kick-off (template kickoff-txt-biosiris, slide 12) è la versione grafica di questo piano: stesse componenti, fasi raggruppate in tre macro-fasi, anni 2026-2028"
   },
   "gestioneCelle": {
     "oggi": "importabile solo come foglio generico (LIV 1 = macro, nome fase = processo); barre, celle unite e stili non vengono letti",
@@ -245,7 +245,7 @@
       "estendi orizzonte",
       "esporta con lo stesso aspetto / salva nell'originale",
       "confronta versioni",
-      "esporta il Gantt verso Cippi (Masterplan)"
+      "esporta il Gantt verso MPoint (Masterplan)"
     ]
   },
   "provenienza": {

@@ -1,5 +1,5 @@
 'use strict';
-// Cippi: dalla presentazione letta (pptx-read.js) alla sua STRUTTURA.
+// MPoint: dalla presentazione letta (pptx-read.js) alla sua STRUTTURA.
 //
 // Il metodo segue il modo in cui il team legge questi documenti (gli appunti di studio di un flusso To-Be):
 //   1. prima il contesto (obiettivi, risultati), poi LEGENDA e GLOSSARIO delle sigle;
@@ -569,7 +569,7 @@ function readingPath(slides, sections, procs, comparisons, legend, glossary) {
   const plan = slides.filter((s) => s.kind === 'masterplan').map((s) => s.n);
   if (plan.length) steps.push({ title: 'Piano di progetto', slides: plan });
   const tables = slides.filter((s) => s.kind === 'tabella').map((s) => s.n);
-  if (tables.length) steps.push({ title: 'Tabelle e numeri', slides: tables, note: 'Cippi controlla che i totali tornino.' });
+  if (tables.length) steps.push({ title: 'Tabelle e numeri', slides: tables, note: 'MPoint controlla che i totali tornino.' });
   return steps;
 }
 

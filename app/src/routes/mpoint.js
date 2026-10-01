@@ -1,11 +1,11 @@
 'use strict';
-// Cippi: presentazioni PowerPoint del team. Importa, legge la struttura (sezioni, tipi di slide, blocchi in ordine,
+// MPoint: presentazioni PowerPoint del team. Importa, legge la struttura (sezioni, tipi di slide, blocchi in ordine,
 // flussi, legenda, sigle), propone i punti chiave e i controlli, permette di modificare i testi, l'ordine e le slide,
 // salva modelli riutilizzabili e crea documenti nuovi da un modello. Esporta un .pptx con la stessa grafica.
 //
 // Archivio (sinergia con il resto del portale):
-//   - il file di partenza resta in data/cippi/sorgenti/<impronta>.pptx (non si perde anche se lo si sposta in Esplora file);
-//   - una copia, gli appunti e le esportazioni stanno nella cartella del progetto: Cippi/<nome documento>/ (Esplora file,
+//   - il file di partenza resta in data/mpoint/sorgenti/<impronta>.pptx (non si perde anche se lo si sposta in Esplora file);
+//   - una copia, gli appunti e le esportazioni stanno nella cartella del progetto: MPoint/<nome documento>/ (Esplora file,
 //     con le versioni precedenti dei file);
 //   - i processi dei flussi si collegano alle voci di GestioneCelle dello stesso progetto (stesso nome o stesso codice);
 //   - il glossario delle sigle e' del progetto.
@@ -16,16 +16,17 @@ const crypto = require('node:crypto');
 const config = require('../config');
 const db = require('../db');
 const ex = require('../explorer');
-const { readPptx, mediaOf, partsXml } = require('../cippi/pptx-read');
-const { analyze, templateOf, compareToTemplate, norm } = require('../cippi/analyze');
-const { build } = require('../cippi/pptx-write');
-const { baseDeck } = require('../cippi/pptx-new');
-const { riconosci } = require('../cippi/impronta');
-const E = require('../cippi/pptx-edit');
+const { readPptx, mediaOf, partsXml } = require('../mpoint/pptx-read');
+const { analyze, templateOf, compareToTemplate, norm } = require('../mpoint/analyze');
+const { build } = require('../mpoint/pptx-write');
+const { baseDeck } = require('../mpoint/pptx-new');
+const { riconosci } = require('../mpoint/impronta');
+const E = require('../mpoint/pptx-edit');
 const { route, HttpError } = require('../http');
 const projects = require('./projects');
 
-const DIR = path.join(config.DATA_DIR, 'cippi');
+const DIR = path.join(config.DATA_DIR, 'mpoint');
+const DIR_VECCHIA = path.join(config.DATA_DIR, 'cippi'); // nome di prima dell'app: si rinomina al primo avvio
 const SRC = path.join(DIR, 'sorgenti');
 const CACHE = path.join(DIR, 'analisi');
 const ANALYZER = 6; // si alza quando cambia l'analisi: le analisi salvate si rifanno
@@ -63,7 +64,7 @@ function storeSource(buf) {
 }
 const sourceBuf = (sha) => {
   if (!/^[0-9a-f]{64}$/.test(sha)) throw new HttpError(400, 'Sorgente non valida.');
-  try { return fs.readFileSync(path.join(SRC, `${sha}.pptx`)); } catch { throw new HttpError(410, 'Il file di partenza non c\'è più nell\'archivio di Cippi.'); }
+  try { return fs.readFileSync(path.join(SRC, `${sha}.pptx`)); } catch { throw new HttpError(410, 'Il file di partenza non c\'è più nell\'archivio di MPoint.'); }
 };
 function load(sha) {
   if (mem.has(sha)) { const v = mem.get(sha); mem.delete(sha); mem.set(sha, v); return v; }
@@ -89,7 +90,7 @@ function project(user, id) {
   return p;
 }
 function openDoc(user, id, { manage = false, kind } = {}) {
-  const d = db.get('SELECT * FROM cippi_docs WHERE id = ? AND deleted_at IS NULL', Number(id));
+  const d = db.get('SELECT * FROM mpoint_docs WHERE id = ? AND deleted_at IS NULL', Number(id));
   const p = d && db.get('SELECT * FROM projects WHERE id = ?', d.project_id);
   // un modello condiviso lo usano tutti; il resto solo chi vede il progetto
   const visible = p && (projects.canSee(user, p) || (d.kind === 'modello' && d.shared));
@@ -106,13 +107,13 @@ const rootOf = (p) => path.join(projects.baseDir(), p.folder);
 function autoPoints(docId, analysis, userId) {
   const now = db.now();
   for (const k of analysis.keyPoints.slice(0, 300)) {
-    db.run('INSERT INTO cippi_points(doc_id, slide, kind, text, status, auto, created_by, created_at) VALUES(?,?,?,?,?,1,?,?)',
+    db.run('INSERT INTO mpoint_points(doc_id, slide, kind, text, status, auto, created_by, created_at) VALUES(?,?,?,?,?,1,?,?)',
       docId, k.slide, k.kind === 'nota' ? 'nota' : 'chiave', k.text.slice(0, 2000), 'aperto', userId, now);
   }
 }
 function uniqueFolder(p, name) {
-  let folder = `Cippi/${safeName(name)}`;
-  for (let i = 2; db.get('SELECT 1 AS x FROM cippi_docs WHERE project_id = ? AND folder = ? AND deleted_at IS NULL', p.id, folder); i++) folder = `Cippi/${safeName(name)} (${i})`;
+  let folder = `MPoint/${safeName(name)}`;
+  for (let i = 2; db.get('SELECT 1 AS x FROM mpoint_docs WHERE project_id = ? AND folder = ? AND deleted_at IS NULL', p.id, folder); i++) folder = `MPoint/${safeName(name)} (${i})`;
   return folder;
 }
 // riassunto per gli elenchi (senza rileggere l'analisi)
@@ -121,24 +122,24 @@ function createDoc(ctx, p, buf, fileName, { name, kind = 'documento', templateId
   const sha = storeSource(buf);
   const { analysis } = load(sha);
   const docName = clean(name || path.basename(fileName, path.extname(fileName)), 120, 'Nome');
-  const folder = kind === 'modello' ? 'Cippi/Modelli' : uniqueFolder(p, docName);
+  const folder = kind === 'modello' ? 'MPoint/Modelli' : uniqueFolder(p, docName);
   if (copyToProject) ex.writeBuffer(space(p), rootOf(p), `${folder}/${safeName(kind === 'modello' ? docName : path.basename(fileName, path.extname(fileName)))}.pptx`, buf, ctx.user.id, { keepHistory: true });
   const list = slides || analysis.slides.map((s) => ({ src: s.n }));
   const now = db.now();
-  const r = db.run(`INSERT INTO cippi_docs(project_id, kind, name, source_sha, source_name, folder, slides, template_id, template, summary, created_by, created_at, updated_at)
+  const r = db.run(`INSERT INTO mpoint_docs(project_id, kind, name, source_sha, source_name, folder, slides, template_id, template, summary, created_by, created_at, updated_at)
     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`, p.id, kind, docName, sha, clean(fileName, 200) || 'presentazione.pptx', folder, JSON.stringify(list), templateId,
   kind === 'modello' ? JSON.stringify(templateOf(analysis)) : null, summaryOf(analysis), ctx.user.id, now, now);
   const id = Number(r.lastInsertRowid);
   if (kind === 'documento' && !slides) autoPoints(id, analysis, ctx.user.id);
-  db.log(ctx, kind === 'modello' ? 'cippi.modello-creato' : 'cippi.importato', `${p.name}: ${docName} (${list.length} slide)`);
+  db.log(ctx, kind === 'modello' ? 'mpoint.modello-creato' : 'mpoint.importato', `${p.name}: ${docName} (${list.length} slide)`);
   return id;
 }
 
 // Importa un .pptx caricato dal PC
-route('PUT', '/api/cippi/import', {}, async (ctx) => {
+route('PUT', '/api/mpoint/import', {}, async (ctx) => {
   const p = project(ctx.user, ctx.query.get('projectId'));
   const fileName = clean(ctx.query.get('name'), 200) || 'presentazione.pptx';
-  if (!/\.pptx$/i.test(fileName)) throw new HttpError(400, 'Cippi legge i file PowerPoint .pptx (salva i .ppt come .pptx).');
+  if (!/\.pptx$/i.test(fileName)) throw new HttpError(400, 'MPoint legge i file PowerPoint .pptx (salva i .ppt come .pptx).');
   const buf = await readBody(ctx.req);
   if (buf.length < 100) throw new HttpError(400, 'File vuoto.');
   const id = createDoc(ctx, p, buf, fileName, { name: ctx.query.get('nome') || null });
@@ -146,7 +147,7 @@ route('PUT', '/api/cippi/import', {}, async (ctx) => {
 });
 
 // Crea da zero: una presentazione base con la struttura tipica (titolo, indice, sezione, testo, legenda, flusso, chiusura)
-route('POST', '/api/cippi/nuovo', {}, async (ctx) => {
+route('POST', '/api/mpoint/nuovo', {}, async (ctx) => {
   const b = await ctx.body();
   const p = project(ctx.user, b.projectId);
   const name = clean(b.name, 120, 'Nome');
@@ -155,7 +156,7 @@ route('POST', '/api/cippi/nuovo', {}, async (ctx) => {
 });
 
 // Importa un .pptx gia' nella cartella del progetto (Esplora file)
-route('POST', '/api/cippi/import-progetto', {}, async (ctx) => {
+route('POST', '/api/mpoint/import-progetto', {}, async (ctx) => {
   const b = await ctx.body();
   const p = project(ctx.user, b.projectId);
   const at = ex.resolve(rootOf(p), String(b.path || ''));
@@ -167,9 +168,9 @@ route('POST', '/api/cippi/import-progetto', {}, async (ctx) => {
 // .pptx presenti nelle cartelle dei progetti visibili (per importarli senza scaricarli e ricaricarli)
 const pptxInProject = (p) => db.all("SELECT path, name, size, updated_at FROM fs_index WHERE space = ? AND is_dir = 0 AND lower(name) LIKE '%.pptx' AND path NOT LIKE '.%' ORDER BY updated_at DESC LIMIT 200", space(p))
   .filter((r) => !/(^|\/)\.(cestino|storico)\//.test(r.path));
-// Per ogni .pptx della cartella, il documento di MPoint che ne e' nato (la copia in Cippi/<nome>/ o il file importato sul posto)
+// Per ogni .pptx della cartella, il documento di MPoint che ne e' nato (la copia in MPoint/<nome>/ o il file importato sul posto)
 function docOfFile(p) {
-  const docs = db.all('SELECT id, folder, source_name FROM cippi_docs WHERE project_id = ? AND deleted_at IS NULL', p.id);
+  const docs = db.all('SELECT id, folder, source_name FROM mpoint_docs WHERE project_id = ? AND deleted_at IS NULL', p.id);
   const byPath = new Map();
   const byName = new Map();
   for (const d of docs) {
@@ -178,7 +179,7 @@ function docOfFile(p) {
   }
   return (r) => byPath.get(r.path) || byName.get(r.name) || null;
 }
-route('GET', '/api/cippi/file-progetto', {}, (ctx) => {
+route('GET', '/api/mpoint/file-progetto', {}, (ctx) => {
   const p = project(ctx.user, ctx.query.get('projectId'));
   const docOf = docOfFile(p);
   ctx.json(200, pptxInProject(p).map((r) => ({ path: r.path, name: r.name, size: r.size, updatedAt: r.updated_at, docId: docOf(r) })));
@@ -193,20 +194,20 @@ const brief = (d, user, extra = {}) => {
     slides: slides.length, sourceName: d.source_name, folder: d.folder, shared: !!d.shared, updatedAt: d.updated_at, createdBy: d.created_by,
     author: (db.get('SELECT name FROM users WHERE id = ?', d.created_by) || {}).name || '',
     score: a.score !== undefined ? a.score : null, counts: a.counts || {}, ratio: a.ratio || 16 / 9, processes: a.processes || 0,
-    points: db.get("SELECT COUNT(*) AS n FROM cippi_points WHERE doc_id = ? AND status = 'aperto' AND kind IN ('domanda','da-fare')", d.id).n,
+    points: db.get("SELECT COUNT(*) AS n FROM mpoint_points WHERE doc_id = ? AND status = 'aperto' AND kind IN ('domanda','da-fare')", d.id).n,
     ...extra,
   };
 };
-route('GET', '/api/cippi', {}, (ctx) => {
+route('GET', '/api/mpoint', {}, (ctx) => {
   projects.sync();
   const visible = db.all('SELECT * FROM projects ORDER BY name').filter((p) => projects.canSee(ctx.user, p));
   const ids = visible.map((p) => p.id);
   const inList = ids.length ? `project_id IN (${ids.map(() => '?').join(',')})` : '0';
-  const docs = db.all(`SELECT * FROM cippi_docs WHERE deleted_at IS NULL AND kind = 'documento' AND ${inList} ORDER BY updated_at DESC`, ...ids);
-  const models = db.all(`SELECT * FROM cippi_docs WHERE deleted_at IS NULL AND kind = 'modello' AND (${inList} OR shared = 1) ORDER BY name`, ...ids);
+  const docs = db.all(`SELECT * FROM mpoint_docs WHERE deleted_at IS NULL AND kind = 'documento' AND ${inList} ORDER BY updated_at DESC`, ...ids);
+  const models = db.all(`SELECT * FROM mpoint_docs WHERE deleted_at IS NULL AND kind = 'modello' AND (${inList} OR shared = 1) ORDER BY name`, ...ids);
   // Schermata iniziale: prima i file aperti di recente dalla persona, poi le cartelle dei progetti con il loro riepilogo
   const seen = new Set([...docs, ...models].map((d) => d.id));
-  const recent = db.all(`SELECT r.doc_id AS id, r.opened_at AS openedAt FROM cippi_recenti r JOIN cippi_docs d ON d.id = r.doc_id
+  const recent = db.all(`SELECT r.doc_id AS id, r.opened_at AS openedAt FROM mpoint_recenti r JOIN mpoint_docs d ON d.id = r.doc_id
     WHERE r.user_id = ? AND d.deleted_at IS NULL ORDER BY r.opened_at DESC LIMIT 24`, ctx.user.id).filter((r) => seen.has(r.id)).slice(0, 12);
   const folderOf = (p) => {
     const mine = docs.filter((d) => d.project_id === p.id);
@@ -248,31 +249,31 @@ function appunti(p, d) {
   return db.all('SELECT path, name, size, updated_at FROM fs_index WHERE space = ? AND parent = ? AND is_dir = 0 ORDER BY name', space(p), `${d.folder}/Appunti`)
     .map((r) => ({ name: r.name, size: r.size, updatedAt: r.updated_at, url: `/api/explorer/${space(p)}/view?path=${encodeURIComponent(r.path)}`, space: space(p), path: r.path }));
 }
-route('GET', '/api/cippi/docs/:id', {}, (ctx) => {
+route('GET', '/api/mpoint/docs/:id', {}, (ctx) => {
   const { doc, project: p, canManage, canEdit } = openDoc(ctx.user, ctx.params.id);
   const { pres, analysis } = load(doc.source_sha);
   // file recenti della schermata iniziale: l'ultima apertura di ogni documento, per persona
-  db.run('INSERT INTO cippi_recenti(user_id, doc_id, opened_at) VALUES(?,?,?) ON CONFLICT(user_id, doc_id) DO UPDATE SET opened_at = excluded.opened_at', ctx.user.id, doc.id, db.now());
+  db.run('INSERT INTO mpoint_recenti(user_id, doc_id, opened_at) VALUES(?,?,?) ON CONFLICT(user_id, doc_id) DO UPDATE SET opened_at = excluded.opened_at', ctx.user.id, doc.id, db.now());
   const tplId = Number(ctx.query.get('modello')) || doc.template_id;
   // modelli noti che somigliano: dalla memoria dei file analizzati (docs/MEMORIA) e dai modelli salvati visibili
-  const known = db.all("SELECT id, name, template FROM cippi_docs WHERE kind = 'modello' AND deleted_at IS NULL AND id != ? AND (project_id = ? OR shared = 1)", doc.id, p.id)
+  const known = db.all("SELECT id, name, template FROM mpoint_docs WHERE kind = 'modello' AND deleted_at IS NULL AND id != ? AND (project_id = ? OR shared = 1)", doc.id, p.id)
     .map((m) => { try { return { id: m.id, name: m.name, template: JSON.parse(m.template || '{}') }; } catch { return null; } }).filter(Boolean);
   let impronta = null;
   try { impronta = riconosci(pres, analysis, known); } catch { impronta = null; }
   let confronto = null;
   if (tplId) {
-    const t = db.get("SELECT * FROM cippi_docs WHERE id = ? AND kind = 'modello' AND deleted_at IS NULL", tplId);
+    const t = db.get("SELECT * FROM mpoint_docs WHERE id = ? AND kind = 'modello' AND deleted_at IS NULL", tplId);
     if (t) confronto = { modello: { id: t.id, name: t.name }, ...compareToTemplate(analysis, JSON.parse(t.template)) };
   }
   const users = new Map(db.all('SELECT id, name FROM users').map((u) => [u.id, u.name]));
-  const glossary = new Map(db.all('SELECT term, meaning FROM cippi_glossary WHERE project_id = ?', p.id).map((g) => [g.term, g.meaning]));
+  const glossary = new Map(db.all('SELECT term, meaning FROM mpoint_glossary WHERE project_id = ?', p.id).map((g) => [g.term, g.meaning]));
   ctx.json(200, {
     ...brief(doc, ctx.user, { project: p.name }),
     canManage, canEdit,
     list: JSON.parse(doc.slides),
     template: doc.kind === 'modello' ? JSON.parse(doc.template) : null,
     analysis: { ...analysis, glossary: analysis.glossary.map((g) => ({ ...g, meaning: glossary.get(g.term) || g.meaning })) },
-    points: db.all('SELECT * FROM cippi_points WHERE doc_id = ? ORDER BY slide, id', doc.id).map((x) => ({
+    points: db.all('SELECT * FROM mpoint_points WHERE doc_id = ? ORDER BY slide, id', doc.id).map((x) => ({
       id: x.id, slide: x.slide, kind: x.kind, text: x.text, status: x.status, auto: !!x.auto, author: users.get(x.created_by) || '', createdAt: x.created_at,
     })),
     celle: celleLinks(p, analysis),
@@ -280,7 +281,7 @@ route('GET', '/api/cippi/docs/:id', {}, (ctx) => {
     confronto,
     background: doc.background || '',
     backgroundSuggestion: doc.background ? '' : suggestBackground(analysis),
-    items: Object.fromEntries(db.all('SELECT key, data FROM cippi_items WHERE doc_id = ?', doc.id).map((r) => [r.key, JSON.parse(r.data)])),
+    items: Object.fromEntries(db.all('SELECT key, data FROM mpoint_items WHERE doc_id = ?', doc.id).map((r) => [r.key, JSON.parse(r.data)])),
     geoms: GEOMS,
     edits: JSON.parse(doc.edits || '{}'),
     impronta,
@@ -299,21 +300,21 @@ function suggestBackground(a) {
 }
 
 // Caratteristiche di un elemento: la chiave e' stabile tra le versioni (codice del processo + testo dello step, ...)
-route('PUT', '/api/cippi/docs/:id/items', {}, async (ctx) => {
+route('PUT', '/api/mpoint/docs/:id/items', {}, async (ctx) => {
   const { doc, canEdit } = openDoc(ctx.user, ctx.params.id);
   if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
   const b = await ctx.body();
   const key = clean(b.key, 400, 'Elemento');
   const data = {};
   for (const f of ITEM_FIELDS) if (b.data && b.data[f] != null && String(b.data[f]).trim()) data[f] = String(b.data[f]).slice(0, 5000);
-  if (!Object.keys(data).length) db.run('DELETE FROM cippi_items WHERE doc_id = ? AND key = ?', doc.id, key);
-  else db.run(`INSERT INTO cippi_items(doc_id, key, data, updated_by, updated_at) VALUES(?,?,?,?,?)
+  if (!Object.keys(data).length) db.run('DELETE FROM mpoint_items WHERE doc_id = ? AND key = ?', doc.id, key);
+  else db.run(`INSERT INTO mpoint_items(doc_id, key, data, updated_by, updated_at) VALUES(?,?,?,?,?)
     ON CONFLICT(doc_id, key) DO UPDATE SET data = excluded.data, updated_by = excluded.updated_by, updated_at = excluded.updated_at`, doc.id, key, JSON.stringify(data), ctx.user.id, db.now());
   ctx.json(200, { ok: true });
 });
 
 // Forme di una slide di origine (per l'anteprima nel pannello di visione)
-route('GET', '/api/cippi/docs/:id/slide/:n', {}, (ctx) => {
+route('GET', '/api/mpoint/docs/:id/slide/:n', {}, (ctx) => {
   const { doc } = openDoc(ctx.user, ctx.params.id);
   const { pres } = load(doc.source_sha);
   const s = pres.slides[Number(ctx.params.n) - 1];
@@ -321,7 +322,7 @@ route('GET', '/api/cippi/docs/:id/slide/:n', {}, (ctx) => {
   const edits = JSON.parse(doc.edits || '{}');
   ctx.json(200, { n: s.n, layout: s.layout, shapes: s.shapes, background: withReplaces(s.background || [], edits.replace), notes: s.notes, theme: pres.theme, fonts: pres.fonts, ratio: pres.ratio });
 });
-route('GET', '/api/cippi/docs/:id/media', {}, (ctx) => {
+route('GET', '/api/mpoint/docs/:id/media', {}, (ctx) => {
   const { doc } = openDoc(ctx.user, ctx.params.id);
   const name = String(ctx.query.get('name') || '');
   const buf = mediaOf(sourceBuf(doc.source_sha), name);
@@ -394,7 +395,7 @@ function withReplaces(shapes, replaces) {
   if (!replaces || !replaces.length) return shapes;
   return shapes.map((s) => (s.paragraphs ? { ...s, paragraphs: s.paragraphs.map((p) => ({ ...p, text: replaces.reduce((t, r) => t.replace(E.regexOf(r.find, r), r.replace), p.text) })) } : s));
 }
-route('PATCH', '/api/cippi/docs/:id', {}, async (ctx) => {
+route('PATCH', '/api/mpoint/docs/:id', {}, async (ctx) => {
   const { doc, canManage, canEdit } = openDoc(ctx.user, ctx.params.id);
   if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
   const b = await ctx.body();
@@ -413,14 +414,14 @@ route('PATCH', '/api/cippi/docs/:id', {}, async (ctx) => {
   }
   if (!sets.length) return ctx.json(200, { ok: true });
   const now = db.now();
-  db.run(`UPDATE cippi_docs SET ${sets.join(', ')}, updated_at = ? WHERE id = ?`, ...vals, now, doc.id);
+  db.run(`UPDATE mpoint_docs SET ${sets.join(', ')}, updated_at = ? WHERE id = ?`, ...vals, now, doc.id);
   ctx.json(200, { ok: true, updatedAt: now });
 });
 
-route('DELETE', '/api/cippi/docs/:id', {}, (ctx) => {
+route('DELETE', '/api/mpoint/docs/:id', {}, (ctx) => {
   const { doc, project: p } = openDoc(ctx.user, ctx.params.id, { manage: true });
-  db.run('UPDATE cippi_docs SET deleted_at = ? WHERE id = ?', db.now(), doc.id);
-  db.log(ctx, doc.kind === 'modello' ? 'cippi.modello-eliminato' : 'cippi.eliminato', `${p.name}: ${doc.name}`);
+  db.run('UPDATE mpoint_docs SET deleted_at = ? WHERE id = ?', db.now(), doc.id);
+  db.log(ctx, doc.kind === 'modello' ? 'mpoint.modello-eliminato' : 'mpoint.eliminato', `${p.name}: ${doc.name}`);
   ctx.json(200, { ok: true });
 });
 
@@ -429,11 +430,11 @@ const fileNameOf = (d) => `${safeName(d.name)}.pptx`;
 function built(doc) {
   try { return build(sourceBuf(doc.source_sha), JSON.parse(doc.slides), JSON.parse(doc.edits || '{}')); } catch (err) { throw err instanceof HttpError ? err : new HttpError(err.status || 500, err.message); }
 }
-route('GET', '/api/cippi/docs/:id/download', {}, (ctx) => {
+route('GET', '/api/mpoint/docs/:id/download', {}, (ctx) => {
   const { doc } = openDoc(ctx.user, ctx.params.id);
   const buf = built(doc);
   const name = fileNameOf(doc);
-  db.log(ctx, 'cippi.scaricato', doc.name);
+  db.log(ctx, 'mpoint.scaricato', doc.name);
   ctx.res.writeHead(200, {
     'Content-Type': 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'Content-Length': buf.length, 'Cache-Control': 'no-store',
     'Content-Disposition': `attachment; filename="${name.replace(/[^\x20-\x7e]/g, '_').replace(/"/g, '_')}"; filename*=UTF-8''${encodeURIComponent(name)}`,
@@ -442,7 +443,7 @@ route('GET', '/api/cippi/docs/:id/download', {}, (ctx) => {
 });
 // Salva la versione nella cartella del progetto e la rende la nuova base del documento (le modifiche entrano nel file,
 // l'analisi si rifa' sul risultato). La versione precedente resta tra le versioni del file in Esplora file.
-route('POST', '/api/cippi/docs/:id/salva-versione', {}, async (ctx) => {
+route('POST', '/api/mpoint/docs/:id/salva-versione', {}, async (ctx) => {
   const { doc, project: p, canEdit } = openDoc(ctx.user, ctx.params.id, { kind: 'documento' });
   if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
   const buf = built(doc);
@@ -454,15 +455,15 @@ route('POST', '/api/cippi/docs/:id/salva-versione', {}, async (ctx) => {
   // le note per slide restano attaccate alla stessa posizione
   const list = analysis.slides.map((s, i) => ({ src: s.n, ...(old[i] && old[i].note ? { note: old[i].note } : {}) }));
   const now = db.now();
-  db.run("UPDATE cippi_docs SET source_sha = ?, source_name = ?, slides = ?, summary = ?, edits = '{}', version = version + 1, updated_at = ? WHERE id = ?", sha, fileNameOf(doc), JSON.stringify(list), summaryOf(analysis), now, doc.id);
-  db.log(ctx, 'cippi.versione', `${p.name}: ${doc.name} v${doc.version + 1}`);
+  db.run("UPDATE mpoint_docs SET source_sha = ?, source_name = ?, slides = ?, summary = ?, edits = '{}', version = version + 1, updated_at = ? WHERE id = ?", sha, fileNameOf(doc), JSON.stringify(list), summaryOf(analysis), now, doc.id);
+  db.log(ctx, 'mpoint.versione', `${p.name}: ${doc.name} v${doc.version + 1}`);
   ctx.json(200, { space: space(p), path: rel, version: doc.version + 1, updatedAt: now });
 });
 
 // ---- Trova e sostituisci in tutto il documento ---------------------------------------------------------
 // Nelle slide (testi e celle delle tabelle) diventa una modifica dei testi, come quelle fatte a mano; nei layout e
 // nei master (piè di pagina, scritte fisse) resta una regola applicata all'esportazione. Con "anteprima" conta e basta.
-route('POST', '/api/cippi/docs/:id/sostituisci', {}, async (ctx) => {
+route('POST', '/api/mpoint/docs/:id/sostituisci', {}, async (ctx) => {
   const { doc, canEdit } = openDoc(ctx.user, ctx.params.id);
   if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
   const b = await ctx.body();
@@ -512,60 +513,60 @@ route('POST', '/api/cippi/docs/:id/sostituisci', {}, async (ctx) => {
   if (!b.anteprima && (count || layoutCount)) {
     const edits = JSON.parse(doc.edits || '{}');
     if (b.layouts && layoutCount) edits.replace = (edits.replace || []).concat([{ find, replace, ...opts }]).slice(-200);
-    db.run('UPDATE cippi_docs SET slides = ?, edits = ?, updated_at = ? WHERE id = ?', JSON.stringify(cleanSlides(list, pres.slides.length)), JSON.stringify(cleanEdits(edits)), now, doc.id);
-    db.log(ctx, 'cippi.sostituito', `${doc.name}: "${find}" → "${replace}" (${count + layoutCount})`);
+    db.run('UPDATE mpoint_docs SET slides = ?, edits = ?, updated_at = ? WHERE id = ?', JSON.stringify(cleanSlides(list, pres.slides.length)), JSON.stringify(cleanEdits(edits)), now, doc.id);
+    db.log(ctx, 'mpoint.sostituito', `${doc.name}: "${find}" → "${replace}" (${count + layoutCount})`);
   }
   ctx.json(200, { count, layoutCount, slides: where, updatedAt: now });
 });
 
 // ---- Punti chiave e note della revisione ----------------------------------------------------------
-route('POST', '/api/cippi/docs/:id/points', {}, async (ctx) => {
+route('POST', '/api/mpoint/docs/:id/points', {}, async (ctx) => {
   const { doc, canEdit } = openDoc(ctx.user, ctx.params.id);
   if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
   const b = await ctx.body();
   const kind = KINDS.includes(b.kind) ? b.kind : 'chiave';
-  const r = db.run('INSERT INTO cippi_points(doc_id, slide, kind, text, status, auto, created_by, created_at) VALUES(?,?,?,?,?,0,?,?)',
+  const r = db.run('INSERT INTO mpoint_points(doc_id, slide, kind, text, status, auto, created_by, created_at) VALUES(?,?,?,?,?,0,?,?)',
     doc.id, b.slide ? Number(b.slide) : null, kind, clean(b.text, 2000, 'Testo'), 'aperto', ctx.user.id, db.now());
   ctx.json(201, { id: Number(r.lastInsertRowid) });
 });
 function openPoint(user, id) {
-  const pt = db.get('SELECT * FROM cippi_points WHERE id = ?', Number(id));
+  const pt = db.get('SELECT * FROM mpoint_points WHERE id = ?', Number(id));
   if (!pt) throw new HttpError(404, 'Punto non trovato.');
   const o = openDoc(user, pt.doc_id);
   if (!o.canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
   return { pt, ...o };
 }
-route('PATCH', '/api/cippi/points/:id', {}, async (ctx) => {
+route('PATCH', '/api/mpoint/points/:id', {}, async (ctx) => {
   const { pt } = openPoint(ctx.user, ctx.params.id);
   const b = await ctx.body();
-  db.run('UPDATE cippi_points SET text = ?, kind = ?, status = ?, slide = ?, updated_at = ? WHERE id = ?',
+  db.run('UPDATE mpoint_points SET text = ?, kind = ?, status = ?, slide = ?, updated_at = ? WHERE id = ?',
     b.text !== undefined ? clean(b.text, 2000, 'Testo') : pt.text, KINDS.includes(b.kind) ? b.kind : pt.kind,
     ['aperto', 'fatto'].includes(b.status) ? b.status : pt.status, b.slide !== undefined ? (b.slide ? Number(b.slide) : null) : pt.slide, db.now(), pt.id);
   ctx.json(200, { ok: true });
 });
-route('DELETE', '/api/cippi/points/:id', {}, (ctx) => {
+route('DELETE', '/api/mpoint/points/:id', {}, (ctx) => {
   const { pt } = openPoint(ctx.user, ctx.params.id);
-  db.run('DELETE FROM cippi_points WHERE id = ?', pt.id);
+  db.run('DELETE FROM mpoint_points WHERE id = ?', pt.id);
   ctx.json(200, { ok: true });
 });
 
 // ---- Appunti (PDF, Word, immagini...) nella cartella del documento ---------------------------------
-route('PUT', '/api/cippi/docs/:id/appunti', {}, async (ctx) => {
+route('PUT', '/api/mpoint/docs/:id/appunti', {}, async (ctx) => {
   const { doc, project: p, canEdit } = openDoc(ctx.user, ctx.params.id);
   if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
   const name = safeName(String(ctx.query.get('name') || 'appunti')).replace(/ (\.\w+)$/, '$1');
   const buf = await readBody(ctx.req, Number(db.getSetting('maxFileMb')) * 1024 * 1024);
   ex.writeBuffer(space(p), rootOf(p), `${doc.folder}/Appunti/${name}`, buf, ctx.user.id, { keepHistory: true });
-  db.log(ctx, 'cippi.appunti', `${doc.name}: ${name}`);
+  db.log(ctx, 'mpoint.appunti', `${doc.name}: ${name}`);
   ctx.json(201, { ok: true });
 });
 
 // ---- Glossario del progetto ----------------------------------------------------------------------
-route('PUT', '/api/cippi/glossario', {}, async (ctx) => {
+route('PUT', '/api/mpoint/glossario', {}, async (ctx) => {
   const b = await ctx.body();
   const p = project(ctx.user, b.projectId);
   const term = clean(b.term, 30, 'Sigla').toUpperCase();
-  db.run(`INSERT INTO cippi_glossary(project_id, term, meaning, updated_by, updated_at) VALUES(?,?,?,?,?)
+  db.run(`INSERT INTO mpoint_glossary(project_id, term, meaning, updated_by, updated_at) VALUES(?,?,?,?,?)
     ON CONFLICT(project_id, term) DO UPDATE SET meaning = excluded.meaning, updated_by = excluded.updated_by, updated_at = excluded.updated_at`,
   p.id, term, clean(b.meaning, 300), ctx.user.id, db.now());
   ctx.json(200, { ok: true });
@@ -573,19 +574,19 @@ route('PUT', '/api/cippi/glossario', {}, async (ctx) => {
 
 // ---- Modelli ---------------------------------------------------------------------------------------
 // Un documento diventa modello: si salva la sua "ricetta" (parti in ordine, blocchi, sezioni, legenda, stile)
-route('POST', '/api/cippi/docs/:id/modello', {}, async (ctx) => {
+route('POST', '/api/mpoint/docs/:id/modello', {}, async (ctx) => {
   const { doc, project: p } = openDoc(ctx.user, ctx.params.id, { kind: 'documento' });
   const b = await ctx.body();
   const buf = built(doc);
   const id = createDoc(ctx, p, buf, `${safeName(b.name || doc.name)}.pptx`, { name: b.name || `Modello da ${doc.name}`, kind: 'modello' });
-  if (b.description) db.run('UPDATE cippi_docs SET description = ? WHERE id = ?', clean(b.description, 1000), id);
+  if (b.description) db.run('UPDATE mpoint_docs SET description = ? WHERE id = ?', clean(b.description, 1000), id);
   ctx.json(201, { id });
 });
 
 // Nuovo documento da un modello: le parti scelte, nell'ordine del modello, ripetute quante volte serve.
 // Con "vuoto" i testi diventano segnaposto da compilare (i flussi e gli schemi restano come esempio).
 const HINT = { titolo: 'Titolo della slide', sottotitolo: 'Sottotitolo', intestazione: 'Intestazione', paragrafo: 'Testo del paragrafo', elenco: 'Punto elenco', nota: 'Nota', etichetta: 'Etichetta' };
-route('POST', '/api/cippi/models/:id/nuovo', {}, async (ctx) => {
+route('POST', '/api/mpoint/models/:id/nuovo', {}, async (ctx) => {
   const { doc: m } = openDoc(ctx.user, ctx.params.id, { kind: 'modello' });
   const b = await ctx.body();
   const p = project(ctx.user, b.projectId);
@@ -616,4 +617,36 @@ route('POST', '/api/cippi/models/:id/nuovo', {}, async (ctx) => {
   ctx.json(201, { id });
 });
 
-module.exports = { load };
+// All'avvio: i nomi di prima dell'app (Cippi) spariscono dal disco. data/cippi -> data/mpoint; in ogni cartella di
+// progetto Cippi/ -> MPoint/ (con lo spostamento di Esplora file: versioni e indice seguono) e i documenti aggiornati.
+// Non cancella niente: se MPoint/ esiste gia', i contenuti di Cippi/ ci si spostano uno per uno e Cippi/ resta solo se
+// non si e' potuto svuotare.
+function allineaNomiVecchi() {
+  const esiti = [];
+  try {
+    if (fs.existsSync(DIR_VECCHIA) && !fs.existsSync(DIR)) { fs.renameSync(DIR_VECCHIA, DIR); esiti.push('data/cippi -> data/mpoint'); }
+  } catch (err) { db.issue('mpoint', 'Non sono riuscito a rinominare data/cippi in data/mpoint', err.message); }
+  let progetti = [];
+  try { projects.sync(); progetti = db.all('SELECT * FROM projects'); } catch { progetti = []; }
+  for (const p of progetti) {
+    const root = rootOf(p);
+    const vecchia = path.join(root, 'Cippi');
+    if (!fs.existsSync(vecchia)) continue;
+    try {
+      if (!fs.existsSync(path.join(root, 'MPoint'))) ex.rename(space(p), root, 'Cippi', 'MPoint', null);
+      else {
+        for (const name of fs.readdirSync(vecchia)) {
+          if (name.startsWith('.')) continue;
+          if (fs.existsSync(path.join(root, 'MPoint', name))) throw new Error(`"MPoint/${name}" esiste gia': "Cippi/${name}" resta dov'e'`);
+          ex.move(space(p), root, `Cippi/${name}`, 'MPoint', null);
+        }
+        if (!fs.readdirSync(vecchia).filter((n) => !n.startsWith('.')).length) { fs.rmSync(vecchia, { recursive: true, force: true }); ex.unindex(space(p), 'Cippi'); }
+      }
+      db.run("UPDATE mpoint_docs SET folder = 'MPoint/' || substr(folder, 7) WHERE project_id = ? AND folder LIKE 'Cippi/%'", p.id);
+      esiti.push(`${p.name}: Cippi/ -> MPoint/`);
+    } catch (err) { db.issue('mpoint', `Progetto ${p.name}: non sono riuscito a spostare Cippi/ in MPoint/`, err.message); }
+  }
+  if (esiti.length) console.log(`MPoint: nomi vecchi allineati (${esiti.join('; ')})`);
+}
+
+module.exports = { load, allineaNomiVecchi };

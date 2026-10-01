@@ -1,5 +1,5 @@
 'use strict';
-// Cippi: riconoscimenti aggiuntivi della STRUTTURA, usati da analyze.js.
+// MPoint: riconoscimenti aggiuntivi della STRUTTURA, usati da analyze.js.
 //   - segnaposto del layout (piè di pagina, data, numero) che non sono contenuto;
 //   - "pillole": una casella di testo trasparente appoggiata sopra una forma colorata = un'intestazione con quel colore;
 //   - tabelle disegnate con le forme (righe di caselle allineate in colonne) = una tabella vera;
@@ -73,7 +73,7 @@ function drawnTables(items) {
 }
 
 // ---- Sezioni native di PowerPoint -----------------------------------------------------------------
-// pres.sections = [{ name, slides: [n] }] -> le sezioni di Cippi, con "section" scritto su ogni slide
+// pres.sections = [{ name, slides: [n] }] -> le sezioni di MPoint, con "section" scritto su ogni slide
 function nativeSectionsOf(pres, slides) {
   const list = (pres.sections || []).filter((s) => s.slides.length);
   if (list.length < 2) return null;

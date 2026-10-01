@@ -20,7 +20,7 @@ Nessun dato del file è copiato qui oltre a struttura e stile: il file resta fuo
 
 ## 2. Impronta di riconoscimento
 
-Impronta leggibile da un programma: `kickoff-txt-biosiris.impronta.json` (la legge `app/src/cippi/impronta.js`). Segnali forti, in ordine:
+Impronta leggibile da un programma: `kickoff-txt-biosiris.impronta.json` (la legge `app/src/mpoint/impronta.js`). Segnali forti, in ordine:
 
 1. tema con accent1 `#225546` e accent5 `#1482AB`, caratteri del tema Poppins/Poppins;
 2. layout usato dalla maggior parte delle slide `1_Title and Content` con piè di pagina "Kick-off Progetto …" (regex `^Kick-off Progetto .+`);
@@ -184,7 +184,7 @@ Le funzioni proposte il 01/10/2026 sono state approvate e realizzate in MPoint 0
 
 ## 9. Da classificare
 
-- Impronta, blocco `cippi` (misura storica con MPoint 0.1.0 / ANALYZER 3): tipi riconosciuti per slide 1 "testo (atteso copertina)", 2 "indice", 3 "testo", 4 "testo", 5 "schema (atteso scheda)", 6 "testo (atteso scheda)", 7–10 "scheda", 11 "testo (atteso scheda)", 12 "testo (atteso masterplan)", 13 "tabella"; punteggio 77; falsi avvisi 6.
+- Impronta, blocco `mpoint` (misura storica con MPoint 0.1.0 / ANALYZER 3): tipi riconosciuti per slide 1 "testo (atteso copertina)", 2 "indice", 3 "testo", 4 "testo", 5 "schema (atteso scheda)", 6 "testo (atteso scheda)", 7–10 "scheda", 11 "testo (atteso scheda)", 12 "testo (atteso masterplan)", 13 "tabella"; punteggio 77; falsi avvisi 6.
 - La prima versione della scheda (commit `e5ab667`) chiudeva con: "Le funzioni mancanti e la loro priorità sono nella proposta inviata il 01/10/2026 (da approvare prima di toccare il codice)"; la seconda (`fff10ab`) con: "Le funzioni proposte il 01/10/2026 sono state approvate e realizzate in MPoint 0.2.0".
 - Nomi dell'autrice e dei co-autori (sezione 1) e importo del contratto (sezione 7): la regola della memoria vieta i dati personali e del cliente; sono qui perché erano nella scheda originale. Decisione in `../CONFLITTI.md`, voce 2.
 - Tema: dk1 `000000` e lt1 `FFFFFF` (dall'impronta; la scheda originale non li elencava).
@@ -193,7 +193,7 @@ Le funzioni proposte il 01/10/2026 sono state approvate e realizzate in MPoint 0
 
 - `admiring-hopper`, sessione `session_01GqNo1MzxngbR1RQrFUDijL`, commit `e5ab667` (docs/MEMORIA/pptx/kickoff-txt-biosiris.md e .impronta.json, prima versione; docs/MEMORIA/README.md): identità, struttura, stile, impronta, caratteristiche trovate, stato con MPoint 0.1.0, funzioni da usare.
 - `admiring-hopper`, commit `fff10ab` (stessa scheda, aggiornata; `docs/REPORT/2026-10-01-cippi-kickoff.md`; `docs/MPOINT.md`): misure con MPoint 0.2.0, esportazione valida, limiti che restano, nomi reali delle funzioni.
-- `kickoff-txt-biosiris.impronta.json` (admiring-hopper, `e5ab667`): colori completi del tema, layout disponibili, forme del layout, segnali per parte, larghezze della tabella, glossario atteso, blocco `cippi`.
-- `app/src/cippi/impronta.js` (admiring-hopper, `fff10ab`): quali campi dell'impronta vengono confrontati.
+- `kickoff-txt-biosiris.impronta.json` (admiring-hopper, `e5ab667`): colori completi del tema, layout disponibili, forme del layout, segnali per parte, larghezze della tabella, glossario atteso, blocco `mpoint`.
+- `app/src/mpoint/impronta.js` (admiring-hopper, `fff10ab`): quali campi dell'impronta vengono confrontati.
 - `cool-noether`, commit `74c4dad` (`../docx/kit-aq-id2610.conoscenza.json`, `../fascicoli/fascicolo-aq-id2610.md`) e `8314b5a` (`../xlsx/piano-di-lavoro-txt-biosiris.md`): aziende del RTI, catena dei documenti, sinergia con il piano di lavoro.
 - `awesome-cray`, commit `51e11c0` (`sal-presentazione.md`, stessa cartella): confronto con la famiglia grafica del SAL R-CAP.AC.

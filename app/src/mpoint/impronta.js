@@ -1,9 +1,9 @@
 'use strict';
-// Cippi: l'IMPRONTA di una presentazione, per riconoscere un modello gia' noto quando arriva un file nuovo.
+// MPoint: l'IMPRONTA di una presentazione, per riconoscere un modello gia' noto quando arriva un file nuovo.
 // L'impronta tiene: colori e caratteri del tema, layout usati (e quello principale), piè di pagina, sezioni native,
 // nomi di forme non di serie, azienda nei metadati, tipi di slide nell'ordine.
 // I modelli noti stanno in docs/MEMORIA/**/*.impronta.json (la memoria dei file analizzati) e tra i modelli salvati
-// in Cippi. Il confronto da' un punteggio 0..100 e il motivo.
+// in MPoint. Il confronto da' un punteggio 0..100 e il motivo.
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -50,7 +50,7 @@ function fromMemory(j) {
   };
 }
 
-// Impronta di un modello salvato in Cippi (template JSON di analyze.templateOf) -> forma comune
+// Impronta di un modello salvato in MPoint (template JSON di analyze.templateOf) -> forma comune
 function fromTemplate(tpl) {
   const t = tpl.theme || {};
   return {
@@ -117,7 +117,7 @@ function modelliNoti(dir) {
       else if (/\.impronta\.json$/i.test(e.name)) {
         try {
           const j = JSON.parse(fs.readFileSync(p, 'utf8'));
-          if (j && (j.formato === 'pptx' || j.app === 'cippi')) list.push({ id: j.template || e.name.replace(/\.impronta\.json$/i, ''), nome: j.tipoDocumento || j.template, scheda: path.relative(root, p).replace(/\\/g, '/').replace(/\.impronta\.json$/i, '.md'), impronta: fromMemory(j) });
+          if (j && (j.formato === 'pptx' || (j.app === 'mpoint' || j.app === 'cippi'))) list.push({ id: j.template || e.name.replace(/\.impronta\.json$/i, ''), nome: j.tipoDocumento || j.template, scheda: path.relative(root, p).replace(/\\/g, '/').replace(/\.impronta\.json$/i, '.md'), impronta: fromMemory(j) });
         } catch { /* file non leggibile: si salta */ }
       }
     }

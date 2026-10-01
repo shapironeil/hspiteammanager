@@ -66,13 +66,13 @@ function dialogs(d, presetProject = null) {
     const proj = projectSelect();
     const loadFiles = async () => {
       fromProject.replaceChildren(h('option', { value: '' }, '— oppure scegli un file già nella cartella del progetto —'));
-      try { for (const f of await get(`/api/cippi/file-progetto?projectId=${proj.value}`)) if (!f.docId) fromProject.append(h('option', { value: f.path }, f.path)); } catch { /* niente */ }
+      try { for (const f of await get(`/api/mpoint/file-progetto?projectId=${proj.value}`)) if (!f.docId) fromProject.append(h('option', { value: f.path }, f.path)); } catch { /* niente */ }
     };
     proj.addEventListener('change', loadFiles);
     loadFiles();
     const bar = h('div', { class: 'small muted' });
     const m = modal('Importa una presentazione', form([
-      field('Progetto', proj, 'Il documento lo vedono le persone del progetto. Il file viene copiato nella cartella del progetto (sottocartella Cippi/).'),
+      field('Progetto', proj, 'Il documento lo vedono le persone del progetto. Il file viene copiato nella cartella del progetto (sottocartella MPoint/).'),
       field('File PowerPoint (.pptx)', file),
       field('Dalla cartella del progetto', fromProject),
       field('Nome (facoltativo)', h('input', { type: 'text', name: 'nome', maxlength: '120', placeholder: 'il nome del file' })),
@@ -80,11 +80,11 @@ function dialogs(d, presetProject = null) {
       h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, icon('upload'), 'Importa e analizza')),
     ], async (v) => {
       let r;
-      if (v.path) r = await post('/api/cippi/import-progetto', { projectId: Number(v.projectId), path: v.path, name: v.nome || null });
+      if (v.path) r = await post('/api/mpoint/import-progetto', { projectId: Number(v.projectId), path: v.path, name: v.nome || null });
       else {
         const f = file.files[0];
         if (!f) throw new Error('Scegli un file .pptx.');
-        r = await upload(`/api/cippi/import?projectId=${v.projectId}&name=${enc(f.name)}${v.nome ? `&nome=${enc(v.nome)}` : ''}`, f, (x) => { bar.textContent = x < 1 ? `Caricamento ${Math.round(x * 100)}%` : 'Analisi della presentazione…'; });
+        r = await upload(`/api/mpoint/import?projectId=${v.projectId}&name=${enc(f.name)}${v.nome ? `&nome=${enc(v.nome)}` : ''}`, f, (x) => { bar.textContent = x < 1 ? `Caricamento ${Math.round(x * 100)}%` : 'Analisi della presentazione…'; });
       }
       m.close();
       location.hash = `#/doc/${r.id}`;
@@ -97,7 +97,7 @@ function dialogs(d, presetProject = null) {
       field('Progetto', projectSelect()),
       field('Nome', h('input', { type: 'text', name: 'name', maxlength: '120', required: true })),
       h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Crea')),
-    ], async (v) => { const r = await post('/api/cippi/nuovo', { projectId: Number(v.projectId), name: v.name }); m.close(); location.hash = `#/doc/${r.id}`; }));
+    ], async (v) => { const r = await post('/api/mpoint/nuovo', { projectId: Number(v.projectId), name: v.name }); m.close(); location.hash = `#/doc/${r.id}`; }));
   };
   const fromModel = async (preset) => {
     if (needProject()) return;
@@ -105,7 +105,7 @@ function dialogs(d, presetProject = null) {
     const sel = h('select', { name: 'model' }, d.models.map((x) => h('option', { value: String(x.id), selected: preset && preset.id === x.id }, x.name)));
     const partsBox = h('div', { class: 'cp-parts' });
     const loadParts = async () => {
-      const md = await get(`/api/cippi/docs/${sel.value}`);
+      const md = await get(`/api/mpoint/docs/${sel.value}`);
       partsBox.replaceChildren(...md.template.parts.map((p, i) => h('label', { class: 'cp-part' },
         h('input', { type: 'checkbox', name: `part-${i}`, checked: true }),
         h('span', { class: 'chip' }, KIND[p.kind] || p.kind),
@@ -125,7 +125,7 @@ function dialogs(d, presetProject = null) {
     ], async (v) => {
       const parts = [];
       partsBox.querySelectorAll('.cp-part').forEach((row, i) => { if (row.querySelector('input[type=checkbox]').checked) parts.push({ part: i, count: Number(row.querySelector('input[type=number]').value) || 1 }); });
-      const r = await post(`/api/cippi/models/${v.model}/nuovo`, { projectId: Number(v.projectId), name: v.name, parts, vuoto: !!v.vuoto });
+      const r = await post(`/api/mpoint/models/${v.model}/nuovo`, { projectId: Number(v.projectId), name: v.name, parts, vuoto: !!v.vuoto });
       m.close();
       location.hash = `#/doc/${r.id}`;
     }), { wide: true });
@@ -165,7 +165,7 @@ const STATUS_LABEL = { attivo: 'attivo', 'in-pausa': 'in pausa', chiuso: 'chiuso
 
 // ---- Schermata iniziale: prima i file recenti, poi le cartelle dei progetti, poi i modelli -----------------------
 async function viewLibrary() {
-  const d = await get('/api/cippi');
+  const d = await get('/api/mpoint');
   const D = dialogs(d);
   const all = [...d.docs, ...d.models];
   const byId = new Map(all.map((x) => [x.id, x]));
@@ -215,17 +215,17 @@ async function viewLibrary() {
 
 // ---- Cartella di un progetto: i suoi documenti, i PowerPoint nella cartella (da importare con un clic), i modelli ----
 async function viewProject(pid) {
-  const d = await get('/api/cippi');
+  const d = await get('/api/mpoint');
   const p = d.projects.find((x) => x.id === pid);
   if (!p) throw new Error('Progetto non trovato, oppure non ne fai parte.');
-  const files = await get(`/api/cippi/file-progetto?projectId=${pid}`);
+  const files = await get(`/api/mpoint/file-progetto?projectId=${pid}`);
   const D = dialogs(d, pid);
   const docs = d.docs.filter((x) => x.projectId === pid);
   const models = d.models.filter((x) => x.projectId === pid);
   const toImport = files.filter((f) => !f.docId);
   const importFile = async (f, btn) => {
     btn.disabled = true; btn.textContent = 'Analisi…';
-    try { const r = await post('/api/cippi/import-progetto', { projectId: pid, path: f.path }); location.hash = `#/doc/${r.id}`; } catch (e) { btn.disabled = false; btn.textContent = 'Importa e analizza'; toastError(e); }
+    try { const r = await post('/api/mpoint/import-progetto', { projectId: pid, path: f.path }); location.hash = `#/doc/${r.id}`; } catch (e) { btn.disabled = false; btn.textContent = 'Importa e analizza'; toastError(e); }
   };
   const fileRow = (f) => {
     const dir = f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : '';
@@ -239,7 +239,7 @@ async function viewProject(pid) {
       f.docId ? h('a', { class: 'btn sm', href: `#/doc/${f.docId}` }, icon('play'), 'Apri in MPoint') : btn,
       h('a', { class: 'icon-btn', title: 'Scarica il file', 'aria-label': `Scarica ${f.name}`, href: `/api/explorer/p${pid}/download?path=${enc(f.path)}` }, icon('download')));
   };
-  const explorerHref = `/#/esplora?${new URLSearchParams({ spazio: `p${pid}`, ...(docs.length ? { percorso: 'Cippi' } : {}) })}`;
+  const explorerHref = `/#/esplora?${new URLSearchParams({ spazio: `p${pid}`, ...(docs.length ? { percorso: 'MPoint' } : {}) })}`;
   const sub = [p.client, p.status !== 'attivo' ? `progetto ${STATUS_LABEL[p.status] || p.status}` : ''].filter(Boolean).join(' · ') || 'Cartella del progetto';
   root.replaceChildren(h('div', { class: 'main app-window cp-lib' },
     topbar(h('nav', { class: 'cp-crumb', 'aria-label': 'Percorso' }, h('a', { href: '#/' }, 'Inizio'), h('span', { class: 'muted' }, '›'), h('strong', {}, p.name))),
@@ -262,8 +262,8 @@ function thumbs(scope) {
       if (!e.isIntersecting) continue;
       io.unobserve(e.target);
       const id = e.target.dataset.thumb;
-      get(`/api/cippi/docs/${id}/slide/1`).then((s) => {
-        e.target.replaceChildren(renderSlide(s, { media: (n) => `/api/cippi/docs/${id}/media?name=${enc(n)}` }));
+      get(`/api/mpoint/docs/${id}/slide/1`).then((s) => {
+        e.target.replaceChildren(renderSlide(s, { media: (n) => `/api/mpoint/docs/${id}/media?name=${enc(n)}` }));
       }).catch(() => {});
     }
   }, { rootMargin: '200px' });
@@ -272,17 +272,17 @@ function thumbs(scope) {
 
 // ---- Revisione -------------------------------------------------------------------------------------
 async function viewDoc(id, startAt) {
-  const doc = await get(`/api/cippi/docs/${id}`);
+  const doc = await get(`/api/mpoint/docs/${id}`);
   const A = doc.analysis;
   const R = {
     list: doc.list.map((x) => ({ ...x, texts: { ...(x.texts || {}) }, geom: { ...(x.geom || {}) }, fill: { ...(x.fill || {}) }, cells: { ...(x.cells || {}) }, tableRows: { ...(x.tableRows || {}) } })), cur: Math.min(Math.max(0, (startAt || 1) - 1), doc.list.length - 1),
-    mode: store('cippi.modo') === 'modifica' && doc.canEdit ? 'modifica' : 'revisione',
-    show: { blocks: store('cippi.blocchi') !== false, flow: store('cippi.stati') !== false, notes: !!store('cippi.note') },
+    mode: store('mpoint.modo') === 'modifica' && doc.canEdit ? 'modifica' : 'revisione',
+    show: { blocks: store('mpoint.blocchi') !== false, flow: store('mpoint.stati') !== false, notes: !!store('mpoint.note') },
     scope: 'slide', compare: null, updatedAt: doc.updatedAt, saving: null, panel: 'visione',
   };
   const cache = new Map();
-  const slideData = (src) => { if (!cache.has(src)) cache.set(src, get(`/api/cippi/docs/${id}/slide/${src}`)); return cache.get(src); };
-  const media = (n) => `/api/cippi/docs/${id}/media?name=${enc(n)}&v=${doc.version}`;
+  const slideData = (src) => { if (!cache.has(src)) cache.set(src, get(`/api/mpoint/docs/${id}/slide/${src}`)); return cache.get(src); };
+  const media = (n) => `/api/mpoint/docs/${id}/media?name=${enc(n)}&v=${doc.version}`;
   const info = (i) => A.slides[R.list[i].src - 1];
   const procOf = (src) => A.processes.find((p) => p.slides.includes(src));
   const cmpOf = (src) => A.comparisons.find((c) => c.toBe.includes(src) || c.asIs.includes(src));
@@ -294,7 +294,7 @@ async function viewDoc(id, startAt) {
     R.saving = setTimeout(async () => {
       try {
         const has = (o) => o && Object.keys(o).length;
-        const r = await patch(`/api/cippi/docs/${id}`, { slides: R.list.map(({ src, texts, note, geom, fill, cells, tableRows }) => ({ src, ...(has(texts) ? { texts } : {}), ...(has(geom) ? { geom } : {}), ...(has(fill) ? { fill } : {}), ...(has(cells) ? { cells } : {}), ...(has(tableRows) ? { tableRows } : {}), ...(note ? { note } : {}) })), updatedAt: R.updatedAt });
+        const r = await patch(`/api/mpoint/docs/${id}`, { slides: R.list.map(({ src, texts, note, geom, fill, cells, tableRows }) => ({ src, ...(has(texts) ? { texts } : {}), ...(has(geom) ? { geom } : {}), ...(has(fill) ? { fill } : {}), ...(has(cells) ? { cells } : {}), ...(has(tableRows) ? { tableRows } : {}), ...(note ? { note } : {}) })), updatedAt: R.updatedAt });
         R.updatedAt = r.updatedAt;
         savedMark.textContent = 'Modifiche salvate';
         doc.edited = true;
@@ -308,25 +308,25 @@ async function viewDoc(id, startAt) {
   const savedMark = h('span', { class: 'small muted' });
 
   // ---- barra in alto
-  const statusSel = h('select', { class: 'cp-status', 'aria-label': 'Stato del documento', disabled: !doc.canEdit, onchange: async () => { try { const r = await patch(`/api/cippi/docs/${id}`, { status: statusSel.value }); R.updatedAt = r.updatedAt; toast(`Stato: ${statusSel.value}`); } catch (e) { toastError(e); } } },
+  const statusSel = h('select', { class: 'cp-status', 'aria-label': 'Stato del documento', disabled: !doc.canEdit, onchange: async () => { try { const r = await patch(`/api/mpoint/docs/${id}`, { status: statusSel.value }); R.updatedAt = r.updatedAt; toast(`Stato: ${statusSel.value}`); } catch (e) { toastError(e); } } },
     STATUS.map((s) => h('option', { value: s, selected: doc.status === s }, s)));
   const actions = h('div', { class: 'row cp-actions' },
     doc.kind === 'documento' ? statusSel : h('span', { class: 'chip' }, 'Modello'),
     h('span', { class: 'chip' + (A.score >= 85 ? ' ok' : A.score >= 60 ? ' warn' : ' danger'), title: 'Completezza e coerenza secondo i controlli' }, `${A.score}%`),
     savedMark,
-    h('a', { class: 'btn sm', href: `/api/cippi/docs/${id}/download`, title: 'Scarica il .pptx con le modifiche' }, icon('download'), 'Scarica'),
+    h('a', { class: 'btn sm', href: `/api/mpoint/docs/${id}/download`, title: 'Scarica il .pptx con le modifiche' }, icon('download'), 'Scarica'),
     doc.kind === 'documento' && doc.canEdit ? h('button', { class: 'btn sm', type: 'button', title: 'Salva il .pptx nella cartella del progetto e rianalizza', onclick: saveVersion }, icon('history'), 'Salva versione') : null,
     doc.canEdit ? h('button', { class: 'btn sm', type: 'button', title: 'Cerca un testo in tutte le slide (anche nelle tabelle e nel piè di pagina) e sostituiscilo', onclick: findReplace }, 'Trova e sostituisci') : null,
     doc.kind === 'documento' ? h('button', { class: 'btn sm', type: 'button', onclick: saveAsModel }, icon('copy'), 'Salva come modello') : null,
-    doc.kind === 'modello' && doc.canManage ? h('label', { class: 'check small' }, h('input', { type: 'checkbox', checked: doc.shared, onchange: async (e) => { try { await patch(`/api/cippi/docs/${id}`, { shared: e.target.checked }); toast(e.target.checked ? 'Modello condiviso con tutto il team.' : 'Modello visibile solo nel progetto.'); } catch (err) { toastError(err); } } }), ' Condiviso con tutti') : null,
-    doc.canManage ? h('button', { class: 'icon-btn', type: 'button', title: 'Elimina', 'aria-label': 'Elimina', onclick: () => confirmDialog(`Eliminare "${doc.name}"?`, 'Il documento sparisce da MPoint. I file nella cartella del progetto restano.', 'Elimina', async () => { await del(`/api/cippi/docs/${id}`); location.hash = '#/'; }) }, icon('trash')) : null);
+    doc.kind === 'modello' && doc.canManage ? h('label', { class: 'check small' }, h('input', { type: 'checkbox', checked: doc.shared, onchange: async (e) => { try { await patch(`/api/mpoint/docs/${id}`, { shared: e.target.checked }); toast(e.target.checked ? 'Modello condiviso con tutto il team.' : 'Modello visibile solo nel progetto.'); } catch (err) { toastError(err); } } }), ' Condiviso con tutti') : null,
+    doc.canManage ? h('button', { class: 'icon-btn', type: 'button', title: 'Elimina', 'aria-label': 'Elimina', onclick: () => confirmDialog(`Eliminare "${doc.name}"?`, 'Il documento sparisce da MPoint. I file nella cartella del progetto restano.', 'Elimina', async () => { await del(`/api/mpoint/docs/${id}`); location.hash = '#/'; }) }, icon('trash')) : null);
 
   async function saveVersion(e) {
     const b = e.currentTarget;
     b.disabled = true;
     try {
       clearTimeout(R.saving);
-      const r = await post(`/api/cippi/docs/${id}/salva-versione`);
+      const r = await post(`/api/mpoint/docs/${id}/salva-versione`);
       toast(`Versione ${r.version} salvata in ${r.path}`);
       await viewDoc(id, R.cur + 1);
     } catch (err) { toastError(err); } finally { b.disabled = false; }
@@ -337,7 +337,7 @@ async function viewDoc(id, startAt) {
       field('Nome del modello', h('input', { type: 'text', name: 'name', maxlength: '120', value: doc.name, required: true })),
       field('Descrizione', h('input', { type: 'text', name: 'description', maxlength: '300', placeholder: 'es. Chiusura progetto di processo (To-Be con Back Up As-Is)' })),
       h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Salva modello')),
-    ], async (v) => { const r = await post(`/api/cippi/docs/${id}/modello`, v); m.close(); toast('Modello salvato.'); location.hash = `#/doc/${r.id}`; }));
+    ], async (v) => { const r = await post(`/api/mpoint/docs/${id}/modello`, v); m.close(); toast('Modello salvato.'); location.hash = `#/doc/${r.id}`; }));
   }
 
   // trova e sostituisci in tutto il documento: nelle slide diventa una modifica dei testi, nel layout una regola
@@ -352,7 +352,7 @@ async function viewDoc(id, startAt) {
       h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Sostituisci')),
     ], async (v) => {
       clearTimeout(R.saving);
-      const r = await post(`/api/cippi/docs/${id}/sostituisci`, { find: v.find, replace: v.replace || '', matchCase: !!v.matchCase, whole: !!v.whole, layouts: !!v.layouts });
+      const r = await post(`/api/mpoint/docs/${id}/sostituisci`, { find: v.find, replace: v.replace || '', matchCase: !!v.matchCase, whole: !!v.whole, layouts: !!v.layouts });
       m.close();
       toast(r.count || r.layoutCount ? `${r.count} sostituzioni nelle slide${r.layoutCount ? `, ${r.layoutCount} nel layout` : ''}.` : 'Testo non trovato.');
       if (r.count || r.layoutCount) await viewDoc(id, R.cur + 1);
@@ -379,12 +379,12 @@ async function viewDoc(id, startAt) {
   // ---- STRUMENTI
   function drawTools() {
     const sec = (title, open, ...kids) => {
-      const key = `cippi.sez.${title}`;
+      const key = `mpoint.sez.${title}`;
       const d = h('details', { class: 'cp-sec', open: store(key) === null ? open : store(key) }, h('summary', {}, title), ...kids);
       d.addEventListener('toggle', () => store(key, d.open));
       return d;
     };
-    const modeBtn = (m, label) => h('button', { type: 'button', class: R.mode === m ? 'on' : '', disabled: m === 'modifica' && !doc.canEdit, onclick: () => { R.mode = m; store('cippi.modo', m); drawAll(); } }, label);
+    const modeBtn = (m, label) => h('button', { type: 'button', class: R.mode === m ? 'on' : '', disabled: m === 'modifica' && !doc.canEdit, onclick: () => { R.mode = m; store('mpoint.modo', m); drawAll(); } }, label);
     const chk = (k, label, storeKey) => h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: R.show[k], onchange: (e) => { R.show[k] = e.target.checked; store(storeKey, e.target.checked); drawView(); } }), ` ${label}`);
 
     // struttura: sezioni -> slide
@@ -418,21 +418,21 @@ async function viewDoc(id, startAt) {
     const gloss = h('div', { class: 'cp-gloss' }, A.glossary.length ? A.glossary.slice(0, 60).map((g) => h('div', { class: 'cp-gloss-row' },
       h('b', {}, g.term), h('small', { class: 'muted' }, `×${g.count}`),
       h('input', { type: 'text', value: g.meaning, placeholder: 'significato…', maxlength: '300', 'aria-label': `Significato di ${g.term}`, disabled: !doc.canEdit,
-        onchange: async (e) => { try { await api('PUT', '/api/cippi/glossario', { projectId: doc.projectId, term: g.term, meaning: e.target.value }); g.meaning = e.target.value; toast(`${g.term}: salvato nel glossario del progetto.`); } catch (err) { toastError(err); } } }))) : h('p', { class: 'muted small' }, 'Nessuna sigla trovata.'));
+        onchange: async (e) => { try { await api('PUT', '/api/mpoint/glossario', { projectId: doc.projectId, term: g.term, meaning: e.target.value }); g.meaning = e.target.value; toast(`${g.term}: salvato nel glossario del progetto.`); } catch (err) { toastError(err); } } }))) : h('p', { class: 'muted small' }, 'Nessuna sigla trovata.'));
     // appunti
     const notesInput = h('input', { type: 'file', hidden: true, onchange: async () => {
       const f = notesInput.files[0];
       if (!f) return;
-      try { await upload(`/api/cippi/docs/${id}/appunti?name=${enc(f.name)}`, f); toast('Appunti salvati nella cartella del documento.'); doc.appunti = (await get(`/api/cippi/docs/${id}`)).appunti; drawTools(); } catch (err) { toastError(err); }
+      try { await upload(`/api/mpoint/docs/${id}/appunti?name=${enc(f.name)}`, f); toast('Appunti salvati nella cartella del documento.'); doc.appunti = (await get(`/api/mpoint/docs/${id}`)).appunti; drawTools(); } catch (err) { toastError(err); }
     } });
     const appunti = h('div', {},
       h('p', { class: 'small muted' }, 'Gli appunti di studio (PDF, Word, immagini) stanno accanto al documento, nella cartella del progetto.'),
       h('ul', { class: 'cp-files' }, doc.appunti.map((a) => h('li', {}, h('a', { href: a.url, target: '_blank', rel: 'noopener' }, icon('file'), a.name)))),
       doc.canEdit ? h('button', { class: 'btn sm', type: 'button', onclick: () => notesInput.click() }, icon('upload'), 'Aggiungi appunti') : null, notesInput);
     // modello
-    const modelSel = h('select', { 'aria-label': 'Confronta con un modello', onchange: async () => { if (!modelSel.value) return; try { const r = await get(`/api/cippi/docs/${id}?modello=${modelSel.value}`); doc.confronto = r.confronto; drawTools(); } catch (err) { toastError(err); } } },
+    const modelSel = h('select', { 'aria-label': 'Confronta con un modello', onchange: async () => { if (!modelSel.value) return; try { const r = await get(`/api/mpoint/docs/${id}?modello=${modelSel.value}`); doc.confronto = r.confronto; drawTools(); } catch (err) { toastError(err); } } },
       h('option', { value: '' }, '— scegli un modello —'));
-    get('/api/cippi').then((d) => { for (const m of d.models.filter((x) => x.id !== doc.id)) modelSel.append(h('option', { value: String(m.id), selected: doc.confronto && doc.confronto.modello.id === m.id }, m.name)); }).catch(() => {});
+    get('/api/mpoint').then((d) => { for (const m of d.models.filter((x) => x.id !== doc.id)) modelSel.append(h('option', { value: String(m.id), selected: doc.confronto && doc.confronto.modello.id === m.id }, m.name)); }).catch(() => {});
     const conf = doc.confronto ? h('div', { class: 'cp-conf' },
       h('div', {}, h('b', {}, `${doc.confronto.percent}%`), ` completo rispetto a "${doc.confronto.modello.name}"`),
       doc.confronto.missingParts.length ? h('ul', {}, doc.confronto.missingParts.map((p) => h('li', {}, `Manca: ${KIND[p.kind] || p.kind}${p.title ? ` (${p.title})` : ''} · ${p.section}`))) : h('p', { class: 'small muted' }, 'Ci sono tutte le parti del modello.'),
@@ -454,7 +454,7 @@ async function viewDoc(id, startAt) {
         : h('div', { class: 'muted' }, 'Nessun modello noto somiglia a questa presentazione.'));
     tools.replaceChildren(
       h('div', { class: 'cp-seg', role: 'group', 'aria-label': 'Modalità' }, modeBtn('revisione', 'Revisione'), modeBtn('modifica', 'Modifica')),
-      sec('Mostra', true, chk('blocks', 'Ordine di lettura e gerarchia', 'cippi.blocchi'), chk('flow', 'Step nuovi e modificati', 'cippi.stati'), chk('notes', 'Note dello speaker', 'cippi.note')),
+      sec('Mostra', true, chk('blocks', 'Ordine di lettura e gerarchia', 'mpoint.blocchi'), chk('flow', 'Step nuovi e modificati', 'mpoint.stati'), chk('notes', 'Note dello speaker', 'mpoint.note')),
       sec(`Struttura (${R.list.length} slide)`, true, struct),
       sec('Documento', false, docInfo),
       A.reading.length ? sec('Percorso di lettura', false, h('p', { class: 'small muted' }, 'Come si studia: contesto, legenda e sigle, mappa, poi ogni processo passo per passo confrontando To-Be e As-Is.'), reading) : null,
@@ -553,20 +553,20 @@ async function viewDoc(id, startAt) {
       e.preventDefault();
       if (!addText.value.trim()) return;
       try {
-        const r = await post(`/api/cippi/docs/${id}/points`, { slide: x.src, kind: addKind.value, text: addText.value });
+        const r = await post(`/api/mpoint/docs/${id}/points`, { slide: x.src, kind: addKind.value, text: addText.value });
         doc.points.push({ id: r.id, slide: x.src, kind: addKind.value, text: addText.value, status: 'aperto', auto: false, author: state.user.name });
         redraw();
       } catch (err) { toastError(err); }
     } }, addKind, addText, h('button', { class: 'btn sm primary', type: 'submit', 'aria-label': 'Aggiungi' }, icon('plus'))) : null;
     const pointRow = (p) => h('li', { class: `cp-pt k-${p.kind}` + (p.status === 'fatto' ? ' done' : '') },
       h('input', { type: 'checkbox', checked: p.status === 'fatto', disabled: !doc.canEdit, title: 'Fatto', 'aria-label': 'Fatto',
-        onchange: async (e) => { try { await patch(`/api/cippi/points/${p.id}`, { status: e.target.checked ? 'fatto' : 'aperto' }); p.status = e.target.checked ? 'fatto' : 'aperto'; redraw(); } catch (err) { toastError(err); } } }),
+        onchange: async (e) => { try { await patch(`/api/mpoint/points/${p.id}`, { status: e.target.checked ? 'fatto' : 'aperto' }); p.status = e.target.checked ? 'fatto' : 'aperto'; redraw(); } catch (err) { toastError(err); } } }),
       h('div', { class: 'grow' },
         h('div', { class: 'cp-pt-meta' }, h('span', { class: 'chip' + (p.kind === 'domanda' || p.kind === 'da-fare' ? ' warn' : '') }, POINT[p.kind] || p.kind),
           R.scope === 'tutti' && p.slide ? h('button', { type: 'button', class: 'linklike small', onclick: () => { const i = posOfSrc(p.slide); if (i >= 0) go(i); } }, `slide ${posOfSrc(p.slide) + 1 || '–'}`) : null,
           h('span', { class: 'small muted' }, p.auto ? 'proposto da MPoint' : p.author)),
         h('div', { class: 'cp-pt-text' }, p.text)),
-      doc.canEdit ? h('button', { class: 'icon-btn', type: 'button', title: 'Elimina', 'aria-label': 'Elimina', onclick: async () => { try { await del(`/api/cippi/points/${p.id}`); doc.points = doc.points.filter((y) => y !== p); redraw(); } catch (err) { toastError(err); } } }, icon('close')) : null);
+      doc.canEdit ? h('button', { class: 'icon-btn', type: 'button', title: 'Elimina', 'aria-label': 'Elimina', onclick: async () => { try { await del(`/api/mpoint/points/${p.id}`); doc.points = doc.points.filter((y) => y !== p); redraw(); } catch (err) { toastError(err); } } }, icon('close')) : null);
     box.replaceChildren(
       h('div', { class: 'cp-pts-head' }, h('h2', {}, 'Punti chiave'),
         h('div', { class: 'cp-seg small' },
@@ -776,7 +776,7 @@ async function viewDoc(id, startAt) {
       const saveBtn = ro ? null : h('button', { type: 'button', class: 'cs-btn primary', onclick: async () => {
         const next = { ...(doc.items[key] || {}) };
         for (const k of fields) next[k] = inputs[k].value;
-        try { await api('PUT', `/api/cippi/docs/${id}/items`, { key, data: next }); doc.items[key] = Object.fromEntries(Object.entries(next).filter(([, v]) => String(v).trim())); toast('Caratteristiche salvate.'); drawDesc(); } catch (err) { toastError(err); }
+        try { await api('PUT', `/api/mpoint/docs/${id}/items`, { key, data: next }); doc.items[key] = Object.fromEntries(Object.entries(next).filter(([, v]) => String(v).trim())); toast('Caratteristiche salvate.'); drawDesc(); } catch (err) { toastError(err); }
       } }, 'Salva');
       return [box, h('div', { class: 'cs-actions' }, saveBtn)];
     };
@@ -791,7 +791,7 @@ async function viewDoc(id, startAt) {
             h('button', { type: 'button', class: 'cs-btn', onclick: () => { ta.value = doc.backgroundSuggestion; } }, 'Usa il testo proposto')) : null,
           fieldEl('Contesto', ta),
           h('div', { class: 'cs-actions' }, ro ? null : h('button', { type: 'button', class: 'cs-btn primary', onclick: async () => {
-            try { const r = await patch(`/api/cippi/docs/${id}`, { background: ta.value }); doc.background = ta.value; R.updatedAt = r.updatedAt || R.updatedAt; toast('Contesto salvato.'); drawDesc(); } catch (err) { toastError(err); }
+            try { const r = await patch(`/api/mpoint/docs/${id}`, { background: ta.value }); doc.background = ta.value; R.updatedAt = r.updatedAt || R.updatedAt; toast('Contesto salvato.'); drawDesc(); } catch (err) { toastError(err); }
           } }, 'Salva'))];
       }
       if (cur === 'descrizione') {

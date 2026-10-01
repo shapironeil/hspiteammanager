@@ -1,5 +1,5 @@
 'use strict';
-// Cippi: modifiche "per funzione" al pacchetto .pptx, senza librerie, usate da pptx-write.js:
+// MPoint: modifiche "per funzione" al pacchetto .pptx, senza librerie, usate da pptx-write.js:
 //   - testo delle celle di una tabella e righe nuove (clonate da una riga esistente, stesso stile);
 //   - trova e sostituisci nei testi di una parte (slide, layout, master), dentro <a:t> e basta;
 //   - pulizia del pacchetto dopo le modifiche: immagini e file non più citati da nessuna relazione,
