@@ -1,0 +1,18 @@
+{
+  "template": "nomina-responsabile-trattamento-consip",
+  "formato": "docx",
+  "app": "verbale-studio",
+  "tipoDocumento": "atto di nomina del responsabile del trattamento (art. 28 GDPR), allegato al contratto esecutivo",
+  "fornitore": "Consip S.p.A.",
+  "fileVisti": [ { "nome": "KIT_ODA_AQ_ID2610_-_Facsimile_nomina_responsabile_trattamento.docx", "pagine": 5, "parole": 2670, "clausole": 21, "analizzato": "2026-10-01" } ],
+  "nomeFile": { "regex": "(?i)facsimile_nomina_responsabile_trattamento" },
+  "struttura": { "titoli": 0, "tabelle": 0, "campi": 0, "clausoleNumerate": 21, "sottoElenco": "clausola 6: 1)-9)", "stile": "Paragrafo elenco" },
+  "segnaposto": { "colore": "0000FF", "formato": "grassetto corsivo tra < e >", "linee": "_{5,}", "alternative": ["autorizzazione generale / specifica dei sub-responsabili", "riscontro agli interessati: opzione 1 / opzione 2"] },
+  "stili": { "carattere": "Calibri 11", "pagina": "A4, una sezione", "pieDiPagina": "Procedura aperta per l'affidamento di Accordi Quadro … servizi applicativi in ottica cloud" },
+  "riconoscimento": { "punteggioMinimo": 3, "segnali": [
+    { "segnale": "nome file 'Facsimile_nomina_responsabile_trattamento'", "peso": 2 },
+    { "segnale": "testo 'Nomina Responsabile del trattamento dei dati' e 'art. 28 del Regolamento UE'", "peso": 2 },
+    { "segnale": "run blu 0000FF corsivi tra < >", "peso": 1 },
+    { "segnale": "21 paragrafi numerati senza titoli", "peso": 1 } ] },
+  "verbaleStudio": { "oggi": "solo testo piatto", "funzioniProposte": ["elenca scelte e campi", "compila guidato", "togli note per la PA", "controlla niente blu / niente linee vuote", "esporta .docx"] }
+}

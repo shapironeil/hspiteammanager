@@ -1,0 +1,33 @@
+{
+  "template": "piano-operativo-consip-id2610",
+  "formato": "docx",
+  "app": "verbale-studio",
+  "tipoDocumento": "piano operativo del fornitore per un contratto esecutivo (AQ Consip ID 2610, Lotto 1)",
+  "fornitore": "modello del RTI aggiudicatario dell'AQ (capofila Engineering), compilato dal team per ogni PA",
+  "fileVisti": [ { "nome": "ID_2610_SAC3_Template_Piano_Operativo_Template_Lotto_1_v3.docx", "pagine": 15, "parole": 4299, "tabelle": 11, "modificato": "2026-01-28", "analizzato": "2026-10-01" } ],
+  "nomeFile": { "schema": "ID_<AQ>_SAC3_Template_Piano_Operativo_Template_Lotto_<n>_v<n>.docx", "regex": "(?i)piano[_ ]operativo", "regexModello": "^ID_\\d{4}_SAC\\d_Template_Piano_Operativo_Template_Lotto_\\d+_v\\d+\\.docx$" },
+  "pagina": { "formato": "A4 (11900x16840 twips)", "sezioni": 2, "copertina": "sezione a sé, margini 0, immagini e caselle di testo", "corpo": "margini 851/170/176 twips, numerazione da 1" },
+  "intestazione": { "corpo": "PA Cliente ID 2610 – AQ SAC 3 - LOTTO 1 – Piano Operativo", "regex": "ID 2610.*Piano Operativo" },
+  "pieDiPagina": { "corpo": "<RTI> | PIANO OPERATIVO | PAG. <PAGE> di <SECTIONPAGES>" },
+  "stili": { "normale": { "carattere": "Segoe UI", "dimensione": 11, "colore": "012F53" }, "titolo1": { "dimensione": 12, "grassetto": true, "colore": "002060", "maiuscolo": true, "numerato": true }, "titolo2": { "dimensione": 10, "grassetto": true, "numerato": true }, "titolo3": { "stile": "Titolo 3 - PE_AQ_DataManagement_ENG", "carattere": "Segoe UI", "dimensione": 10, "colore": "012F53" }, "corpo": "Normale - PO_AQ_DataManagement_ENG", "tabella": { "paragrafo": "Table Paragraph", "carattere": "Calibri", "testaSfondo": "4472C4", "testaTesto": "FFFFFF", "cellaSfondo": "F2F2F2" } },
+  "capitoli": ["DATI ANAGRAFICI AMMINISTRAZIONE RICHIEDENTE", "INTRODUZIONE", "ORGANIZZAZIONE DEL CONTRATTO ESECUTIVO", "IMPORTO CONTRATTUALE E QUANTITÀ PREVISTE PER I SERVIZI OGGETTO DI FORNITURA", "DELIVERABLE DELLA FORNITURA", "SERVIZIO DI FORNITURA", "Attività In Carico Alle Aziende e Quote di RTI", "QUOTA E PRESTAZIONI IN SUBAPPALTO", "CV DELLE RISORSE PROFESSIONALI"],
+  "sottoCapitoliServizio": ["Attivazione del Servizio", "Vincoli Temporali", "Erogazione e Consuntivazione", "Cronoprogramma"],
+  "tabelle": { "anagrafica": ["DENOMINAZIONE AMMNISTRAZIONE", "INDIRIZZO", "CAP", "COMUNE", "PROVINCIA", "REGIONE", "CODICE FISCALE", "CODICE IPA", "INDIRIZZO MAIL", "PEC"], "referente": ["REFERENTE AMMINISTRAZIONE", "RUOLO", "TELEFONO", "INDIRIZZO MAIL", "MAIL PEC"], "glossario": ["DEFINIZIONE/ACRONIMO", "DESCRIZIONE ESTESA"], "quantita": ["Servizio", "Modalità", "Metrica", "Dimensionamento", "Fabbisogno"], "aziendeServizi": "AZIENDE × sigle dei servizi", "quote": ["AZIENDE", "% RTI", "Quota Ordine"], "ruoli": ["Nominativo", "Ruolo", "Profilo"] },
+  "segnaposto": { "evidenziazione": "yellow", "pattern": ["x{3,}", "X{2,}", "xx/xx/202X", "XX mesi", "xx,xx%", "xxx\\.xxx,xx€", "Nome Cognome", "NOME AMMINISTRAZIONE", "<[^>]+>"], "istruzioniGialle": ["Descrivere il contesto (riprendere dal Piano dei Fabbisogni)", "Riprendere dal Piano dei Fabbisogni (copiare e incollare)", "Da personalizzare", "Riportare solo quelli richiesti nel Piano dei Fabbisogni", "Fare riferimento ai deliverable presenti nell'OT", "Eliminare i servizi non richiesti", "Eliminare i ruoli dei servizi non richiesti"] },
+  "campi": ["TOC \\o \"1-2\" \\h \\z \\u", "PAGEREF", "DOCVARIABLE Data", "PAGE", "SECTIONPAGES"],
+  "riconoscimento": {
+    "punteggioMinimo": 4,
+    "segnali": [
+      { "segnale": "intestazione con 'ID 2610' e 'Piano Operativo'", "peso": 2 },
+      { "segnale": "titolo 1 'DATI ANAGRAFICI AMMINISTRAZIONE RICHIEDENTE'", "peso": 2 },
+      { "segnale": "tabella con intestazioni Servizio/Modalità/Metrica/Dimensionamento/Fabbisogno", "peso": 2 },
+      { "segnale": "sotto-capitoli Attivazione del Servizio / Vincoli Temporali / Erogazione e Consuntivazione / Cronoprogramma", "peso": 1 },
+      { "segnale": "stile con nome *_AQ_DataManagement_ENG", "peso": 1 },
+      { "segnale": "piè di pagina 'PIANO OPERATIVO | PAG.'", "peso": 1 },
+      { "segnale": "nome file con 'Piano_Operativo'", "peso": 1 }
+    ]
+  },
+  "anomalieTipiche": ["residui di un'altra gara nelle caselle di testo della copertina", "stili e metadati di un altro modello", "sigla SS/SA incoerente", "refusi fissi (AMMNISTRAZIONE, Piano de Fabbisogni, IL servizio)", "riferimento al D.Lgs. 50/2016 invece del 36/2023", "sommario non aggiornato dopo i tagli", "DOCVARIABLE senza variabile", "segnaposto gialli rimasti", "quote RTI che non sommano 100%"],
+  "sinergie": { "xlsx": "piano-di-lavoro-txt-biosiris: il cronoprogramma e le date di attivazione del cap. 6 sono le stesse del piano di lavoro", "pptx": "kickoff-txt-biosiris: ambito, componenti e masterplan", "docx": "sal-verbale (ramo awesome-cray): servizi e attività con gli stessi codici; riferimenti ad AQ, Piano dei Fabbisogni, Piano Operativo, CE" },
+  "verbaleStudio": { "oggi": "solo testo piatto (docxToText)", "funzioniProposte": ["riconosci modello", "leggi piano operativo (struttura in dati)", "controlla", "compila da oggetto contratto esecutivo", "taglia servizi non richiesti + rigenera sommario", "esporta .docx conservando copertina e stili", "confronta versioni", "pulisci residui"] }
+}
