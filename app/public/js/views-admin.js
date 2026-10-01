@@ -187,5 +187,41 @@ export async function viewSystem(el) {
           h('dt', {}, 'Acceso da'), h('dd', {}, `${hours} h ${minutes} min`),
           h('dt', {}, 'Account'), h('dd', {}, String(s.counts.users)),
           h('dt', {}, 'Sessioni attive'), h('dd', {}, String(s.counts.sessions)),
-          h('dt', {}, 'Voci nel log'), h('dd', {}, String(s.counts.logs))))));
+          h('dt', {}, 'Voci nel log'), h('dd', {}, String(s.counts.logs)))),
+      backupCard()));
+}
+
+// Backup: elenco, "esegui adesso", destinazione e copia aggiuntiva (es. un altro server).
+function backupCard() {
+  const box = h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Backup')), h('div', { class: 'empty' }, 'Carico…'));
+  const load = async () => {
+    const b = await get('/api/backups');
+    const st = b.status || {};
+    const last = st.last;
+    const now = h('button', { class: 'btn sm primary', type: 'button', onclick: async (e) => {
+      e.currentTarget.disabled = true;
+      toast('Backup in corso: può richiedere qualche minuto la prima volta.');
+      try { const r = await post('/api/backups'); toast(`Backup pronto: ${r.files} file (${r.copied} copiati, ${r.linked} già presenti).`); } catch (err) { toastError(err); }
+      load();
+    } }, 'Esegui adesso');
+    box.replaceChildren(
+      h('div', { class: 'card-head' }, h('h2', {}, 'Backup'), now),
+      h('p', { class: 'small muted', style: 'margin-bottom:10px' }, 'Ogni giorno il portale salva una copia completa di dati, progetti, immagini e web app. I file non cambiati non occupano spazio in più. Si fa anche prima di ogni aggiornamento. Per ripristinare: ripristina.bat nella cartella del portale.'),
+      h('dl', { class: 'kv' },
+        h('dt', {}, 'Ultimo backup'), h('dd', {}, last ? `${fmtDate(last.at)} · ${last.files} file${last.errors ? ` · ${last.errors} non copiati` : ''}` : 'ancora nessuno'),
+        st.running ? [h('dt', {}, 'In corso'), h('dd', {}, st.running.name)] : null,
+        st.lastError ? [h('dt', {}, 'Ultimo errore'), h('dd', { style: 'color:var(--danger)' }, `${fmtDate(st.lastError.at)}: ${st.lastError.message}`)] : null,
+        h('dt', {}, 'Cosa salva'), h('dd', { class: 'mono small' }, Object.values(b.areas).join(' · '))),
+      b.backups.length ? h('details', { class: 'detail', style: 'margin-top:12px' }, h('summary', {}, `${b.backups.length} backup disponibili`),
+        h('ul', { class: 'list' }, b.backups.map((x) => h('li', {}, h('div', { class: 'grow' }, h('div', { class: 'title mono small' }, x.name),
+          h('div', { class: 'meta' }, `versione ${x.version || '?'} · ${x.files || '?'} file · ${fmtBytes(x.newBytes || 0)} nuovi${x.errors ? ` · ${x.errors} errori` : ''}`)))))) : null,
+      form([
+        field('Cartella dei backup', h('input', { type: 'text', name: 'dir', value: b.dir }), 'Dove si salvano i backup. Meglio un disco diverso da quello del portale. Lascia "Backup" per la cartella accanto al portale.'),
+        field('Copia aggiuntiva (facoltativa)', h('input', { type: 'text', name: 'extraDir', value: b.extraDir || '', placeholder: 'es. \\\\server\\backup-hspi' }), 'Una seconda cartella, per esempio sull\'altro server: dopo ogni backup ci si copia anche lì.'),
+        h('label', { class: 'check' }, h('input', { type: 'checkbox', name: 'auto', checked: b.auto }), 'Backup automatico ogni giorno'),
+        h('button', { class: 'btn', type: 'submit' }, 'Salva impostazioni backup'),
+      ], async (v) => { await patch('/api/backups/settings', v); toast('Impostazioni del backup salvate.'); load(); }));
+  };
+  load().catch((err) => box.replaceChildren(h('h2', {}, 'Backup'), h('p', { class: 'muted' }, err.message)));
+  return box;
 }

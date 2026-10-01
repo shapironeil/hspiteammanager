@@ -1,6 +1,9 @@
 'use strict';
 // Home, annunci, segnalazioni, log e pannello Sistema.
 const os = require('node:os');
+const fs = require('node:fs');
+const path = require('node:path');
+const crypto = require('node:crypto');
 const config = require('../config');
 const db = require('../db');
 const storage = require('../storage');
@@ -157,6 +160,58 @@ route('PATCH', '/api/settings', { role: 'hacker' }, async (ctx) => {
   db.setSetting('maxFileMb', Math.round(maxFileMb));
   db.log(ctx, 'impostazioni.modificate', `spazio ${Math.round(quotaGb)} GB, file max ${Math.round(maxFileMb)} MB`);
   ctx.json(200, { ok: true });
+});
+
+// --- Backup (solo Hacker) -------------------------------------------------------
+const backup = require('../backup');
+route('GET', '/api/backups', { role: 'hacker' }, (ctx) => {
+  const conf = backup.settings(db.getSetting);
+  ctx.json(200, {
+    dir: conf.dir, extraDir: conf.extraDir, auto: conf.auto, status: backup.readStatus(),
+    areas: backup.sources(), backups: backup.list(conf.dir).slice(0, 60).map(({ path: p, errors, ...b }) => ({ ...b, errors: (errors || []).length })),
+  });
+});
+route('POST', '/api/backups', { role: 'hacker' }, async (ctx) => {
+  const r = await backup.run({ reason: 'manuale', sqlite: db.db, getSetting: db.getSetting });
+  db.log(ctx, 'backup.eseguito', `${r.name}: ${r.files} file, ${r.copied} copiati`);
+  ctx.json(201, { name: r.name, files: r.files, copied: r.copied, linked: r.linked, newBytes: r.newBytes, errors: r.errors.length, extra: r.extra });
+});
+route('PATCH', '/api/backups/settings', { role: 'hacker' }, async (ctx) => {
+  const b = await ctx.body();
+  for (const [key, field] of [['backupDir', 'dir'], ['backupExtraDir', 'extraDir']]) {
+    if (typeof b[field] !== 'string') continue;
+    const v = b[field].trim().replace(/^"|"$/g, '');
+    if (v) {
+      const abs = path.resolve(config.ROOT, v);
+      const inside = (d) => abs === d || abs.startsWith(d + path.sep);
+      if (inside(config.DATA_DIR) || inside(path.join(config.ROOT, 'progetti'))) throw new HttpError(400, 'Il backup non puo\' stare dentro le cartelle che salva.');
+      try { fs.mkdirSync(abs, { recursive: true }); fs.writeFileSync(path.join(abs, '.prova-scrittura'), 'ok'); fs.rmSync(path.join(abs, '.prova-scrittura')); } catch { throw new HttpError(400, `Non riesco a scrivere in ${abs}.`); }
+    }
+    db.setSetting(key, v);
+  }
+  if (typeof b.auto === 'boolean') db.setSetting('backupAuto', b.auto ? '1' : '0');
+  db.log(ctx, 'backup.impostazioni', JSON.stringify({ dir: b.dir, extraDir: b.extraDir, auto: b.auto }));
+  ctx.json(200, { ok: true });
+});
+
+// --- Versione (unica fonte: version.json) --------------------------------------
+// Pubblica (senza login): la leggono gli script di aggiornamento e il programma client.
+// Il portale e' raggiungibile solo da questo PC o via Tailscale, quindi non e' visibile da internet.
+route('GET', '/api/version', { public: true }, (ctx) => {
+  ctx.json(200, { name: 'HSPI Team Manager', version: config.VERSION, channel: config.CHANNEL, released: config.RELEASED, client: require('../client-package').info() });
+});
+
+// --- Arresto ordinato richiesto dagli script dell'host (aggiornamento, ripristino) ---
+// Solo da questo PC e solo con il codice segreto scritto in data/.host-token all'avvio.
+const TOKEN_FILE = path.join(config.DATA_DIR, '.host-token');
+const hostToken = crypto.randomBytes(24).toString('hex');
+try { fs.writeFileSync(TOKEN_FILE, hostToken); } catch { /* cartella dati non scrivibile: arresto remoto non disponibile */ }
+route('POST', '/api/host/shutdown', { public: true }, (ctx) => {
+  const given = String(ctx.req.headers['x-host-token'] || '');
+  if (!ctx.isLocal || given.length !== hostToken.length || !crypto.timingSafeEqual(Buffer.from(given), Buffer.from(hostToken))) throw new HttpError(403, 'Non consentito.');
+  db.log({ actor: 'sistema', ip: ctx.ip }, 'portale.arresto', String(ctx.query.get('motivo') || 'richiesta locale').slice(0, 80));
+  ctx.json(200, { ok: true });
+  setTimeout(() => process.exit(0), 300);
 });
 
 module.exports = { accessUrls };

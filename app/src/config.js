@@ -1,6 +1,12 @@
 'use strict';
 // Configurazione centrale: percorsi, porta, ruoli. Nessun altro file calcola percorsi da solo.
+const fs = require('node:fs');
 const path = require('node:path');
+
+// Versione: unica fonte e' version.json alla radice del programma (non si scrive in nessun altro file).
+const CODE_ROOT = path.resolve(__dirname, '..', '..');
+let release = { version: '0.0.0', channel: 'sviluppo' };
+try { release = { ...release, ...JSON.parse(fs.readFileSync(path.join(CODE_ROOT, 'version.json'), 'utf8')) }; } catch { /* file mancante: versione sconosciuta */ }
 
 // HSPI_ROOT permette ai test di usare una cartella di prova al posto di quella vera.
 const ROOT = process.env.HSPI_ROOT ? path.resolve(process.env.HSPI_ROOT) : path.resolve(__dirname, '..', '..');
@@ -15,7 +21,10 @@ const TITLES = { dirigente: 'Dirigente', manager: 'Manager', 'project-manager': 
 
 module.exports = {
   TITLES,
-  VERSION: '0.5.0',
+  VERSION: release.version,
+  CHANNEL: release.channel,
+  RELEASED: release.released || null,
+  CODE_ROOT,
   ROOT,
   DATA_DIR,
   DB_FILE: path.join(DATA_DIR, 'portale.db'),

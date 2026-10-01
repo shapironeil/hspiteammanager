@@ -98,6 +98,16 @@ function serveFile(res, baseDir, relPath, cache) {
   return true;
 }
 
+// Il service worker porta nel nome della cache la versione del portale (da version.json).
+function serveServiceWorker(res) {
+  let text;
+  try { text = fs.readFileSync(path.join(config.PUBLIC_DIR, 'sw.js'), 'utf8'); } catch { return false; }
+  const body = text.replace(/__VERSION__/g, config.VERSION);
+  res.writeHead(200, { 'Content-Type': MIME['.js'], 'Content-Length': Buffer.byteLength(body), 'Cache-Control': 'no-cache', ...SECURITY_HEADERS });
+  res.end(body);
+  return true;
+}
+
 function serveStatic(req, res, pathname) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return false;
   let rel;
@@ -108,6 +118,7 @@ function serveStatic(req, res, pathname) {
     const file = media.resolve(m[1], m[2]);
     return file ? serveFile(res, path.dirname(file), path.basename(file), 'private, max-age=3600') : false;
   }
+  if (rel === '/sw.js') return serveServiceWorker(res);
   if (rel.endsWith('/')) rel += 'index.html';
   return serveFile(res, config.PUBLIC_DIR, rel.slice(1));
 }

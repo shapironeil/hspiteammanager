@@ -15,7 +15,7 @@ Per caricare su GitHub le tue risorse (loghi, sfondi, web app): doppio clic su *
 
 Per portare nei progetti i file che stanno altrove (per esempio l'archivio di Verbale Studio): **`sincronizza-una-tantum.bat`**. Copia soltanto, non tocca l'origine. Vedi `docs/INTEGRAZIONE-APP.md`.
 
-Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Scarica i file nuovi, toglie quelli che la nuova versione non usa più e avvia il portale senza fare domande. Database e file caricati (cartella `data/`), Node.js portatile e le tue immagini non vengono toccati.
+Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Controlla la versione, fa un backup, installa e prova la nuova versione; se non parte rimette tutto com'era. Backup automatici ogni giorno, `backup.bat` per farne uno subito, `ripristina.bat` per tornare a un backup. Dettagli: `docs/BACKUP-E-AGGIORNAMENTI.md`.
 
 ## Cosa vede ogni ruolo
 
@@ -45,6 +45,7 @@ Prove nel browser (solo sul PC di sviluppo, serve Playwright): `node test/browse
 |---|---|
 | `docs/PROGETTI-E-DATI.md` | Come sono trattati i file dei progetti, permessi, decisioni aperte |
 | `docs/INTEGRAZIONE-APP.md` | Archivio unico, Verbale Studio nel portale, importazione dal vecchio programma, API di Esplora file |
+| `docs/BACKUP-E-AGGIORNAMENTI.md` | Versione unica, aggiornamento sicuro, backup automatici, ripristino |
 | `docs/TELEFONO.md` | Usare e installare il portale dal telefono con Tailscale (HTTPS) |
 | `docs/DIPENDENZE.md` | Albero delle dipendenze, struttura delle cartelle, regole per aggiungere cose |
 | `docs/ACCESSO-RETE.md` | Come far entrare i colleghi: stessa Wi-Fi, Tailscale, cosa evitare |

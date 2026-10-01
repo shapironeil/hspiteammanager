@@ -1,7 +1,8 @@
 // Service worker del portale: rende l'app installabile sul telefono e mostra una pagina chiara quando la rete manca.
 // Regola: prima sempre la rete (cosi' gli aggiornamenti arrivano subito); la copia salvata serve solo senza rete.
 // Le richieste ai dati (/api/), alle web app (/apps/) e alle immagini personali (/media/) non si salvano MAI.
-const CACHE = 'hspi-v0.5.0';
+// __VERSION__ viene sostituito dal server con la versione di version.json: a ogni aggiornamento la cache si rinnova.
+const CACHE = 'hspi-__VERSION__';
 const SHELL = ['/', '/index.html', '/css/app.css', '/js/app.js', '/js/api.js', '/js/ui.js', '/js/views-main.js', '/js/views-projects.js',
   '/js/views-admin.js', '/js/tour.js', '/js/explorer.js', '/img/logo.svg', '/img/icon-192.png', '/offline.html'];
 

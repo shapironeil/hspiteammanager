@@ -53,6 +53,8 @@ setInterval(security.cleanupSessions, 3600000).unref();
 // Indice dei file per la ricerca: si aggiorna poco dopo l'avvio e poi ogni ora, senza bloccare il portale.
 setTimeout(explorer.reindexAll, 2000).unref();
 setInterval(explorer.reindexAll, 3600000).unref();
+// Backup automatico una volta al giorno (data, progetti, immagini, web app): vedi src/backup.js
+require('./src/backup').schedule({ sqlite: db.db, getSetting: db.getSetting, onError: (err) => db.issue('backup', 'Backup automatico non riuscito: ' + err.message, err.stack, null) });
 
 server.listen(config.PORT, config.HOST, () => {
   console.log('\n  HSPI Team Manager v' + config.VERSION + ' - portale avviato\n');
