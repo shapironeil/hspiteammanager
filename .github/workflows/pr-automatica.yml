@@ -54,5 +54,11 @@ jobs:
               echo
               echo "Le prove automatiche partono da sole. Il merge lo decide il proprietario."
             } > corpo.md
-            gh pr create --base main --head "$ramo" --title "${versione:+v$versione: }aggiornamento da $ramo" --body-file corpo.md
+            if ! gh pr create --base main --head "$ramo" --title "${versione:+v$versione: }aggiornamento da $ramo" --body-file corpo.md 2> errore.txt; then
+              cat errore.txt
+              if grep -q "not permitted to create" errore.txt; then
+                echo "::error title=Permesso mancante::Abilita su GitHub: Settings → Actions → General → Workflow permissions → 'Allow GitHub Actions to create and approve pull requests'. Poi rilancia questo workflow."
+              fi
+              exit 1
+            fi
           done
