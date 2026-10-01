@@ -3,6 +3,7 @@ import { get, post } from './api.js';
 import { h, icon, form, field, toast, toastError, avatarEl, usernamePreview } from './ui.js';
 import { viewHome, viewPrograms, viewFiles, viewProfile } from './views-main.js';
 import { viewProjects, resetProjects } from './views-projects.js';
+import { viewExplorer } from './explorer.js';
 import { maybeShowTour, showTour } from './tour.js';
 import { viewAccounts, viewLogs, viewIssues, viewSystem } from './views-admin.js';
 
@@ -18,8 +19,9 @@ export const roleText = (u) => (u.title && app.state.titles[u.title]) || app.sta
 const NAV = [
   { id: 'home', label: 'Home', icon: 'home', min: 'dipendente', view: viewHome, dynamic: true },
   { id: 'progetti', label: 'Progetti', icon: 'briefcase', min: 'dipendente', view: viewProjects, reset: resetProjects },
+  { id: 'esplora', label: 'Esplora file', icon: 'folder', min: 'dipendente', view: viewExplorer },
   { id: 'programmi', label: 'Programmi', icon: 'apps', min: 'dipendente', view: viewPrograms },
-  { id: 'file', label: 'File', icon: 'folder', min: 'dipendente', view: viewFiles },
+  { id: 'file', label: 'File inviati', icon: 'upload', min: 'dipendente', view: viewFiles },
   { id: 'team', label: (u) => (u.role === 'hacker' ? 'Account' : 'Team'), icon: 'users', min: 'manager', view: viewAccounts, group: 'Organizzazione' },
   { id: 'log', label: 'Log attività', icon: 'log', min: 'hacker', view: viewLogs, group: 'Controllo' },
   { id: 'problemi', label: 'Errori e bug', icon: 'bug', min: 'hacker', view: viewIssues },

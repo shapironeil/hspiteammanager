@@ -45,6 +45,14 @@ const ICONS = {
   play: 'M8 5v14l11-7z',
   back: 'M15 6l-6 6 6 6',
   refresh: 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
+  more: 'M5 12h.01M12 12h.01M19 12h.01',
+  move: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM10 13h6M13 10l3 3-3 3',
+  history: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 8v4l3 2',
+  image: 'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15 9h.01',
+  video: 'M4 6h11v12H4zM15 10l5-3v10l-5-3',
+  restore: 'M4 12a8 8 0 1 0 2.3-5.7M4 4v5h5',
+  note: 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5',
 };
 
 export function icon(name) {

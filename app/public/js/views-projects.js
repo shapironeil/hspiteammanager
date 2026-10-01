@@ -1,6 +1,7 @@
 // Progetti: elenco, scheda con persone e collegamento alla cartella aziendale, file locali.
-import { get, post, patch, del, upload } from './api.js';
-import { h, icon, modal, confirmDialog, form, field, toast, toastError, fmtBytes, fmtDate, pageHead, avatarEl, meter, markdown } from './ui.js';
+import { get, post, patch, del } from './api.js';
+import { h, icon, modal, confirmDialog, form, field, toast, toastError, pageHead, avatarEl } from './ui.js';
+import { explorerPanel } from './explorer.js';
 import { app, refresh } from './app.js';
 
 const STATUS_CHIP = { attivo: 'ok', 'in-pausa': 'warn', chiuso: '' };
@@ -59,84 +60,7 @@ function renderList(el, data) {
 
 // ---- Scheda progetto ------------------------------------------------------------
 async function renderProject(el, data, p) {
-  const filesBox = h('div', {});
-  const progress = h('div', { hidden: true }, meter(0));
-  let here = '';
-
-  async function load(pathRel) {
-    here = pathRel;
-    const d = await get(`/api/projects/${p.id}/files?path=${encodeURIComponent(pathRel)}`);
-    const parts = d.path ? d.path.split('/') : [];
-    const crumbs = h('div', { class: 'crumbs' },
-      h('button', { type: 'button', onclick: () => load('').catch(toastError) }, 'Cartella del progetto'),
-      parts.map((name, i) => [h('span', { class: 'muted' }, '/'), h('button', { type: 'button', onclick: () => load(parts.slice(0, i + 1).join('/')).catch(toastError) }, name)]));
-    const rows = [
-      ...d.folders.map((name) => h('li', { class: 'file-row' }, icon('folder'),
-        h('div', { class: 'grow' }, h('button', { class: 'link title', type: 'button', onclick: () => load(d.path ? `${d.path}/${name}` : name).catch(toastError) }, name)))),
-      ...d.files.map((f) => {
-        const rel = encodeURIComponent(d.path ? `${d.path}/${f.name}` : f.name);
-        const viewUrl = `/api/projects/${p.id}/view?path=${rel}`;
-        const isText = /\.(txt|md|json|csv|log)$/i.test(f.name);
-        // I testi si leggono in una finestra del portale; PDF, immagini e pagine HTML in una nuova scheda.
-        const name = !f.viewable ? h('div', { class: 'title' }, f.name)
-          : isText ? h('button', { class: 'link title', type: 'button', title: 'Leggi', onclick: () => readText(f.name, viewUrl) }, f.name)
-            : h('a', { class: 'title', href: viewUrl, target: '_blank', rel: 'noopener', title: 'Apri in una nuova scheda', style: 'color:inherit;text-decoration:none;display:block' }, f.name);
-        return h('li', { class: 'file-row' }, icon('file'),
-          h('div', { class: 'grow' }, name, h('div', { class: 'meta' }, `${fmtBytes(f.size)} · ${fmtDate(f.modifiedAt)}${f.viewable ? ' · clicca il nome per aprirlo' : ''}`)),
-          h('a', { class: 'icon-btn', title: 'Scarica', 'aria-label': `Scarica ${f.name}`, href: `/api/projects/${p.id}/download?path=${rel}` }, icon('download')));
-      }),
-    ];
-    filesBox.replaceChildren(crumbs, rows.length ? h('ul', { class: 'list' }, rows) : h('div', { class: 'empty' }, 'Cartella vuota.'));
-  }
-
-  async function readText(name, url) {
-    try {
-      const res = await fetch(url, { credentials: 'same-origin' });
-      if (!res.ok) throw new Error('Non riesco ad aprire il file.');
-      const text = await res.text();
-      const body = /\.md$/i.test(name) ? markdown(text)
-        : h('pre', { style: 'white-space:pre-wrap;overflow-wrap:anywhere;font:12.5px/1.55 var(--mono);margin:0;max-height:65vh;overflow:auto' }, text.length > 400000 ? text.slice(0, 400000) + '\n\n[file lungo: scaricalo per vederlo tutto]' : text);
-      modal(name, body, { wide: true });
-    } catch (err) { toastError(err); }
-  }
-
-  const newFolder = () => {
-    const m = modal('Nuova cartella', form([
-      field('Nome della cartella', h('input', { type: 'text', name: 'name', maxlength: '100' }), 'Viene creata dentro la cartella che stai guardando. Esempio: Verbali, oppure 2026-09-28 Checkpoint.'),
-      h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Crea')),
-    ], async (v) => { await post(`/api/projects/${p.id}/folders`, { path: here, name: v.name }); m.close(); await load(here); }));
-  };
-
-  const pickAndUpload = () => {
-    const input = h('input', { type: 'file', onchange: async () => {
-      const file = input.files[0];
-      if (!file) return;
-      try {
-        if (file.size > app.state.maxFileMb * 1024 * 1024) throw new Error(`File troppo grande: il massimo è ${app.state.maxFileMb} MB.`);
-        progress.hidden = false;
-        const bar = progress.querySelector('i');
-        const url = `/api/projects/${p.id}/files?path=${encodeURIComponent(here)}&name=${encodeURIComponent(file.name)}`;
-        const send = (extra) => upload(url + extra, file, (f) => { bar.style.width = `${f * 100}%`; });
-        try {
-          await send('');
-        } catch (err) {
-          if (!/Esiste già un file/.test(err.message)) throw err;
-          progress.hidden = true;
-          // Stesso nome: si chiede conferma. La versione precedente finisce nello storico del progetto.
-          confirmDialog('Sostituire il file?', `"${file.name}" esiste già in questa cartella. La versione attuale viene conservata nello storico del progetto.`, 'Sostituisci', async () => {
-            try { progress.hidden = false; await send('&overwrite=1'); toast('File sostituito.'); await load(here); } catch (e2) { toastError(e2); }
-            progress.hidden = true;
-          });
-          return;
-        }
-        toast('File caricato.');
-        await load(here);
-      } catch (err) { toastError(err); }
-      progress.hidden = true;
-    } });
-    input.click();
-  };
-
+  const files = explorerPanel({ space: `p${p.id}`, title: 'File del progetto' });
   el.replaceChildren(
     h('div', { style: 'margin-bottom:10px' }, h('button', { class: 'btn sm', type: 'button', onclick: () => { openId = null; refresh(); } }, icon('back'), 'Tutti i progetti')),
     pageHead(p.name, [p.client, p.description].filter(Boolean).join(' · ') || null,
@@ -152,14 +76,10 @@ async function renderProject(el, data, p) {
       h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Persone'), h('span', { class: 'chip' }, String(p.members.length))),
         p.members.length ? h('ul', { class: 'list' }, p.members.map((u) => h('li', {}, avatarEl(u, 'sm'), h('div', { class: 'grow' }, h('div', { class: 'title' }, u.name), h('div', { class: 'meta' }, u.username)))))
           : h('div', { class: 'empty' }, 'Nessuna persona assegnata: per ora lo vede solo l\'Hacker.'))),
-    h('section', { class: 'card glass', style: 'margin-top:16px' },
-      h('div', { class: 'card-head' }, h('h2', {}, 'File nel portale'),
-        h('div', { class: 'row' },
-          h('button', { class: 'btn sm', type: 'button', onclick: newFolder }, icon('plus'), 'Nuova cartella'),
-          h('button', { class: 'btn sm', type: 'button', onclick: pickAndUpload }, icon('upload'), 'Carica qui'))),
-      progress, filesBox,
-      h('p', { class: 'small muted mono', style: 'margin-top:10px' }, `progetti/${p.folder}`)));
-  await load('');
+    h('div', { style: 'margin-top:16px' }, files),
+    h('p', { class: 'small muted mono', style: 'margin-top:10px' }, `progetti/${p.folder}`,
+      ' · ', h('a', { href: `#/esplora?spazio=p${p.id}` }, 'apri in Esplora file')));
+  await files.ready;
 }
 
 // Tornando su "Progetti" dal menu si riparte dall'elenco.

@@ -364,6 +364,29 @@ details.detail pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/
 .member-list .check:hover { background: var(--glass); }
 .note { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--well); border: 1px solid var(--border); font-size: 12.5px; color: var(--muted); }
 
+/* ---- Esplora file --------------------------------------------------------- */
+.ex-layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 16px; align-items: start; }
+.ex-spaces { padding: 10px; display: flex; flex-direction: column; gap: 3px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; }
+.ex-spaces .nav-item span { opacity: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ex-space { width: 100%; text-align: left; font: inherit; }
+.ex-space.active { color: var(--text); background: rgba(217, 119, 87, 0.2); border-color: rgba(233, 162, 127, 0.35); }
+.ex-side-title { padding: 8px 10px 2px; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+.ex-space-select { display: none; width: 100%; margin-bottom: 12px; }
+.ex-searchbar { display: flex; align-items: center; gap: 10px; padding: 4px 14px; margin-bottom: 16px; border-radius: 999px; }
+.ex-searchbar svg { width: 18px; height: 18px; color: var(--muted); flex: none; }
+.ex-search { flex: 1; border: 0 !important; background: none !important; box-shadow: none !important; padding: 9px 0 !important; min-width: 0; }
+.ex-panel { transition: border-color 0.15s, background 0.15s; }
+.ex-panel.over { border-color: var(--accent-soft); background: rgba(217, 119, 87, 0.1); }
+.ex-panel .file-row { min-height: 44px; }
+.ex-progress { margin-bottom: 10px; }
+.ex-drop-hint { margin-top: 10px; }
+.ex-actions { display: flex; flex-direction: column; gap: 8px; }
+.ex-action { justify-content: flex-start; width: 100%; padding: 10px 14px; }
+.ex-media { display: block; max-width: 100%; max-height: 70vh; margin: 0 auto; border-radius: 10px; background: #000; }
+.ex-text { white-space: pre-wrap; overflow-wrap: anywhere; font: 12.5px/1.55 var(--mono); margin: 0 0 12px; max-height: 62vh; overflow: auto; }
+.ex-editor { width: 100%; min-height: 50vh; font: 13px/1.55 var(--mono); }
+.ex-pick button.link { border: 0; background: none; color: var(--text); cursor: pointer; text-align: left; padding: 4px 0; font: inherit; }
+
 /* ---- Guida a popup -------------------------------------------------------- */
 .tour { width: min(440px, 100%); padding: 26px 26px 20px; text-align: center; background: var(--modal-bg); }
 .tour-icon { width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 16px; display: grid; place-items: center; color: #2a120a; background: linear-gradient(160deg, #f1c7ac, var(--accent)); }
@@ -390,6 +413,14 @@ details.detail pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/
   .topbar-logo { height: 34px; max-width: 130px; }
   .user-chip { padding: 5px; }
   .upload-grid { grid-template-columns: 1fr; }
+  .ex-layout { grid-template-columns: 1fr; }
+  .ex-spaces { display: none; }
+  .ex-space-select { display: block; }
+  .ex-drop-hint { display: none; }
+  .list li { gap: 8px; }
+  .icon-btn { width: 40px; height: 40px; }
+  .modal-back { padding: 8px; align-items: end; }
+  .modal { max-height: calc(100vh - 16px); }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
