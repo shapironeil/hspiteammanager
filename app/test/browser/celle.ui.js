@@ -94,6 +94,23 @@ const XLSX = buildBpbWorkbook({ name: 'prova', macros: [
         ok(overflow <= 1, 'nessuno scorrimento orizzontale su telefono (' + overflow + ')');
       }
       await page.screenshot({ path: path.join(OUT, `celle-tabella-${label}.png`) });
+      // Modifica: tabella di riferimento a sinistra, caratteristiche a destra, predecessore con codici a cascata
+      await page.click('.tabs .tab:has-text("Modifica")');
+      await page.waitForSelector('.cg-grid');
+      ok(await page.locator('.tabs .tab:has-text("Processi")').count() === 1, 'la vista Albero si chiama Processi');
+      await page.click('.cg-seg button:has-text("Processi")');
+      const first = page.locator('.cg-grid tbody tr').first();
+      const firstCode = (await first.locator('.cg-code').textContent()).trim();
+      await first.click();
+      await page.waitForSelector('.cg-right .tr-bigcode');
+      await page.click('.cg-tool:has-text("Predecessore")');
+      await page.fill('.modal textarea[name=name]', 'Analisi preliminare');
+      await page.click('.modal button:has-text("Aggiungi")');
+      await page.waitForSelector('.cg-cascade');
+      ok(await page.locator(`.cg-grid tr.sel .cg-code:text-is("${firstCode}")`).count() === 1, 'il predecessore prende il codice della voce scelta');
+      ok(await page.locator('.cg-grid tr.changed').count() >= 1, 'le voci dopo cambiano codice a cascata e sono evidenziate');
+      ok(/a cascata/.test(await page.textContent('.cg-cascade')), 'riepilogo dei codici aggiornati');
+      await page.screenshot({ path: path.join(OUT, `celle-modifica-${label}.png`), fullPage: !mobile });
       // export
       const dl = page.waitForEvent('download');
       await page.click('a:has-text("Scarica Excel")');

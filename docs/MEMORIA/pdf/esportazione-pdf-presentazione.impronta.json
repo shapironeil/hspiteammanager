@@ -4,19 +4,75 @@
   "app": "cippi",
   "tipoDocumento": "PDF esportato da una presentazione PowerPoint (si manda al cliente) o appunti in PDF",
   "fileVisti": [
-    { "nome": "ATAC_Kick_Off_Data_Platform_v1.0.pdf", "pagine": 16, "creato": "2026-05-05", "analizzato": "2026-10-01", "presentazione": "kickoff-hspi-atac-data-platform" }
+    {
+      "nome": "ATAC_Kick_Off_Data_Platform_v1.0.pdf",
+      "pagine": 16,
+      "creato": "2026-05-05",
+      "analizzato": "2026-10-01",
+      "presentazione": "kickoff-hspi-atac-data-platform"
+    }
   ],
-  "nomeFile": { "schema": "<stesso nome del .pptx>.pdf", "regex": "\\.pdf$" },
-  "pagina": { "larghezza": 960, "altezza": 540, "formato": "Widescreen 16:9 (13,33 x 7,5 pollici)" },
+  "provenienza": {
+    "agente": "ecstatic-planck",
+    "sessione": "session_01SsSNTHHcV7asTQyvonE7gX",
+    "ramo": "claude/ecstatic-planck-q9m57v",
+    "commit": "981931f (+ unione con main v0.10.0)",
+    "analizzato": "2026-10-01",
+    "strumento": "Cippi 0.3.0, Documento -> Scarica impronta"
+  },
+  "nomeFile": {
+    "schema": "<stesso nome del .pptx>.pdf",
+    "regex": "\\.pdf$"
+  },
+  "pagina": {
+    "larghezza": 960,
+    "altezza": 540,
+    "formato": "Widescreen 16:9 (13,33 x 7,5 pollici)"
+  },
   "versione": "PDF-1.7",
-  "struttura": { "xrefStream": true, "objectStream": true, "aggiornamentoIncrementale": true, "cifrato": false },
-  "metadati": { "producer": "Microsoft® PowerPoint® for Microsoft 365", "creator": "Microsoft® PowerPoint® for Microsoft 365", "titolo": "quello del .pptx (spesso 'PowerPoint Presentation')" },
-  "caratteri": { "sottoinsiemi": "^[A-Z]{6}\\+", "semplici": "TrueType WinAnsiEncoding", "composti": "Type0 Identity-H con ToUnicode", "esempi": ["Poppins", "Poppins-Bold", "Poppins-BoldItalic"] },
-  "testo": { "titoloPagina": "riga piu' grande in alto (18 pt), numero di pagina piccolo a destra alla stessa altezza", "testiRuotati": "letti una lettera per riga" },
+  "struttura": {
+    "xrefStream": true,
+    "objectStream": true,
+    "aggiornamentoIncrementale": true,
+    "cifrato": false
+  },
+  "metadati": {
+    "producer": "Microsoft® PowerPoint® for Microsoft 365",
+    "creator": "Microsoft® PowerPoint® for Microsoft 365",
+    "titolo": "quello del .pptx (spesso 'PowerPoint Presentation')"
+  },
+  "caratteri": {
+    "sottoinsiemi": "^[A-Z]{6}\\+",
+    "semplici": "TrueType WinAnsiEncoding",
+    "composti": "Type0 Identity-H con ToUnicode",
+    "esempi": [
+      "Poppins",
+      "Poppins-Bold",
+      "Poppins-BoldItalic"
+    ]
+  },
+  "testo": {
+    "titoloPagina": "riga piu' grande in alto (18 pt), numero di pagina piccolo a destra alla stessa altezza",
+    "testiRuotati": "letti una lettera per riga"
+  },
   "immagini": 91,
   "riconoscimento": {
-    "segnali": ["pagine 960x540 pt", "producer con 'PowerPoint'", "caratteri in sottoinsieme", "stesso nome di un .pptx nella cartella del progetto"],
+    "segnali": [
+      "pagine 960x540 pt",
+      "producer con 'PowerPoint'",
+      "caratteri in sottoinsieme",
+      "stesso nome di un .pptx nella cartella del progetto"
+    ],
     "confrontoConLaPresentazione": "GET /api/cippi/docs/:id/appunti/pdf?path= (pagina per slide: parole in comune e titolo)"
   },
-  "cippi": { "versioneAnalisi": "0.2.0", "letturaMs": 160, "titoliCorretti": "16/16", "confronto": { "coppie": 16, "somiglianzaMedia": 0.98, "allineato": true } }
+  "cippi": {
+    "versioneAnalisi": "0.3.0",
+    "letturaMs": 160,
+    "titoliCorretti": "16/16",
+    "confronto": {
+      "coppie": 16,
+      "somiglianzaMedia": 0.98,
+      "allineato": true
+    }
+  }
 }

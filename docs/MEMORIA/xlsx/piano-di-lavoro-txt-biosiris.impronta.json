@@ -1,0 +1,264 @@
+{
+  "template": "piano-di-lavoro-txt-biosiris",
+  "formato": "xlsx",
+  "app": "gestione-celle",
+  "tipoDocumento": "piano di lavoro di dettaglio (Gantt mensile a due livelli)",
+  "fornitore": "TXT e-solutions S.p.A. (con Deda Next, Webgenesys)",
+  "fileVisti": [
+    {
+      "nome": "BIOSIRIS_PdL_di_dettaglio_v0.4.xlsx",
+      "fogli": 1,
+      "workPackage": 6,
+      "fasi": 46,
+      "mesi": 39,
+      "formule": 54,
+      "celleUnite": 17,
+      "modificato": "2026-09-29",
+      "analizzato": "2026-10-01"
+    }
+  ],
+  "nomeFile": {
+    "schema": "<PROGETTO>_PdL_di_dettaglio_v<maggiore>.<minore>.xlsx",
+    "regex": "^[A-Za-z0-9]+_PdL_di_dettaglio_v\\d+\\.\\d+\\.xlsx$",
+    "regexLasca": "(?i)pdl|piano.?di.?lavoro|gantt|masterplan"
+  },
+  "fogli": [
+    "Piano di lavoro"
+  ],
+  "intestazione": {
+    "righe": 3,
+    "anni": {
+      "riga": 2,
+      "celleUniteDa": 12,
+      "nota": "il primo gruppo di mesi, prima del primo anno pieno, è unito ma senza anno"
+    },
+    "trimestri": {
+      "riga": 3,
+      "valori": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q4"
+      ],
+      "celleUniteDa": 3,
+      "sfondo": "F2F2F2"
+    },
+    "colonneFisse": {
+      "riga": 4,
+      "valori": [
+        "LIV 1",
+        "Work Package",
+        "LIV 2",
+        "Work Package",
+        "Owner",
+        "Note"
+      ],
+      "colonne": "B-G"
+    },
+    "mesi": {
+      "riga": 4,
+      "daColonna": "H",
+      "iniziali": "G F M A M G L A S O N D",
+      "nota": "una lettera per colonna, può iniziare da un mese qualsiasi"
+    }
+  },
+  "timeline": {
+    "primoMese": "2026-10",
+    "ultimoMese": "2029-12",
+    "colonne": 39,
+    "larghezzaColonna": 4.5
+  },
+  "livelli": {
+    "1": {
+      "colonne": {
+        "codice": "B",
+        "nome": "C"
+      },
+      "codici": "N oppure N.0 (testo o numero con formato 0.0)",
+      "barra": "tinta +0,40 del colore del tema, tutto l'arco del work package"
+    },
+    "2": {
+      "colonne": {
+        "codiceWp": "B (=B riga sopra)",
+        "nomeWp": "C (testo o =C riga sopra)",
+        "codice": "D (N.N testo, sfondo F2F2F2)",
+        "nome": "E",
+        "owner": "F",
+        "note": "G"
+      },
+      "barra": "tinta +0,80 dello stesso colore del tema"
+    }
+  },
+  "fasiStandard": [
+    {
+      "nome": "Design e Prototipazione",
+      "inizio": 0,
+      "durata": 2
+    },
+    {
+      "nome": "Analisi Funzionale",
+      "inizio": 0,
+      "durata": 5
+    },
+    {
+      "nome": "Sviluppo Applicativo",
+      "inizio": 2,
+      "durata": 13
+    },
+    {
+      "nome": "UAT & Stress Test",
+      "inizio": 13,
+      "durata": 2
+    },
+    {
+      "nome": "VA/PT e Monitoraggio post pubblicazione Versione Beta Soluzione",
+      "inizio": 13,
+      "durata": 2
+    },
+    {
+      "nome": "Implementazione soluzione su data center/infrastruttura del cliente",
+      "inizio": 13,
+      "durata": 2
+    },
+    {
+      "nome": "Go Live e Messa in esercizio",
+      "inizio": 15,
+      "durata": 1
+    },
+    {
+      "nome": "MAD/MAC/MEV/HD",
+      "inizio": 15,
+      "durata": "fino a fine contratto"
+    }
+  ],
+  "stile": {
+    "carattere": "Calibri 11 (tema minor)",
+    "grassetto": [
+      "intestazioni",
+      "righe di livello 1",
+      "nome fase (E)",
+      "owner (F)"
+    ],
+    "corsivo": [
+      "intestazioni dei mesi e dei trimestri"
+    ],
+    "testoGrigio": "B e C delle righe di livello 2 (tema 0, tinta -0,5)",
+    "famiglieColore": {
+      "livello1": "tema 9 / 4 / 5 tinta 0.40",
+      "livello2": "stesso tema tinta 0.80",
+      "garanzia": "tema 6 tinta 0.80"
+    },
+    "bordi": "hair all'interno, thin sul contorno dei blocchi",
+    "righe": {
+      "altezza": 29,
+      "altezzaDoppia": 43.5
+    },
+    "colonne": {
+      "B": 12,
+      "C": 41.4,
+      "D": 12,
+      "E": 37.8,
+      "F": 16.9,
+      "G": 25.4
+    },
+    "vista": {
+      "griglia": false,
+      "zoom": 40,
+      "bloccoRiquadri": "F16 (atteso H5)"
+    },
+    "assenti": [
+      "tabelle Excel",
+      "convalide",
+      "formati condizionali",
+      "nomi definiti",
+      "macro"
+    ]
+  },
+  "formule": {
+    "quante": 54,
+    "tipi": [
+      "=B5",
+      "=C22",
+      "=+B5"
+    ],
+    "uso": "propagano codice e nome del work package nelle righe delle fasi"
+  },
+  "riconoscimento": {
+    "punteggioMinimo": 4,
+    "segnali": [
+      {
+        "segnale": "foglio 'Piano di lavoro'",
+        "peso": 1
+      },
+      {
+        "segnale": "riga con LIV 1 / Work Package / LIV 2 / Work Package / Owner / Note",
+        "peso": 2
+      },
+      {
+        "segnale": "almeno 12 celle consecutive con una sola lettera tra G F M A M G L A S O N D",
+        "peso": 2
+      },
+      {
+        "segnale": "riga con Q1..Q4 in celle unite da 3",
+        "peso": 1
+      },
+      {
+        "segnale": "riga con anni in celle unite da 12",
+        "peso": 1
+      },
+      {
+        "segnale": "celle piene di colore senza valore nelle colonne dei mesi",
+        "peso": 2
+      },
+      {
+        "segnale": "nome file con PdL / piano di lavoro / gantt / masterplan",
+        "peso": 1
+      }
+    ]
+  },
+  "anomalieTipiche": [
+    "codici di livello 2 non coerenti con il livello 1",
+    "codice di livello 1 duplicato",
+    "tipi misti nei codici",
+    "nome del work package ripetuto sbagliato",
+    "formule di propagazione che saltano una riga",
+    "blocchi senza formule",
+    "barre non contigue",
+    "owner mancante",
+    "spazi finali",
+    "anno mancante sul primo gruppo di mesi",
+    "blocco riquadri fuori posto",
+    "fasi sempre sovrapposte"
+  ],
+  "sinergie": {
+    "cippi": "la slide Masterplan del kick-off (template kickoff-txt-biosiris, slide 12) è la versione grafica di questo piano: stesse componenti, fasi raggruppate in tre macro-fasi, anni 2026-2028"
+  },
+  "gestioneCelle": {
+    "oggi": "importabile solo come foglio generico (LIV 1 = macro, nome fase = processo); barre, celle unite e stili non vengono letti",
+    "funzioniProposte": [
+      "riconosci modello",
+      "leggi piano (asse dei mesi, barre → inizio/fine)",
+      "controlla piano",
+      "normalizza",
+      "applica fasi standard",
+      "sposta/allunga/accorcia barre",
+      "estendi orizzonte",
+      "esporta con lo stesso aspetto / salva nell'originale",
+      "confronta versioni",
+      "esporta il Gantt verso Cippi (Masterplan)"
+    ]
+  },
+  "provenienza": {
+    "agente": "cool-noether",
+    "sessione": "session_016fgi7494LKk88z4etQe9Lu",
+    "ramo": "claude/cool-noether-kv3o8c",
+    "commit": [
+      "0fe8189",
+      "8314b5a"
+    ],
+    "dataAnalisi": "2026-10-01",
+    "primaVersione": "docs/MODELLI-FILE/modelli.json (id excel-piano-di-lavoro-gantt), commit 0fe8189",
+    "archivio": "docs/MEMORIA/_archivio/2026-10-01/cool-noether/MEMORIA/xlsx/piano-di-lavoro-txt-biosiris.impronta.json",
+    "unificazione": "2026-10-01, ramo claude/integrazione-2026-10-01: impronta invariata, aggiunto solo questo campo"
+  }
+}

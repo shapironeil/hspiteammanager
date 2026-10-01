@@ -2,8 +2,8 @@
   "template": "kickoff-hspi-atac-data-platform",
   "formato": "pptx",
   "app": "cippi",
-  "tipoDocumento": "kick-off di progetto (consulenza, con Quick Win KPI)",
-  "fornitore": "HSPI S.p.A. (brand ATAC nelle slide)",
+  "tipoDocumento": "kick-off di progetto HSPI (consulenza, con Quick Win KPI)",
+  "fornitore": "HSPI S.p.A. (brand del cliente nelle slide)",
   "fileVisti": [
     {
       "nome": "ATAC_Kick_Off_Data_Platform_v1.0.pptx",
@@ -21,6 +21,14 @@
   "nomeFile": {
     "schema": "<CLIENTE>_Kick_Off_<Progetto>_v<maggiore>.<minore>.pptx",
     "regex": "^[A-Za-z0-9]+_Kick_?Off_[A-Za-z0-9_]+_v\\d+\\.\\d+\\.pptx$"
+  },
+  "provenienza": {
+    "agente": "ecstatic-planck",
+    "sessione": "session_01SsSNTHHcV7asTQyvonE7gX",
+    "ramo": "claude/ecstatic-planck-q9m57v",
+    "commit": "981931f (+ unione con main v0.10.0)",
+    "analizzato": "2026-10-01",
+    "strumento": "Cippi 0.3.0, Documento -> Scarica impronta"
   },
   "slide": {
     "cx": 12192000,
@@ -108,7 +116,7 @@
     "scheda",
     "schema",
     "testo",
-    "piano",
+    "masterplan",
     "organigramma",
     "testo",
     "testo",
@@ -138,23 +146,23 @@
     "MVP",
     "UAT",
     "SAP",
-    "MATRICS",
     "ATAC",
     "CITIES",
     "FDV",
     "F3",
     "ID",
     "DADO",
-    "EXCEL"
+    "EXCEL",
+    "AI"
   ],
   "metadati": {
     "company": "",
-    "applicazione": "Microsoft Office PowerPoint",
+    "applicazione": "Microsoft Office PowerPoint 16.0000",
     "titolo": "PowerPoint Presentation",
     "soggetto": ""
   },
   "cippi": {
-    "versioneAnalisi": "0.2.0 / ANALYZER 4",
+    "versioneAnalisi": "0.3.0 / ANALYZER 7",
     "tipi": {
       "1": "copertina",
       "2": "indice",
@@ -163,7 +171,7 @@
       "5": "scheda",
       "6": "schema",
       "7": "testo",
-      "8": "piano",
+      "8": "masterplan",
       "9": "organigramma",
       "10": "testo",
       "11": "testo",
@@ -176,7 +184,7 @@
     "sezioni": "indice",
     "controlli": [
       "avviso: Voce dell'indice \"Quick Win KPI\": il titolo più vicino è \"QUICK WIN KIP\" (slide 11), forse un refuso.",
-      "info: Caratteri fuori tema (Calibri, Poppins): Ubuntu (slide 6); Gill Sans MT (slide 8)."
+      "info: Caratteri diversi da quelli del tema (Calibri, Calibri): Poppins (964), Ubuntu (16), Roboto Black (14), Gill Sans MT (14), 72 Brand (10), Arial (1), Arial Narrow (1), Roboto Light (1), Poppins SemiBold (1)."
     ],
     "punteggio": 96
   }

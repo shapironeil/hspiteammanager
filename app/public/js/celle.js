@@ -31,7 +31,7 @@ async function viewList(el) {
       await viewCelle(el);
     }));
   };
-  el.replaceChildren(
+  el.replaceChildren(h('div', { class: 'cg' },
     pageHead('GestioneCelle', 'Le mappe dei processi: macro (1), processi (1.2), micro processi (1.2.3). I codici si aggiornano da soli; il file Excel si importa e si esporta con le stesse formule.',
       h('button', { class: 'btn primary', type: 'button', onclick: newMap }, icon('plus'), 'Nuova mappa')),
     d.maps.length ? h('div', { class: 'grid' }, d.maps.map((m) => h('button', { class: 'project glass', type: 'button', onclick: () => { setHash(`mappa=${m.id}`); viewCelle(el).catch(toastError); } },
@@ -40,7 +40,7 @@ async function viewList(el) {
       m.description ? h('p', {}, m.description) : null,
       h('div', { class: 'row', style: 'gap:6px' }, h('span', { class: 'chip' }, `${m.macros} macro`), h('span', { class: 'chip' }, `${m.processes} processi`), h('span', { class: 'chip' }, `${m.micros} micro`)),
       h('div', { class: 'small muted' }, `aggiornata ${fmtDate(m.updatedAt)}`))))
-      : h('div', { class: 'card glass empty' }, 'Nessuna mappa. Creane una con "Nuova mappa": puoi partire da zero o importare un file Excel.'));
+      : h('div', { class: 'card glass empty' }, 'Nessuna mappa. Creane una con "Nuova mappa": puoi partire da zero o importare un file Excel.')));
 }
 
 // ---- Importazione guidata ----------------------------------------------------------------
@@ -98,7 +98,8 @@ function mappingDialog(mapId, r, onDone) {
 
 // ---- Mappa --------------------------------------------------------------------------------
 async function viewMap(el, mapId) {
-  const state = { tab: params().get('vista') || 'albero', selected: Number(params().get('voce')) || null, open: new Set(), filter: { q: '', ambito: '', stato: '', resp: '', late: false, issues: false } };
+  // "albero" e' il vecchio nome della vista Processi: i vecchi collegamenti funzionano ancora
+  const state = { tab: ({ albero: 'processi' })[params().get('vista')] || params().get('vista') || 'processi', mod: { level: 0, q: '', changed: new Map(), last: '' }, selected: Number(params().get('voce')) || null, open: new Set(), filter: { q: '', ambito: '', stato: '', resp: '', late: false, issues: false } };
   let d;
   const byId = new Map();
   const load = async () => {
@@ -129,7 +130,7 @@ async function viewMap(el, mapId) {
     d.canManage ? h('button', { class: 'icon-btn', type: 'button', title: 'Rinomina o elimina la mappa', 'aria-label': 'Impostazioni della mappa', onclick: mapSettings }, icon('edit')) : null);
 
   const tabs = () => h('div', { class: 'tabs tr-tabs', role: 'tablist' },
-    [['albero', 'Albero'], ['tabella', 'Tabella'], ['controlli', `Controlli${d.issues.length ? ` (${d.issues.length})` : ''}`], ['richieste', `Richieste${d.requests.length ? ` (${d.requests.length})` : ''}`]]
+    [['processi', 'Processi'], ['tabella', 'Tabella'], ['modifica', 'Modifica'], ['controlli', `Controlli${d.issues.length ? ` (${d.issues.length})` : ''}`], ['richieste', `Richieste${d.requests.length ? ` (${d.requests.length})` : ''}`]]
       .map(([id, label]) => h('button', { class: 'tab' + (state.tab === id ? ' active' : ''), type: 'button', role: 'tab', onclick: () => { state.tab = id; remember(); render(); } }, label)));
 
   // --- albero
@@ -154,7 +155,7 @@ async function viewMap(el, mapId) {
   // --- scheda della voce
   function detail(n) {
     if (!n) {
-      return h('div', { class: 'empty' }, d.macros.length ? 'Scegli una voce dall\'albero per vederla e modificarla.' : 'Mappa vuota: aggiungi il primo macro processo oppure importa un file Excel.',
+      return h('div', { class: 'empty' }, d.macros.length ? 'Scegli una voce dall\'elenco per vederla e modificarla.' : 'Mappa vuota: aggiungi il primo macro processo oppure importa un file Excel.',
         h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn primary', type: 'button', onclick: () => addChild(null) }, icon('plus'), 'Aggiungi macro processo')));
     }
     const save = async (body) => { try { await patch(`/api/celle/nodes/${n.id}`, body); await reload(n.id); } catch (err) { toastError(err); render(); } };
@@ -325,7 +326,7 @@ async function viewMap(el, mapId) {
         h('span', { class: 'small muted' }, `${shown.length} di ${rows.length}`)),
       h('div', { class: 'table-wrap' }, h('table', { class: 'tr-table' },
         h('thead', {}, h('tr', {}, ['Codice', 'Macro', 'Processo', 'Sotto processo', 'Ambito', 'Responsabile', 'Scadenza', 'Stato', 'Check'].map((x) => h('th', {}, x)))),
-        h('tbody', {}, shown.slice(0, 600).map(({ mac, p, u }) => h('tr', { class: 'tr-click', onclick: () => { state.tab = 'albero'; select(u.id); } },
+        h('tbody', {}, shown.slice(0, 600).map(({ mac, p, u }) => h('tr', { class: 'tr-click', onclick: () => { state.tab = 'processi'; select(u.id); } },
           h('td', { class: 'mono nowrap' }, u.code), h('td', { class: 'small' }, mac.name), h('td', { class: 'small' }, p.name), h('td', {}, u.name),
           h('td', { class: 'small' }, u.ambito), h('td', { class: 'small' }, u.responsible || ''), h('td', { class: 'small nowrap' + (u.overdue ? ' tr-late' : '') }, shortDate(u.dueDate)),
           h('td', {}, u.status ? h('span', { class: `chip tr-mini ${STATUS_CHIP[u.status] || ''}` }, u.status) : ''),
@@ -335,7 +336,7 @@ async function viewMap(el, mapId) {
 
   function issuesView() {
     return d.issues.length ? h('ul', { class: 'list' }, d.issues.map((i) => h('li', {}, h('span', { class: 'tr-dot danger' }),
-      h('button', { class: 'link title grow tr-link', type: 'button', onclick: () => { state.tab = 'albero'; select(i.id); } }, h('span', { class: 'tr-code' }, i.code), ` ${i.name}`),
+      h('button', { class: 'link title grow tr-link', type: 'button', onclick: () => { state.tab = 'processi'; select(i.id); } }, h('span', { class: 'tr-code' }, i.code), ` ${i.name}`),
       h('span', { class: 'small', style: 'color:var(--danger)' }, i.checks.join(' · ')))))
       : h('div', { class: 'empty' }, 'Nessun problema: codici, nomi e duplicati sono a posto.');
   }
@@ -347,10 +348,111 @@ async function viewMap(el, mapId) {
   }
   const decide = async (r, approve) => { try { await post(`/api/celle/requests/${r.id}`, { approve }); toast(approve ? 'Eliminata.' : 'Richiesta rifiutata.'); await reload(); } catch (err) { toastError(err); } };
 
+  // --- Modifica: a sinistra la tabella di riferimento (tutte le voci in ordine, come un foglio),
+  // a destra le caratteristiche della voce scelta. Predecessore / successore / sotto-voce / sposta:
+  // i codici di tutte le voci dopo si ricalcolano a cascata e il foglio mostra quali sono cambiati.
+  const codesNow = () => new Map([...byId.values()].map((n) => [n.id, n.code]));
+  async function cascade(label, fn) {
+    const before = codesNow();
+    let r;
+    try { r = await fn(); } catch (err) { toastError(err); return; }
+    await load();
+    const changed = new Map();
+    for (const n of byId.values()) if (before.has(n.id) && before.get(n.id) !== n.code) changed.set(n.id, before.get(n.id));
+    state.mod.changed = changed;
+    state.mod.last = `${label}${changed.size ? ` · ${changed.size} codici aggiornati a cascata` : ''}`;
+    if (r && r.id) state.selected = r.id;
+    remember();
+    render();
+  }
+  const askName = (title, hint) => new Promise((resolve) => {
+    const m = modal(title, form([
+      field('Nome', h('textarea', { name: 'name', style: 'min-height:60px' }), hint),
+      h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Aggiungi')),
+    ], async (v) => { m.close(); resolve(v.name); }));
+  });
+  async function insertAt(n, where) {
+    const sibs = n.parent ? n.parent.children : d.macros;
+    const idx = sibs.indexOf(n);
+    const kind = LEVEL[n.level].toLowerCase();
+    if (where === 'figlio') {
+      if (n.level >= 3) return;
+      const name = await askName(`Nuovo ${CHILD[n.level]}`, `Dentro ${n.code} ${n.name}, in fondo.`);
+      return cascade(`Aggiunto ${CHILD[n.level]} in ${n.code}`, async () => { const r = await post(`/api/celle/maps/${mapId}/nodes`, { level: n.level + 1, parentId: n.id, name }); state.open.add(n.id); return r; });
+    }
+    const name = await askName(where === 'prima' ? `Nuovo ${kind} prima di ${n.code}` : `Nuovo ${kind} dopo ${n.code}`,
+      where === 'prima' ? `Prende il posto di ${n.code}: ${n.code} e le voci dopo scalano di uno.` : `Va subito dopo ${n.code}: le voci dopo scalano di uno.`);
+    const afterId = where === 'prima' ? (idx > 0 ? sibs[idx - 1].id : 0) : n.id;
+    return cascade(where === 'prima' ? `Aggiunto predecessore di ${n.code}` : `Aggiunto successore di ${n.code}`,
+      () => post(`/api/celle/maps/${mapId}/nodes`, { level: n.level, parentId: n.parent ? n.parent.id : null, name, afterId }));
+  }
+  const shiftNode = (n, delta) => {
+    const sibs = n.parent ? n.parent.children : d.macros;
+    const idx = sibs.indexOf(n);
+    if (idx + delta < 0 || idx + delta >= sibs.length) return null;
+    return cascade(`Spostato ${n.code}`, async () => { await post(`/api/celle/nodes/${n.id}/move`, { index: idx + delta, parentId: n.parent ? n.parent.id : null }); return { id: n.id }; });
+  };
+  function editor(selected) {
+    const m = state.mod;
+    const all = [];
+    const walk = (list, depth) => { for (const n of list) { all.push({ n, depth }); walk(n.children, depth + 1); } };
+    walk(d.macros, 0);
+    const q = m.q.toLowerCase();
+    const rows = all.filter(({ n }) => (!m.level || n.level === m.level) && (!q || `${n.code} ${n.name} ${n.responsible || ''}`.toLowerCase().includes(q)));
+    const n = selected;
+    const sibs = n ? (n.parent ? n.parent.children : d.macros) : [];
+    const idx = n ? sibs.indexOf(n) : -1;
+    const tool = (label, ico, fn, disabled, title) => h('button', { class: 'cg-tool', type: 'button', disabled: !n || disabled, title: title || label, onclick: fn }, icon(ico), h('span', {}, label));
+    const ribbon = h('div', { class: 'cg-ribbon', role: 'toolbar', 'aria-label': 'Strumenti di modifica' },
+      h('div', { class: 'cg-ribbon-group' },
+        tool('Predecessore', 'up', () => insertAt(n, 'prima'), false, 'Aggiungi una voce dello stesso livello prima di questa'),
+        tool('Successore', 'down', () => insertAt(n, 'dopo'), false, 'Aggiungi una voce dello stesso livello dopo questa'),
+        tool(n && n.level < 3 ? `Aggiungi ${CHILD[n.level]}` : 'Sotto-voce', 'plus', () => insertAt(n, 'figlio'), n && n.level >= 3, 'Aggiungi una voce del livello sotto, in fondo')),
+      h('div', { class: 'cg-ribbon-group' },
+        tool('Sposta su', 'up', () => shiftNode(n, -1), idx <= 0),
+        tool('Sposta giù', 'down', () => shiftNode(n, 1), idx < 0 || idx >= sibs.length - 1),
+        tool('Elimina', 'trash', () => removeNode(n), false)),
+      h('div', { class: 'cg-ribbon-group' }, h('button', { class: 'cg-tool', type: 'button', onclick: () => cascade('Aggiunto macro processo', async () => { const name = await askName('Nuovo macro processo', 'In fondo alla mappa, con il primo ID Macro libero.'); return post(`/api/celle/maps/${mapId}/nodes`, { level: 1, parentId: null, name }); }) }, icon('plus'), h('span', {}, 'Macro'))));
+    const levelSeg = h('div', { class: 'cg-seg', role: 'group', 'aria-label': 'Livello' }, [[0, 'Tutti'], [1, 'Macro'], [2, 'Processi'], [3, 'Micro']].map(([lv, label]) =>
+      h('button', { type: 'button', class: m.level === lv ? 'on' : '', onclick: () => { m.level = lv; render(); } }, label)));
+    const search = h('input', { type: 'search', class: 'cg-search', placeholder: 'Cerca codice, nome, responsabile…', value: m.q, oninput: (e) => { m.q = e.target.value; clearTimeout(state.qt); state.qt = setTimeout(() => { render(); const s2 = el.querySelector('.cg-search'); if (s2) { s2.focus(); s2.setSelectionRange(s2.value.length, s2.value.length); } }, 250); } });
+    const table = h('div', { class: 'cg-sheet', tabindex: '0', onkeydown: (e) => {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      e.preventDefault();
+      const i = rows.findIndex((r) => r.n.id === state.selected);
+      const next = rows[Math.max(0, Math.min(rows.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))];
+      if (next) { state.selected = next.n.id; remember(); render(); el.querySelector('.cg-sheet').focus(); }
+    } },
+    h('table', { class: 'cg-grid' },
+      h('thead', {}, h('tr', {}, h('th', { class: 'cg-rn' }, ''), ['Codice', 'Livello', 'Nome', 'Responsabile', 'Stato', 'Scadenza'].map((t) => h('th', {}, t)))),
+      h('tbody', {}, rows.slice(0, 1500).map(({ n: x, depth }, i) => {
+        const was = m.changed.get(x.id);
+        return h('tr', { class: `lv${x.level}` + (state.selected === x.id ? ' sel' : '') + (was ? ' changed' : ''), onclick: () => { state.selected = x.id; remember(); render(); } },
+          h('td', { class: 'cg-rn' }, String(i + 1)),
+          h('td', { class: 'mono nowrap' }, h('span', { class: 'cg-code' }, x.code), was ? h('span', { class: 'cg-was', title: 'Codice prima della modifica' }, was) : null),
+          h('td', { class: 'small nowrap' }, LEVEL[x.level]),
+          h('td', { style: `padding-left:${8 + (m.level ? 0 : depth * 16)}px` }, x.name || h('i', { class: 'muted' }, '(senza nome)'), x.checks.length ? h('span', { class: 'tr-dot danger', title: x.checks.join(' · '), style: 'margin-left:6px' }) : null),
+          h('td', { class: 'small' }, x.responsible || ''),
+          h('td', {}, x.status ? h('span', { class: `chip tr-mini ${STATUS_CHIP[x.status] || ''}` }, x.status) : ''),
+          h('td', { class: 'small nowrap' + (x.overdue ? ' tr-late' : '') }, shortDate(x.dueDate)));
+      }))));
+    return h('div', { class: 'cg-editor' },
+      h('section', { class: 'card glass cg-left' },
+        h('div', { class: 'cg-left-head' }, h('div', {}, h('div', { class: 'cg-label' }, 'Tabella di riferimento'), h('strong', {}, `${rows.length} voci`)), levelSeg),
+        ribbon, search,
+        m.last ? h('div', { class: 'cg-cascade' }, icon('refresh'),
+          h('div', { class: 'grow' }, h('b', {}, m.last),
+            m.changed.size ? h('div', { class: 'small' }, [...m.changed.entries()].slice(0, 6).map(([cid, old]) => `${old} → ${byId.get(cid) ? byId.get(cid).code : '?'}`).join(' · ') + (m.changed.size > 6 ? ' · …' : '')) : null),
+          h('button', { type: 'button', class: 'icon-btn sm', 'aria-label': 'Nascondi', onclick: () => { m.last = ''; m.changed = new Map(); render(); } }, icon('close'))) : null,
+        table),
+      h('section', { class: 'card glass cg-right' }, h('div', { class: 'cg-label' }, 'Caratteristiche'), detail(n)));
+  }
+
   function render() {
     const selected = state.selected ? byId.get(state.selected) : null;
     let body;
     if (state.tab === 'tabella') body = h('section', { class: 'card glass' }, table());
+    else if (state.tab === 'modifica') body = editor(selected);
     else if (state.tab === 'controlli') body = h('section', { class: 'card glass' }, issuesView());
     else if (state.tab === 'richieste') body = h('section', { class: 'card glass' }, requestsView());
     else {
@@ -364,11 +466,11 @@ async function viewMap(el, mapId) {
           d.macros.length ? h('ul', { class: 'tr-list' }, d.macros.map(treeRow)) : h('div', { class: 'empty' }, 'Nessuna voce.')),
         h('section', { class: 'card glass' }, detail(selected)));
     }
-    el.replaceChildren(
+    el.replaceChildren(h('div', { class: 'cg' },
       h('div', { style: 'margin-bottom:10px' }, h('button', { class: 'btn sm', type: 'button', onclick: () => { setHash(''); viewCelle(el).catch(toastError); } }, icon('back'), 'Tutte le mappe')),
       pageHead(d.map.name, `${d.map.project}${d.map.description ? ` · ${d.map.description}` : ''}`, actions()),
       h('datalist', { id: 'tr-ambiti' }, d.ambiti.map((a) => h('option', { value: a }))),
-      tabs(), body);
+      tabs(), body));
     const active = el.querySelector('.tr-row.active');
     if (active && state.scroll !== state.selected) { state.scroll = state.selected; active.scrollIntoView({ block: 'nearest' }); }
   }

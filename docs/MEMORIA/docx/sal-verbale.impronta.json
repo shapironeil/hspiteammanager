@@ -1,0 +1,65 @@
+{
+  "template": "sal-verbale",
+  "formato": "docx",
+  "app": "verbale-studio",
+  "tipoDocumento": "verbale di stato avanzamento lavori (SAL) di un progetto PA",
+  "fornitore": "RTI non nominato nel file, per un'Amministrazione regionale; progetto R-CAP.AC (PN Capacità per la Coesione 2021-2027)",
+  "fileVisti": [
+    { "nome": "2026.02.15_Verbale_SAL_Template_v1.00.docx", "dimensioneKB": 453, "capitoli": 10, "tabelle": 12, "commenti": 1, "analizzato": "2026-10-01" }
+  ],
+  "id": "sal-verbale",
+  "tipo": "docx",
+  "scheda": "docs/MEMORIA/docx/sal-verbale.md",
+  "fascicolo": "sal",
+  "nomeFile": "^\\d{4}\\.\\d{2}\\.\\d{2}_Verbale_SAL_Template_v\\d+\\.\\d+\\.docx$",
+  "nomeFileSchema": "AAAA.MM.GG_Verbale_SAL_Template_vn.nn.docx",
+  "impronta": {
+    "pagina": "A4",
+    "sezioni": ["portrait", "landscape", "portrait"],
+    "primaPaginaDiversa": true,
+    "carattere": "Titillium Web",
+    "colori": ["002060", "305496", "1F497D", "17365D", "DEEAF6", "DAE9F7", "A9D08E", "70AD47"],
+    "immagini": [{ "px": [2146, 136], "cosa": "striscia loghi" }, { "px": [225, 225], "cosa": "stemma regionale" }, { "px": [1251, 1405], "cosa": "sfondo blu prima pagina" }],
+    "capitoli": ["Informazioni di verbalizzazione", "Rappresentanti Amministrazione", "Rappresentanti RTI", "Riferimenti", "Premessa", "Avanzamento Piano di Lavoro", "Avanzamento delle attività", "Consuntivazione", "Fatturazione attiva", "Accettazione"],
+    "tabelle": 12,
+    "campi": ["TOC", "PAGEREF", "PAGE"],
+    "segnaposto": "\\[[Ii]nserire [^\\]]+\\]"
+  },
+  "codici": { "servizio": "S_n", "attivita": "S_n.m", "attivitaBreve": "[A-Z]_n", "lotto": "L<n>", "mese": "Mese_n" },
+  "calcoli": { "ritenuta": 0.005, "iva": 0.22 },
+  "funzioni": ["docx-testo (solo transcript)"],
+  "mancanti": ["lettura-strutturata", "compila-modello", "tabelle-ripetute", "calcoli-economici", "toc-aggiornato", "controlli", "esporta-docx", "da-checkpoint-a-verbale"],
+  "pagina": { "formato": "A4", "sezioni": 3, "sezione1": "verticale, margini 2,5 / 2 / 2 / 2 cm", "sezione2": "orizzontale, solo la tabella economica del cap. 8 (14923 twips)", "sezione3": "verticale", "primaPaginaDiversa": "titlePg: intestazione con immagine blu 1251x1405 + striscia loghi" },
+  "intestazione": { "primaPagina": "immagine blu 'tessuto' 1251x1405 + striscia loghi 2146x136", "normale": "striscia loghi 2146x136" },
+  "pieDiPagina": { "contenuto": "stemma regionale 225x225 + campo PAGE" },
+  "stili": { "carattere": "Titillium Web (il tema dichiara Aptos)", "capitoli1a7e9": "Normal + numerazione (numId 1)", "capitoli8e10": "Heading 1", "tabellaDiRaccordo": "Heading 3", "altri": ["Body Text", "TOC 1"], "tabella": "Grid Table 2 Accent 1", "titoliColore": "0F4761", "intestazioniTabelle": ["002060", "1F497D", "17365D"], "righeGruppo": "305496", "celleChiare": ["DEEAF6", "DAE9F7"], "economics": ["A9D08E", "70AD47"], "segnapostoEvidenziazione": "yellow" },
+  "tabelleStruttura": { "cap1": "3x4 con celle unite", "cap2": "3x3", "cap3": "5x2", "cap4": "5x2", "cap6": "11x8 (ultima colonna 160 twips: residuo)", "cap7": "5x3 Grid Table 2 Accent 1", "cap8": ["4x5", "10x11 (3 intestazioni unite, 24 celle unite)"], "cap9": ["4x6", "6x2", "1x2"], "cap10": "4x2" },
+  "segnapostoDettaglio": { "pattern": "\\[[Ii]nserire [^\\]]+\\]", "evidenziazione": "yellow", "date": ["gg.mm.aaaa", "__/__/____"], "nonApplicabile": "-" },
+  "altro": { "commenti": 1, "revisioni": 0, "docSecurity": 4, "customXmlSharePoint": true, "bibliografiaVuota": true, "refusi": ["2'026 nella Premessa"] },
+  "riconoscimento": {
+    "nota": "pesi e punteggio minimo non ancora decisi: l'analisi originale dava solo l'elenco dei segnali",
+    "segnali": [
+      "nome file AAAA.MM.GG_Verbale_SAL_Template_vn.nn.docx",
+      "A4 con tre sezioni: verticale, orizzontale (solo cap. 8), verticale",
+      "prima pagina diversa con immagine 1251x1405; striscia loghi 2146x136; stemma 225x225 nel piè di pagina",
+      "carattere Titillium Web nel corpo",
+      "colori 002060 / 305496 / DEEAF6 / DAE9F7 / A9D08E / 70AD47",
+      "i 10 capitoli nell'ordine, da 'Informazioni di verbalizzazione' ad 'Accettazione'",
+      "12 tabelle, campi TOC/PAGEREF/PAGE, segnaposto [Inserire …] in giallo"
+    ]
+  },
+  "sinergie": { "pptx": "sal-presentazione: stesso fascicolo SAL, stesso brand, stesso oggetto dati 'SAL'", "docx": "piano-operativo-consip-id2610: servizi e attività con gli stessi codici; cap. 4 cita AQ, Piano dei Fabbisogni, Piano Operativo, CE (appartenenza all'AQ ID 2610 da confermare: CONFLITTI.md voce 1)" },
+  "verbaleStudio": { "oggi": "solo testo piatto (docxToText); il template di riepilogo 'Stato avanzamento lavori (SAL)' copre i contenuti del cap. 7", "funzioniProposte": ["lettura strutturata", "compila modello", "tabelle ripetute", "calcoli economici", "indice aggiornato", "controlli", "esporta .docx", "da checkpoint a verbale"] },
+  "provenienza": {
+    "agente": "awesome-cray",
+    "sessione": "session_01WbrSz86BeYisrNNoJc7Eh5",
+    "ramo": "claude/awesome-cray-8lgn1k",
+    "commit": ["51e11c0"],
+    "dataAnalisi": "2026-10-01",
+    "fonte": "docs/memoria/modelli.json, voce id 'sal-verbale' (tutti i campi originali conservati: id, tipo, app, scheda, fascicolo, nomeFile, impronta, codici, calcoli, funzioni, mancanti) e docs/memoria/modelli/sal-verbale.md",
+    "schedaOriginale": "docs/memoria/modelli/sal-verbale.md",
+    "notaDelFileOriginale": "Impronte dei modelli di file conosciuti. Nessun dato aziendale: solo struttura, stili e segni di riconoscimento.",
+    "archivio": "docs/MEMORIA/_archivio/2026-10-01/awesome-cray/memoria/",
+    "unificazione": "2026-10-01, ramo claude/integrazione-2026-10-01"
+  }
+}

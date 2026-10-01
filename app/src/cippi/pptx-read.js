@@ -7,6 +7,8 @@
 const posix = require('node:path').posix;
 const { readZip } = require('../celle/zip');
 const X = require('./xml');
+const extra = require('./pptx-extra');
+const { gantt } = require('./gantt-svg');
 
 const EMU_CM = 360000;
 const relsPath = (part) => posix.join(posix.dirname(part), '_rels', posix.basename(part) + '.rels');
@@ -69,7 +71,7 @@ function styleColor(sp, ref, theme) {
 }
 
 // ---- Testo ------------------------------------------------------------------------------------
-// fonts: insieme (facoltativo) in cui raccogliere i caratteri usati dai testi (per i controlli e l'impronta)
+// fonts: insieme (facoltativo) in cui raccogliere i caratteri usati dai testi di questa slide
 function paragraphs(txBody, theme, fonts) {
   if (!txBody) return [];
   const out = [];
@@ -161,9 +163,18 @@ function shapesOf(tree, ctx, map = (r) => r, groupId = null, out = []) {
       if (s.line && !s.line.color && X.child(n, 'p:style')) s.line.color = styleColor(n, 'a:lnRef', ctx.theme);
     }
     if (kind === 'sp') {
-      s.paragraphs = paragraphs(X.child(n, 'p:txBody'), ctx.theme, ctx.fonts);
+      const txBody = X.child(n, 'p:txBody');
+      s.paragraphs = paragraphs(txBody, ctx.theme, ctx.fonts);
       s.textbox = (X.child(nv, 'p:cNvSpPr') || { attrs: {} }).attrs.txBox === '1';
+      // testo ridotto da PowerPoint per entrare nella forma (0.9 = 90%)
+      const fsc = extra.fontScaleOf(txBody);
+      if (fsc !== null && fsc < 1) s.fontScale = fsc;
+      // geometria personalizzata: percorso SVG in un riquadro 0..100, per l'anteprima
+      if (s.geom === 'custom') { const d = extra.custGeomPath(spPr); if (d) s.path = d; }
     }
+    // regolazioni della geometria (per i connettori a gomito: dove piegano)
+    const av = geom && X.child(geom, 'a:avLst');
+    if (av) for (const gd of X.children(av, 'a:gd')) { const m = /val\s+(-?\d+)/.exec(gd.attrs.fmla || ''); if (m) { s.adj = s.adj || {}; s.adj[gd.attrs.name] = Number(m[1]); } }
     if (kind === 'cxn') {
       const cn = X.child(nv, 'p:cNvCxnSpPr');
       const st = X.child(cn, 'a:stCxn'); const en = X.child(cn, 'a:endCxn');
@@ -183,6 +194,8 @@ function shapesOf(tree, ctx, map = (r) => r, groupId = null, out = []) {
       if (tbl) {
         s.kind = 'table';
         s.rows = X.children(tbl, 'a:tr').map((tr) => X.children(tr, 'a:tc').map((tc) => paragraphs(X.child(tc, 'a:txBody'), ctx.theme, ctx.fonts).map((p) => p.text).join('\n').trim()));
+        // celle unite, riempimenti, grassetti, larghezze delle colonne, stile
+        Object.assign(s, extra.tableDetail(tbl, (node) => color(node, ctx.theme), (tb) => paragraphs(tb, ctx.theme)));
       } else {
         const gd = X.find(n, 'a:graphicData');
         const uri = (gd && gd.attrs.uri) || '';
@@ -216,7 +229,7 @@ function phIndex(shapes) {
 }
 
 // Tema (colori e caratteri) di un master: ogni slide usa quello del SUO master, non il primo della presentazione
-// (una presentazione puo' avere piu' master, con temi diversi: i colori "accent1" cambiano da uno all'altro)
+// (una presentazione puo' avere piu' master con temi diversi: i colori "accent1" cambiano da uno all'altro)
 const themeCache = new WeakMap();
 function themeOf(files, part) {
   const t = part && xmlOf(files, part);
@@ -259,6 +272,29 @@ function readLayout(files, part) {
   return out;
 }
 
+// Percorso di un connettore in coordinate della slide (EMU): segmenti dritti o a gomito, con ribaltamenti e rotazione.
+// I connettori a gomito di PowerPoint sono spesso ruotati di 90/270 gradi: senza la rotazione le frecce andrebbero
+// da un'altra parte e i collegamenti tra le forme sarebbero sbagliati.
+function connectorPath(s) {
+  const { w, h } = s;
+  const a = (k, d) => (s.adj && s.adj[k] !== undefined ? s.adj[k] / 100000 : d);
+  let pts;
+  const g = s.geom || 'line';
+  if (/bentConnector2|curvedConnector2/.test(g)) pts = [[0, 0], [w, 0], [w, h]];
+  else if (/bentConnector3|curvedConnector3/.test(g)) { const xm = w * a('adj1', 0.5); pts = [[0, 0], [xm, 0], [xm, h], [w, h]]; }
+  else if (/bentConnector4|curvedConnector4/.test(g)) { const x1 = w * a('adj1', 0.5); const y2 = h * a('adj2', 0.5); pts = [[0, 0], [x1, 0], [x1, y2], [w, y2], [w, h]]; }
+  else if (/bentConnector5|curvedConnector5/.test(g)) { const x1 = w * a('adj1', 0.5); const y2 = h * a('adj2', 0.5); const x3 = w * a('adj3', 0.5); pts = [[0, 0], [x1, 0], [x1, y2], [x3, y2], [x3, h], [w, h]]; }
+  else pts = [[0, 0], [w, h]];
+  if (s.flipH) pts = pts.map(([x, y]) => [w - x, y]);
+  if (s.flipV) pts = pts.map(([x, y]) => [x, h - y]);
+  const rot = (s.rot || 0) * Math.PI / 180;
+  if (rot) {
+    const cx = w / 2; const cy = h / 2; const c = Math.cos(rot); const sn = Math.sin(rot);
+    pts = pts.map(([x, y]) => [cx + (x - cx) * c - (y - cy) * sn, cy + (x - cx) * sn + (y - cy) * c]);
+  }
+  return pts.map(([x, y]) => [s.x + x, s.y + y]);
+}
+
 // ---- Presentazione ----------------------------------------------------------------------------
 function readPptx(buf) {
   const files = readZip(buf);
@@ -268,19 +304,43 @@ function readPptx(buf) {
   const sz = X.find(pres, 'p:sldSz');
   const W = Number(sz ? sz.attrs.cx : 12192000);
   const H = Number(sz ? sz.attrs.cy : 6858000);
+  // i master della presentazione, ognuno con il suo tema; "theme" e "fonts" sono quelli del master piu' usato
   const masterParts = X.children(X.child(pres, 'p:sldMasterIdLst'), 'p:sldMasterId').map((m) => presRels[m.attrs['r:id']]).filter(Boolean).map((r) => r.target);
   const masters = masterParts.map((p) => masterOf(files, p));
   const fallback = masters[0] || { theme: {}, fonts: { major: null, minor: null }, texts: [] };
+  const useCount = new Map();
+  let theme = fallback.theme;
+  let fonts = fallback.fonts;
   const pct = (s) => {
     if (s.x === undefined) return s;
     const o = { ...s, x: +(s.x / W * 100).toFixed(3), y: +(s.y / H * 100).toFixed(3), w: +(s.w / W * 100).toFixed(3), h: +(s.h / H * 100).toFixed(3) };
+    if (s.kind === 'cxn' || (s.kind === 'sp' && /^(line|straightConnector1|bentConnector\d|curvedConnector\d)$/.test(s.geom || ''))) {
+      o.pts = connectorPath(s).map(([px, py]) => [+(px / W * 100).toFixed(3), +(py / H * 100).toFixed(3)]);
+    }
     return o;
   };
   const ids = X.children(X.child(pres, 'p:sldIdLst'), 'p:sldId');
   const slides = [];
-  const byId = {}; // id della slide in presentation.xml -> numero
-  const useCount = new Map();
-  ids.forEach((sid) => {
+  const idToN = {}; // id della slide in presentation.xml -> numero nella presentazione
+  // forme di sfondo di layout e master (loghi, barre, numero di slide): quelle non segnaposto, una volta per layout
+  const backgrounds = {};
+  const backgroundOf = (layoutPart) => {
+    if (!layoutPart) return [];
+    if (backgrounds[layoutPart]) return backgrounds[layoutPart];
+    const ldoc = xmlOf(files, layoutPart);
+    const lrels = readRels(files, layoutPart);
+    const out = [];
+    const masterRel = Object.values(lrels).find((r) => r.type === 'slideMaster');
+    const ltheme = masterRel ? masterOf(files, masterRel.target).theme : theme;
+    if (masterRel && !(ldoc && ldoc.attrs.showMasterSp === '0')) {
+      const mdoc = xmlOf(files, masterRel.target);
+      if (mdoc) out.push(...shapesOf(treeOf(mdoc), { theme: ltheme, rels: readRels(files, masterRel.target), files }).filter((s) => !s.ph));
+    }
+    if (ldoc) out.push(...shapesOf(treeOf(ldoc), { theme: ltheme, rels: lrels, files }).filter((s) => !s.ph));
+    backgrounds[layoutPart] = out.filter((s) => s.x !== undefined && !s.hidden && s.kind !== 'group').map(pct);
+    return backgrounds[layoutPart];
+  };
+  ids.forEach((sid, i) => {
     const rel = presRels[sid.attrs['r:id']];
     if (!rel) return;
     const part = rel.target;
@@ -288,47 +348,51 @@ function readPptx(buf) {
     if (!doc) return;
     const rels = readRels(files, part);
     const layoutRel = Object.values(rels).find((r) => r.type === 'slideLayout');
-    const layout = layoutRel ? readLayout(files, layoutRel.target) : { name: '', find: () => null, master: fallback, texts: [] };
-    const theme = (layout.master && layout.master.theme) || fallback.theme;
-    const fonts = new Set();
-    const shapes = shapesOf(treeOf(doc), { theme, rels, files, inherit: layout.find, fonts }).map(pct);
+    const layout = layoutRel ? readLayout(files, layoutRel.target) : { name: '', find: () => null, master: null, texts: [] };
+    const stheme = (layout.master && layout.master.theme) || theme;
+    const sfonts = new Set();
+    const shapes = shapesOf(treeOf(doc), { theme: stheme, rels, files, inherit: layout.find, fonts: sfonts }).map(pct);
     const notesRel = Object.values(rels).find((r) => r.type === 'notesSlide');
     let notes = '';
     if (notesRel) {
       const nd = xmlOf(files, notesRel.target);
-      const body = nd && shapesOf(treeOf(nd), { theme, rels: {} }).filter((s) => s.ph && s.ph.type === 'body');
+      const body = nd && shapesOf(treeOf(nd), { theme: stheme, rels: {} }).filter((s) => s.ph && s.ph.type === 'body');
       notes = (body || []).flatMap((s) => (s.paragraphs || []).map((p) => p.text)).join('\n').trim();
       // PowerPoint lascia nelle note il solo numero della slide: non e' una nota
       if (/^\d{1,4}$/.test(notes)) notes = '';
     }
+    if (layout.master && layout.master.part) useCount.set(layout.master.part, (useCount.get(layout.master.part) || 0) + 1);
     const show = doc.attrs.show !== '0';
-    const masterPart = layout.master && layout.master.part;
-    if (masterPart) useCount.set(masterPart, (useCount.get(masterPart) || 0) + 1);
-    byId[sid.attrs.id] = slides.length + 1;
-    slides.push({ n: slides.length + 1, part, layout: layout.name, layoutPart: layoutRel ? layoutRel.target : null, master: masterPart, hidden: !show, shapes, notes, fonts: [...fonts].sort() });
+    // un piano di progetto (Gantt) incollato come immagine SVG: i testi sono ancora leggibili
+    for (const s of shapes) {
+      if (s.kind === 'pic' && /\.svg$/i.test(s.image || '') && files.get(s.image)) {
+        try { const g = gantt(files.get(s.image)().toString('utf8')); if (g) s.gantt = g; } catch { /* SVG non leggibile: resta un'immagine */ }
+      }
+    }
+    const background = doc.attrs.showMasterSp === '0' ? [] : backgroundOf(layoutRel ? layoutRel.target : null);
+    slides.push({ n: slides.length + 1, part, layout: layout.name, layoutPart: layoutRel ? layoutRel.target : null, master: layout.master ? layout.master.part : null, hidden: !show, shapes, notes, background, fonts: [...sfonts].sort() });
+    idToN[sid.attrs.id] = slides.length;
   });
-  // sezioni native di PowerPoint (p14:sectionLst): nome -> slide
-  const sections = [];
-  for (const sec of X.findAll(pres, 'p14:section')) {
-    const list = X.findAll(sec, 'p14:sldId').map((x) => byId[x.attrs.id]).filter(Boolean);
-    sections.push({ name: sec.attrs.name || '', slides: list });
-  }
-  const core = xmlOf(files, 'docProps/core.xml');
-  const app = xmlOf(files, 'docProps/app.xml');
-  const T = (doc, name) => (doc ? X.text(X.find(doc, name)).trim() : '');
-  const meta = {
-    title: T(core, 'dc:title'), subject: T(core, 'dc:subject'), keywords: T(core, 'cp:keywords'), author: T(core, 'dc:creator'),
-    modifiedBy: T(core, 'cp:lastModifiedBy'), modified: T(core, 'dcterms:modified'), created: T(core, 'dcterms:created'),
-    company: T(app, 'Company'), application: T(app, 'Application'), format: T(app, 'PresentationFormat'),
-  };
-  // tema della presentazione: quello del master piu' usato
+  // tema della presentazione: quello del master piu' usato dalle slide
   const mainMaster = masters.slice().sort((a, b) => (useCount.get(b.part) || 0) - (useCount.get(a.part) || 0))[0] || fallback;
+  theme = mainMaster.theme; fonts = mainMaster.fonts;
+  const core = xmlOf(files, 'docProps/core.xml');
+  const T = (name) => (core ? X.text(X.find(core, name)).trim() : '');
+  const meta = core ? {
+    title: T('dc:title'), subject: T('dc:subject'), keywords: T('cp:keywords'), author: T('dc:creator'),
+    modifiedBy: T('cp:lastModifiedBy'), modified: T('dcterms:modified'), created: T('dcterms:created'),
+  } : {};
   const layouts = [...new Set(masterParts.flatMap((m) => Object.values(readRels(files, m)).filter((r) => r.type === 'slideLayout').map((r) => readLayout(files, r.target).name)))];
+  // testi fissi dei layout usati (pie' di pagina, diciture): per l'impronta del modello
   const layoutTexts = {};
   for (const s of slides) if (s.layoutPart && !layoutTexts[s.layout]) layoutTexts[s.layout] = readLayout(files, s.layoutPart).texts;
+  // sezioni native di PowerPoint, metadati estesi (azienda, co-autori, revisioni) e caratteri usati davvero
+  const sections = extra.nativeSections(pres, idToN);
+  Object.assign(meta, extra.metaExtra(files, idToN));
+  const fontsUsed = extra.fontsUsed(files);
   return {
     width: W, height: H, ratio: +(W / H).toFixed(4), widthCm: +(W / EMU_CM).toFixed(2), heightCm: +(H / EMU_CM).toFixed(2),
-    theme: mainMaster.theme, themeName: mainMaster.themeName || '', fonts: mainMaster.fonts,
+    theme, themeName: mainMaster.themeName || '', fonts, fontsUsed,
     masters: masters.map((m) => ({ name: m.name, theme: m.theme, themeName: m.themeName, fonts: m.fonts, slides: useCount.get(m.part) || 0 })),
     meta, layouts, layoutTexts, sections, slides,
   };
@@ -341,4 +405,11 @@ function mediaOf(buf, name) {
   return f ? f() : null;
 }
 
-module.exports = { readPptx, mediaOf, EMU_CM };
+// Il testo XML delle parti il cui nome corrisponde (per esempio layout e master)
+function partsXml(buf, re) {
+  const out = {};
+  for (const [name, f] of readZip(buf)) if (re.test(name)) out[name] = f().toString('utf8');
+  return out;
+}
+
+module.exports = { readPptx, mediaOf, partsXml, EMU_CM };

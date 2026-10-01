@@ -38,13 +38,46 @@ function geometry(g) {
   }
 }
 
+// Colore del testo leggibile sopra un riempimento
+const contrast = (hex) => { const n = parseInt(String(hex).replace('#', ''), 16); const r = (n >> 16) & 255; const g = (n >> 8) & 255; const b = n & 255; return (r * 299 + g * 587 + b * 114) / 1000 > 150 ? '#1f1f1f' : '#ffffff'; };
+
+// Tabella con celle unite, riempimenti, grassetti e stile (prima riga, righe a bande); edits = { "riga,colonna": righe }
+function tableEl(s, slide, edits) {
+  const t = el('table', { class: 'cp-table' });
+  const total = (s.cols || []).reduce((a, b) => a + b, 0);
+  if (total) t.append(el('colgroup', {}, s.cols.map((w) => el('col', { style: `width:${(w / total * 100).toFixed(2)}%` }))));
+  const accent = slide.theme && slide.theme.accent1 ? `#${slide.theme.accent1}` : '#44546a';
+  const first = !!(s.tableStyle && s.tableStyle.firstRow);
+  const band = !!(s.tableStyle && s.tableStyle.bandRow);
+  const rows = s.cells || (s.rows || []).map((r) => r.map((text) => ({ text })));
+  rows.forEach((r, ri) => {
+    const tr = el('tr', {});
+    r.forEach((c, ci) => {
+      if (c.hMerge || c.vMerge) return;
+      const key = `${ri},${ci}`;
+      const text = edits && edits[key] ? edits[key].join('\n') : (c.text || '');
+      const td = el('td', { colspan: c.gridSpan > 1 ? c.gridSpan : null, rowspan: c.rowSpan > 1 ? c.rowSpan : null, 'data-cell': key }, text);
+      if (c.fill) { td.style.background = `#${c.fill}`; td.style.color = contrast(c.fill); }
+      else if (first && ri === 0) { td.style.background = accent; td.style.color = contrast(accent); td.style.fontWeight = '700'; td.classList.add('cp-th'); }
+      else if (band && ri % 2 === 1) td.style.background = `${accent}1f`;
+      if (c.bold) td.style.fontWeight = '700';
+      if (c.align === 'ctr') td.style.textAlign = 'center';
+      if (c.align === 'r') td.style.textAlign = 'right';
+      tr.append(td);
+    });
+    t.append(tr);
+  });
+  return t;
+}
+
 function textBox(s, overrides) {
   const paras = overrides || s.paragraphs || [];
   if (!paras.some((p) => String(p.text || '').trim())) return null;
   const boxed = s.fill || (s.line && s.line.color) || (s.geom && s.geom !== 'rect');
   const box = el('div', { class: 'cp-text' + (boxed && !s.textbox ? ' center' : '') });
   for (const p of paras) {
-    const size = p.size || (s.ph && /title/i.test(s.ph.type) ? 24 : 12);
+    // testo ridotto da PowerPoint per entrare nella forma (fontScale)
+    const size = (p.size || (s.ph && /title/i.test(s.ph.type) ? 24 : 12)) * (s.fontScale || 1);
     const d = el('div', { class: 'cp-p' + (p.lvl || p.bullet ? ' bullet' : '') });
     d.style.fontSize = `${(size / 540) * 100}cqh`;
     if (p.lvl) d.style.paddingLeft = `${p.lvl * 1.4}em`;
@@ -70,7 +103,9 @@ export function withTexts(shape, lines) {
   });
 }
 
-// Disegna una slide. opts: { media(name) -> url, texts: { id: righe }, onShape(shape, node) }
+// Disegna una slide. opts: { media(name) -> url, texts: { id: righe }, geom: { id: forma }, fill: { id: colore }, onShape(shape, node) }
+// Le forme di sfondo del layout e del master (loghi, barre, numero di slide) stanno sotto, senza interazione.
+//   geom/fill = forma e colore cambiati per id; cells = celle delle tabelle modificate.
 export function renderSlide(slide, opts = {}) {
   const root = el('div', { class: 'cp-slide' });
   root.style.aspectRatio = String(slide.ratio || 16 / 9);
@@ -91,16 +126,15 @@ export function renderSlide(slide, opts = {}) {
     }
     return markers.get(color);
   };
-  for (const s of slide.shapes) {
+  const all = [...(slide.background || []).map((s) => ({ ...s, bg: true })), ...slide.shapes];
+  for (const s of all) {
     if (s.hidden || s.x === undefined || s.kind === 'group') continue;
     if (s.kind === 'cxn' || (s.kind === 'sp' && s.geom === 'line')) {
-      const x0 = (s.flipH ? s.x + s.w : s.x) * R; const y0 = s.flipV ? s.y + s.h : s.y;
-      const x1 = (s.flipH ? s.x : s.x + s.w) * R; const y1 = s.flipV ? s.y : s.y + s.h;
+      // percorso calcolato alla lettura (gomiti, ribaltamenti, rotazione); altrimenti diagonale del riquadro
+      const pts = s.pts || [[s.flipH ? s.x + s.w : s.x, s.flipV ? s.y + s.h : s.y], [s.flipH ? s.x : s.x + s.w, s.flipV ? s.y : s.y + s.h]];
       const color = hex(s.line && s.line.color) || '#555';
-      const bent = /bentConnector/.test(s.geom || '');
-      const mx = (x0 + x1) / 2;
       const path = sv('path', {
-        d: bent ? `M${x0} ${y0}H${mx}V${y1}H${x1}` : `M${x0} ${y0}L${x1} ${y1}`,
+        d: pts.map(([x, y], i) => `${i ? 'L' : 'M'}${(x * R).toFixed(2)} ${y.toFixed(2)}`).join(''),
         fill: 'none', stroke: color, 'stroke-width': Math.max(0.6, ((s.line && s.line.w) || 9525) / 12700),
         'vector-effect': 'non-scaling-stroke', 'stroke-dasharray': s.line && DASH[s.line.dash],
       });
@@ -109,12 +143,14 @@ export function renderSlide(slide, opts = {}) {
       lines.append(path);
       continue;
     }
-    const node = el('div', { class: `cp-shape cp-${s.kind}`, 'data-id': s.id });
+    const node = el('div', { class: `cp-shape cp-${s.kind}${s.bg ? ' cp-bg' : ''}`, 'data-id': s.bg ? null : s.id });
     Object.assign(node.style, { left: `${s.x}%`, top: `${s.y}%`, width: `${Math.max(s.w, 0.2)}%`, height: `${Math.max(s.h, 0.2)}%` });
     if (s.rot) node.style.transform = `rotate(${s.rot}deg)`;
     if (s.kind === 'sp') {
-      const [tag, attrs] = geometry(s.geom);
-      const fill = attrs.fillNone ? 'none' : hex(s.fill) || 'none';
+      const g = (opts.geom && opts.geom[s.id]) || s.geom;
+      // geometria personalizzata letta dal file (percorso), altrimenti una delle geometrie note
+      const [tag, attrs] = s.path && (g === 'custom' || !g) ? ['path', { d: s.path }] : geometry(g);
+      const fill = attrs.fillNone ? 'none' : hex((opts.fill && opts.fill[s.id]) || s.fill) || 'none';
       const stroke = s.line && s.line.color ? hex(s.line.color) : 'none';
       if (fill !== 'none' || stroke !== 'none') {
         const g = sv('svg', { viewBox: '0 0 100 100', preserveAspectRatio: 'none', class: 'cp-geom' });
@@ -122,20 +158,18 @@ export function renderSlide(slide, opts = {}) {
         g.append(sv(tag, { ...a, fill, stroke, 'stroke-width': Math.max(0.8, ((s.line && s.line.w) || 9525) / 12700), 'vector-effect': 'non-scaling-stroke', 'stroke-dasharray': s.line && DASH[s.line.dash] }));
         node.append(g);
       }
-      const t = textBox(s, opts.texts && opts.texts[s.id] ? withTexts(s, opts.texts[s.id]) : null);
+      const t = textBox({ ...s, geom: g }, opts.texts && opts.texts[s.id] ? withTexts(s, opts.texts[s.id]) : null);
       if (t) node.append(t);
     } else if (s.kind === 'pic') {
       const url = s.image && opts.media ? opts.media(s.image) : null;
       if (url && /\.(png|jpe?g|gif|svg|bmp|webp)$/i.test(s.image)) node.append(el('img', { src: url, alt: s.descr || '', loading: 'lazy', draggable: 'false' }));
       else node.append(el('div', { class: 'cp-noimg' }, 'immagine'));
     } else if (s.kind === 'table') {
-      const t = el('table', { class: 'cp-table' });
-      for (const r of s.rows || []) t.append(el('tr', {}, r.map((c) => el('td', {}, c))));
-      node.append(t);
+      node.append(tableEl(s, slide, opts.cells && opts.cells[s.id]));
     } else if (s.kind === 'diagram' || s.kind === 'chart' || s.kind === 'object') {
       node.append(el('div', { class: 'cp-noimg' }, s.kind === 'diagram' ? (s.items || []).slice(0, 12).join(' · ') : s.kind === 'chart' ? 'grafico' : 'oggetto'));
     }
-    if (opts.onShape) opts.onShape(s, node);
+    if (opts.onShape && !s.bg) opts.onShape(s, node);
     root.append(node);
   }
   root.append(lines);

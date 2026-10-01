@@ -1,10 +1,10 @@
 {
   "id": "cippi",
   "name": "Cippi",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "released": "2026-10-01",
   "summary": "Presentazioni PowerPoint del team: le legge (anche kick-off e offerte), riconosce i modelli noti, confronta il PDF esportato, propone i punti chiave e i controlli, le rifà da un modello.",
-  "description": "Importa un .pptx e ne ricostruisce la struttura: sezioni (native di PowerPoint, dall'indice o dai divisori), tipo di ogni slide (copertina, indice, testo, scheda, schema, piano Gantt, organigramma, numeri, tabella anche se disegnata con le forme, flusso, chiusura), blocchi nell'ordine di lettura con la loro gerarchia, flussi a corsie, legenda, sigle. Controlli: refusi tra indice e titoli, segnaposto da compilare, parti mancanti, caratteri fuori tema. Riconosce i modelli noti della memoria (docs/MEMORIA) e legge i PDF: il PDF esportato si confronta pagina per slide con la presentazione. Modalità Revisione, modifica, modelli, esportazione .pptx.",
+  "description": "Importa un .pptx e ne ricostruisce la struttura: sezioni dall'indice, tipo di ogni slide, blocchi nell'ordine di lettura con la loro gerarchia, flussi a corsie (attori, step, decisioni Si/No, sistemi, rimandi), legenda dei colori, sigle. Modalità Revisione con pannello strumenti, visione e punti chiave; modifica dei testi e dell'ordine; modelli riutilizzabili; esportazione in .pptx con la stessa grafica. Legge le sezioni di PowerPoint, le schede con le pillole colorate, le tabelle (anche disegnate con le forme, con il controllo dei totali) e il masterplan a Gantt incollato come immagine; riconosce i modelli noti; trova e sostituisce in tutto il documento, piè di pagina compreso; modifica celle e righe delle tabelle.",
   "web": "/cippi/",
   "color": "#5b4fd6",
   "icon": "icon.svg",
@@ -12,14 +12,32 @@
   "engine": null,
   "novita": [
     {
+      "version": "0.3.0",
+      "date": "2026-10-01",
+      "items": [
+        "Kick-off e offerte: capitoli dall'indice quando non ci sono sezioni né divisori; organigramma e numeri in evidenza riconosciuti; piano di progetto anche se disegnato con le forme (riga dei mesi); copertina dalla prima slide con immagine e data; chiusura dai contatti.",
+        "Controlli nuovi: refuso tra una voce dell'indice e il titolo della slide (\"Quick Win KPI\" contro \"QUICK WIN KIP\"), testi segnaposto da compilare (xxxxxx, 0+), parti mancanti nei titoli (1/3 senza 3/3).",
+        "PDF: Cippi legge i PDF da solo (appunti e l'esportazione con lo stesso nome nella cartella del progetto) e li confronta pagina per slide con la presentazione: dice se il PDF è aggiornato.",
+        "Scarica impronta: il file .impronta.json della presentazione, da salvare in docs/MEMORIA per riconoscere in futuro le presentazioni dello stesso tipo.",
+        "Lettura più fedele: tema del master usato da ogni slide (non il primo della presentazione), caratteri usati slide per slide, note con il solo numero ignorate, titolo dalle forme chiamate \"Title\"."
+      ]
+    },
+    {
       "version": "0.2.0",
       "date": "2026-10-01",
       "items": [
-        "Kick-off e offerte: copertina, indice numerato, capitoli dall'indice, sezioni native di PowerPoint, piano (Gantt disegnato), organigramma, numeri in evidenza, tabelle disegnate con le forme lette come tabelle.",
-        "Controlli nuovi: refuso tra una voce dell'indice e il titolo della slide, testi segnaposto da compilare (xxxxxx, 0+), parti mancanti (1/3 senza 3/3), caratteri fuori tema.",
-        "Memoria dei modelli: all'apertura Cippi riconosce i template noti (docs/MEMORIA) e offre l'impronta da salvare per i nuovi.",
-        "PDF: lettura del testo senza librerie e confronto pagina per slide con la presentazione (il PDF esportato è aggiornato?).",
-        "Lettura più fedele: tema del master usato da ogni slide, caratteri usati, note con il solo numero ignorate, titolo dalle forme chiamate \"Title\"."
+        "Stile PowerPoint futuristico: pannelli di vetro, elementi più piccoli e professionali.",
+        "Punti chiave sotto l'anteprima della slide; a destra la descrizione della slide: prima i protagonisti, poi la struttura.",
+        "Finestra delle caratteristiche (stile impostazioni, scura): testo, forma (es. rettangolo → rombo), stato nuovo/modificato, tecnologia, collegamenti, descrizione, processo e contesto generale del documento. Forma, colore e testi finiscono nel .pptx.",
+        "Lettura più precisa: frecce a gomito e ruotate seguite correttamente, etichette Sì/No completate, scritte sulle frecce collegate al loro collegamento.",
+        "Sezioni lette da quelle di PowerPoint (niente slide divisorie necessarie); indice a due livelli abbinato ai titoli, senza falsi avvisi; copertina, schede e masterplan riconosciuti.",
+        "Pillole (testo sopra una forma colorata) come intestazioni con il loro colore; tabelle disegnate con le forme lette come tabelle; tabelle vere con celle unite, stile, grassetti e controllo \"il totale torna\".",
+        "Masterplan: il Gantt incollato come immagine SVG diventa un piano con componenti, attività e periodi.",
+        "Anteprima con loghi, barre e numero del layout; tabelle con lo stile; forme personalizzate disegnate dal loro percorso; testo ridotto come in PowerPoint.",
+        "Trova e sostituisci in tutto il documento (testi, tabelle, piè di pagina e layout); modifica delle celle e righe nuove nelle tabelle.",
+        "Sezione Documento: autori e co-autori, azienda, ultime modifiche per slide, caratteri usati; i modelli noti che somigliano alla presentazione (memoria in docs/MEMORIA).",
+        "Glossario della pubblica amministrazione preimpostato (SPID, PagoPA, AppIO, PDND, SEND, FESR...); sigle lunghe spiegate dal documento; niente sigle false da parole accentate.",
+        "Esportazione pulita: via le immagini non più usate, contatori aggiornati; il file passa i validatori."
       ]
     },
     {

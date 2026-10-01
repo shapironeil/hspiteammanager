@@ -2,7 +2,7 @@
   "template": "offerta-hspi-erp-governance",
   "formato": "pptx",
   "app": "cippi",
-  "tipoDocumento": "offerta / presentazione di offering (ERP Governance)",
+  "tipoDocumento": "offerta / presentazione di offering HSPI (ERP Governance)",
   "fornitore": "HSPI S.p.A. (gruppo TXT)",
   "fileVisti": [
     {
@@ -15,6 +15,14 @@
   "nomeFile": {
     "schema": "HSPI_<Offering>_Offering_v<maggiore>.<minore>.pptx",
     "regex": "^HSPI_[A-Za-z0-9_]+_Offering_v\\d+\\.\\d+\\.pptx$"
+  },
+  "provenienza": {
+    "agente": "ecstatic-planck",
+    "sessione": "session_01SsSNTHHcV7asTQyvonE7gX",
+    "ramo": "claude/ecstatic-planck-q9m57v",
+    "commit": "981931f (+ unione con main v0.10.0)",
+    "analizzato": "2026-10-01",
+    "strumento": "Cippi 0.3.0, Documento -> Scarica impronta"
   },
   "slide": {
     "cx": 12192000,
@@ -106,9 +114,9 @@
     "scheda",
     "testo",
     "scheda",
-    "tabella",
     "scheda",
-    "tabella",
+    "scheda",
+    "scheda",
     "scheda",
     "tabella",
     "tabella",
@@ -135,20 +143,20 @@
     "AFC",
     "AMS",
     "PMO",
+    "HANA",
     "ECC",
     "ITIL",
     "COBIT",
-    "PROGRAM",
     "DATA"
   ],
   "metadati": {
     "company": "",
-    "applicazione": "Microsoft Office PowerPoint",
+    "applicazione": "Microsoft Office PowerPoint 16.0000",
     "titolo": "Offerta Tecnico-Economica",
     "soggetto": "SAP S4 HANA"
   },
   "cippi": {
-    "versioneAnalisi": "0.2.0 / ANALYZER 4",
+    "versioneAnalisi": "0.3.0 / ANALYZER 7",
     "tipi": {
       "1": "copertina",
       "2": "titolo",
@@ -156,9 +164,9 @@
       "4": "scheda",
       "5": "testo",
       "6": "scheda",
-      "7": "tabella",
+      "7": "scheda",
       "8": "scheda",
-      "9": "tabella",
+      "9": "scheda",
       "10": "scheda",
       "11": "tabella",
       "12": "tabella",
@@ -172,12 +180,11 @@
     "sezioni": "native",
     "controlli": [
       "info: Sezione non presente nell'indice: \"End\" (va bene per le sottosezioni).",
-      "info: Sezione non presente nell'indice: \"Back up\" (va bene per le sottosezioni).",
       "avviso: Testo segnaposto da compilare: \"xxxxxx\".",
       "avviso: Testo segnaposto da compilare: \"0+\".",
       "avviso: Testo segnaposto da compilare: \"0K\".",
-      "info: Caratteri fuori tema (Poppins): Roboto Bold (slide 10, 11, 12, 13); Work Sans ExtraLight (slide 4); Sora (slide 17)."
+      "info: Caratteri diversi da quelli del tema (Poppins, Poppins): Helvetica Neue (48), Work Sans ExtraLight (47), Calibri (27), Roboto Bold (14), Segoe UI (13), Sora (6), Poppins Medium (4), Poppins SemiBold (3), Century Gothic (3), Roboto Light (1), Roboto Black (1), Lato Light (1)."
     ],
-    "punteggio": 90
+    "punteggio": 91
   }
 }

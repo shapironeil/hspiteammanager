@@ -1,0 +1,65 @@
+{
+  "template": "kickoff-txt-biosiris",
+  "formato": "pptx",
+  "app": "cippi",
+  "tipoDocumento": "kick-off di progetto",
+  "fornitore": "TXT e-solutions S.p.A. (con HSPI, Deda Next, Webgenesys, RPC Net)",
+  "fileVisti": [
+    { "nome": "BIOSIRIS_Kick-off_v0.9.1.pptx", "slide": 13, "modificato": "2026-09-30", "analizzato": "2026-10-01" }
+  ],
+  "nomeFile": { "schema": "<PROGETTO>_Kick-off_v<maggiore>.<minore>.<patch>.pptx", "regex": "^[A-Za-z0-9]+_Kick-off_v\\d+\\.\\d+(\\.\\d+)?\\.pptx$" },
+  "slide": { "cx": 12192000, "cy": 6858000, "formato": "Widescreen 16:9" },
+  "tema": {
+    "nome": "Office Theme",
+    "colori": { "dk1": "000000", "lt1": "FFFFFF", "dk2": "335B74", "lt2": "DFE3E5", "accent1": "225546", "accent2": "A9D7B6", "accent3": "318B71", "accent4": "42BA97", "accent5": "1482AB", "accent6": "264457", "hlink": "6EAC1C", "folHlink": "B26B02" },
+    "coloriExtra": ["DCEAF7", "00B095", "767171", "292C35", "41B6E6", "247DE1", "C3E7DD"],
+    "caratteri": { "maggiore": "Poppins", "minore": "Poppins" },
+    "caratteriNelleSlide": ["Poppins", "Helvetica", "Arial", "Open Sans", "FT Habit Trial"]
+  },
+  "layout": {
+    "disponibili": ["Title Slide", "Title and Content", "1_Title and Content", "Section Header", "Two Content", "Comparison", "Title Only", "Blank", "Content with Caption", "Picture with Caption", "Title and Vertical Text", "Vertical Title and Text"],
+    "usati": { "Title Slide": [1], "Blank": [2], "1_Title and Content": [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] },
+    "pieDiPagina": "Kick-off Progetto <Nome>",
+    "pieDiPaginaRegex": "^Kick-off Progetto .+",
+    "formeDelLayoutPrincipale": ["Rectangle 12", "Rectangle 3", "Immagine 4", "Picture 8", "Picture 10", "Picture 13", "Picture 14", "Straight Connector 11", "Straight Connector 15"]
+  },
+  "sezioniNative": ["Copertina", "Indice", "Introduzione e contesto", "Obiettivi", "Ambito", "Masterplan", "Sintesi contratto esecutivo"],
+  "partiNellOrdine": [
+    { "parte": "copertina", "slide": [1], "layout": "Title Slide", "segnali": ["ph ctrTitle", "ph subTitle", "ph dt", "Rectangle 6 accent1 a destra", "6 immagini"] },
+    { "parte": "indice", "slide": [2], "layout": "Blank", "segnali": ["testo INDICE 24pt b", "elenco buAutoNum con sotto-voci lvl 1"] },
+    { "parte": "contesto", "slide": [3], "segnali": ["paragrafi in grassetto", "rightArrow x3", "Rectangle 6 accent3 in basso con AQ/importo/durata"] },
+    { "parte": "obiettivi", "slide": [4], "segnali": ["5 gruppi custGeom+TextBox", "Picture 6 esagono", "Straight Arrow Connector"] },
+    { "parte": "ambito-riquadro", "slide": [5], "segnali": ["roundRect DCEAF7 grande", "homePlate x4", "Graphic SVG"] },
+    { "parte": "ambito-componenti", "slide": [6], "segnali": ["gruppi: roundRect bianco + pillola roundRect colorata + TextBox"] },
+    { "parte": "ambito-griglia", "slide": [7], "segnali": ["4 roundRect DCEAF7", "4 Graphic SVG", "8 TextBox"] },
+    { "parte": "scheda-ambito", "slide": [8, 9, 10, 11], "ripetibile": true, "segnali": ["titolo 'Ambito - …'", "pillole Web Design/Programming/Database", "Straight Connector accent1", "Text 85 x3 intestazioni FUNZIONALITÀ/PIATTAFORMA ABILITANTE/FINALITÀ", "righe roundRect 225546 + Text 90 x3"] },
+    { "parte": "masterplan", "slide": [12], "segnali": ["Picture SVG grande con testi anni/mesi", "TextBox nota in piccolo"] },
+    { "parte": "sintesi-contratto", "slide": [13], "segnali": ["graphicFrame tabella 7 colonne", "ultima riga TOTALE gridSpan 6", "tableStyleId {5C22544A-7EE6-4342-B048-85BDC9FD1C3A}"] }
+  ],
+  "tabellaContratto": {
+    "colonne": ["ID SERVIZIO", "NOME SERVIZIO", "METRICA", "NOTE", "PREZZO UNITARIO", "QUANTITÀ", "VALORE ECONOMICO"],
+    "larghezzeEmu": [1105786, 2072589, 1092566, 1150589, 1200167, 1150445, 1434911],
+    "stile": "Medium Style 2 - Accent 1 (firstRow, bandRow)",
+    "regola": "VALORE ECONOMICO = PREZZO UNITARIO × QUANTITÀ; TOTALE = somma dei valori"
+  },
+  "glossarioAtteso": ["AQ", "SAC", "PMO", "SPID", "CIE", "PagoPA", "AppIO", "PDND", "SEND", "FESR", "PSR", "PSP", "PAC", "PRIU", "SAL", "FTE", "GG", "DSS", "OMS", "IAM", "TIC", "Consip"],
+  "metadati": { "company": "TXT e-solutions S.p.A.", "applicazione": "Microsoft Office PowerPoint 16", "coAutori": true, "registroRevisioni": true },
+  "cippi": {
+    "versioneAnalisi": "0.1.0 / ANALYZER 3",
+    "tipiRiconosciuti": { "1": "testo (atteso copertina)", "2": "indice", "3": "testo", "4": "testo", "5": "schema (atteso scheda)", "6": "testo (atteso scheda)", "7": "scheda", "8": "scheda", "9": "scheda", "10": "scheda", "11": "testo (atteso scheda)", "12": "testo (atteso masterplan)", "13": "tabella" },
+    "punteggio": 77,
+    "falsiAvvisi": 6
+  },
+  "provenienza": {
+    "agente": "admiring-hopper",
+    "sessione": "session_01GqNo1MzxngbR1RQrFUDijL",
+    "ramo": "claude/admiring-hopper-dc5bp0",
+    "commit": [
+      "e5ab667",
+      "fff10ab"
+    ],
+    "dataAnalisi": "2026-10-01",
+    "archivio": "docs/MEMORIA/_archivio/2026-10-01/admiring-hopper/MEMORIA/pptx/kickoff-txt-biosiris.impronta.json",
+    "unificazione": "2026-10-01, ramo claude/integrazione-2026-10-01: impronta invariata, aggiunto solo questo campo"
+  }
+}

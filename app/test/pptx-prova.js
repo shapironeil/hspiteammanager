@@ -73,6 +73,6 @@ function kickoffSlides() {
     [title('CATALOGO KPI (1/2)'), ...grid.flatMap((row, r) => row.map((t, c) => cell(r, c, t, r === 0)))],
   ];
 }
-const kickoff = ({ native = true } = {}) => packDeck(kickoffSlides(), { title: 'Kick-off di prova', layoutName: 'Diapositiva titolo', sections: native ? [{ name: 'Intro', slides: [1, 2] }, { name: 'Contenuti', slides: [3, 4, 5, 6, 7, 8] }] : null });
+const kickoffHspi = ({ native = true } = {}) => packDeck(kickoffSlides(), { title: 'Kick-off di prova', layoutName: 'Diapositiva titolo', sections: native ? [{ name: 'Intro', slides: [1, 2] }, { name: 'Contenuti', slides: [3, 4, 5, 6, 7, 8] }] : null });
 
-module.exports = { pptx, kickoff };
+module.exports = { pptx, kickoffHspi };

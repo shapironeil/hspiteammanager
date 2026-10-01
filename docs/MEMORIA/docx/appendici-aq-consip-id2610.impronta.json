@@ -1,0 +1,44 @@
+{
+  "template": "appendici-aq-consip-id2610",
+  "formato": "docx",
+  "app": "verbale-studio",
+  "tipoDocumento": "appendici al capitolato tecnico speciale (documenti di riferimento, non si compilano)",
+  "fornitore": "Consip S.p.A.",
+  "fileVisti": [
+    { "nome": "KIT_ODA_AQ_ID2610_-_Appendice_1_-_Profili_Professionali.docx", "pagine": 62, "parole": 17364, "tabelle": 27, "schede": 27, "analizzato": "2026-10-01" },
+    { "nome": "KIT_ODA_AQ_ID2610_-_Appendice_2_-_Indicatori_di_qualit_.docx", "pagine": 59, "parole": 12910, "tabelle": 49, "schede": 37, "analizzato": "2026-10-01" },
+    { "nome": "KIT_ODA_AQ_ID2610_-_Appendice_3_-_Cicli_e_prodotti.docx", "pagine": 34, "parole": 12758, "tabelle": 2, "schede": 38, "analizzato": "2026-10-01" }
+  ],
+  "nomeFile": { "schema": "KIT_ODA_AQ_ID<AQ>_-_Appendice_<n>_-_<Titolo>.docx", "regex": "^KIT_ODA_AQ_ID\\d{4}_-_Appendice_\\d_-_.+\\.docx$" },
+  "pieDiPagina": { "regex": "Procedura aperta per .*Accordi Quadro.*servizi applicativi in ottica cloud" },
+  "stili": { "copertina": "Stile Titolo copertina + Crenatura 16 pt", "titoloColore": "0070C0", "app1": { "paragrafo": "Elenco Numerato", "griglia": "C2D59B" }, "app2": { "paragrafi": ["tab_iq", "tab_iq_bold", "Titolo_schede_IQ", "corpo_IQ"], "intestazioniScheda": ["D9D9D9", "A5A5A5"], "equazioni": "OMML (Cambria Math)" }, "app3": { "paragrafi": ["CL corpo testo", "Elenco.Bullet01.Tondo", "A BLOCK PARA"], "campi": ["STYLEREF", "NOTEREF", "SEQ", "REF"] } },
+  "schede": {
+    "profilo": ["Titolo del profilo", "Descrizione sintetica", "Missione", "Principali Task", "Competenze", "Conoscenze", "Abilità", "Certificazioni", "Titolo di studio", "Anzianità lavorativa"],
+    "indicatore": ["Aspetto da valutare", "Unità di misura", "Fonte dati", "Periodo di riferimento", "Frequenza di misurazione", "Dati da rilevare", "Formula", "Regole di arrotondamento", "Valore di soglia", "Azioni contrattuali", "Eccezioni"],
+    "prodotto": ["nome (Titolo 2)", "contenuti minimi (elenco puntato)"]
+  },
+  "riconoscimento": {
+    "punteggioMinimo": 3,
+    "segnali": [
+      { "segnale": "nome file KIT_ODA_AQ_ID…Appendice", "peso": 2 },
+      { "segnale": "piè di pagina 'Procedura aperta per … Accordi Quadro'", "peso": 2 },
+      { "segnale": "stile 'Stile Titolo copertina + Crenatura 16 pt'", "peso": 1 },
+      { "segnale": "App.1: tabelle con prima riga 'Titolo del profilo'", "peso": 1 },
+      { "segnale": "App.2: titoli 'CODICE – Nome' e 'Matrice di Corrispondenza'", "peso": 1 },
+      { "segnale": "App.3: 'Tabella 3.1 Fasi e attività nei cicli di vita tradizionali'", "peso": 1 }
+    ]
+  },
+  "conoscenza": "kit-aq-id2610.conoscenza.json",
+  "verbaleStudio": { "oggi": "solo testo piatto", "funzioniProposte": ["riconosci famiglia", "estrai schede in dati", "consulta per codice", "controlla i documenti del progetto contro le appendici"] },
+  "provenienza": {
+    "agente": "cool-noether",
+    "sessione": "session_016fgi7494LKk88z4etQe9Lu",
+    "ramo": "claude/cool-noether-kv3o8c",
+    "commit": [
+      "74c4dad"
+    ],
+    "dataAnalisi": "2026-10-01",
+    "archivio": "docs/MEMORIA/_archivio/2026-10-01/cool-noether/MEMORIA/docx/appendici-aq-consip-id2610.impronta.json",
+    "unificazione": "2026-10-01, ramo claude/integrazione-2026-10-01: impronta invariata, aggiunto solo questo campo"
+  }
+}

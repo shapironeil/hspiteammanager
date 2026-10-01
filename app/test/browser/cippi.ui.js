@@ -6,7 +6,9 @@ const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
 const { startPortal, setupHacker } = require('../helpers');
-const { pptx, kickoff } = require('../pptx-prova');
+const { pptx } = require('../pptx-prova');
+const { kickoff } = require('../pptx-kickoff-prova');
+const { kickoffHspi } = require('../pptx-prova');
 const { pdfProva } = require('../pdf-prova');
 let playwright;
 try { playwright = require('playwright'); } catch { playwright = require(path.join(require('node:child_process').execSync('npm root -g').toString().trim(), 'playwright')); }
@@ -21,7 +23,7 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hspi-cippi-'));
   try {
     const hacker = await setupHacker(portal.base);
-    const project = (await hacker.post('/api/projects', { name: 'Acquisti' })).data;
+    await hacker.post('/api/projects', { name: 'Acquisti' });
     const file = path.join(tmp, 'Flusso acquisti.pptx');
     fs.writeFileSync(file, pptx());
     browser = await playwright.chromium.launch();
@@ -56,7 +58,26 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await page.click('.cp-struct-item:has-text("Processi To Be")');
     await page.waitForSelector('.cp-view .cp-st-nuovo');
     ok(await page.locator('.cp-view .cp-st-modificato').count() === 1, 'step nuovi e modificati evidenziati come nella legenda');
-    ok(await page.locator('.cp-steps li').count() === 4, 'dettaglio del flusso: step e decisioni');
+    ok(await page.locator('.cp-actor').count() === 2, 'descrizione della slide: prima i protagonisti (corsie)');
+    ok(await page.locator('.cp-step').count() === 6, 'poi la struttura: inizio, step, decisione, fine');
+    ok(await page.locator('.cp-view .cp-keypoints').count() === 1, 'punti chiave sotto l\'anteprima');
+    // finestra delle caratteristiche: il quadrato diventa un rombo, il contesto del documento
+    await page.click('.cp-step:has-text("4. Revisione del budget")');
+    await page.waitForSelector('.cs-sheet');
+    await page.click('.cs-choice:has-text("Decisione")');
+    await page.waitForSelector('.cs-choice.on:has-text("Decisione")');
+    await page.click('.cs-nav-item:has-text("Descrizione")');
+    await page.fill('.cs-field:has-text("Input") input', 'Richiesta di acquisto');
+    await page.click('.cs-btn.primary:has-text("Salva")');
+    await page.waitForSelector('.toast:has-text("Caratteristiche salvate")');
+    await page.click('.cs-nav-item:has-text("Contesto")');
+    await page.click('.cs-btn:has-text("Usa il testo proposto")');
+    await page.click('.cs-btn.primary:has-text("Salva")');
+    await page.waitForSelector('.toast:has-text("Contesto salvato")');
+    await page.screenshot({ path: path.join(OUT, 'cippi-caratteristiche.png') });
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('text=Modifiche salvate');
+    ok(await page.locator('.cp-step:has-text("4. Revisione del budget") .cp-shape-ico:has-text("◇")').count() === 1, 'finestra delle caratteristiche: forma cambiata (rettangolo → rombo), descrizione e contesto salvati');
     await page.click('button:has-text("Confronta con l\'As-Is")');
     await page.waitForSelector('.cp-stage.two .cp-frame:nth-child(2) .cp-slide');
     ok(/Approvazione del responsabile/.test(await page.textContent('.cp-diff')), 'confronto To-Be / As-Is affiancato con le differenze');
@@ -111,25 +132,65 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await page.waitForSelector('.cp-card .cp-thumb .cp-slide');
     await page.screenshot({ path: path.join(OUT, 'cippi-libreria.png') });
 
-    // kick-off: tipi nuovi, memoria dei modelli, tabella disegnata, confronto con il PDF esportato
-    const kid = (await hacker.put(`/api/cippi/import?projectId=${project.id}&name=Kickoff_di_prova_v1.0.pptx`, kickoff())).data.id;
+    // kick-off: sezioni native, scheda Documento con il modello noto, trova e sostituisci, celle della tabella in Modifica
+    const kfile = path.join(tmp, 'Kick-off prova.pptx');
+    fs.writeFileSync(kfile, kickoff());
+    await page.goto(portal.base + '/cippi/#/');
+    await page.reload();
+    await page.waitForSelector('button:has-text("Importa PowerPoint")');
+    await page.click('button:has-text("Importa PowerPoint")');
+    await page.setInputFiles('.modal input[type=file]', kfile);
+    await page.click('.modal button:has-text("Importa e analizza")');
+    await page.waitForSelector('.cp-review .cp-view .cp-slide');
+    ok(await page.locator('.cp-struct-sec').count() === 6, 'kick-off: le sei sezioni native di PowerPoint');
+    ok(await page.locator('.cp-struct-item .cp-kind.k-masterplan').count() === 1, 'kick-off: la slide del masterplan ha il suo tipo');
+    const docSec = page.locator('.cp-sec:has(summary:has-text("Documento"))');
+    await docSec.locator('summary').click();
+    ok(/Somiglia a: kick-off di progetto/.test(await docSec.textContent()), 'kick-off: il modello noto della memoria viene riconosciuto');
+    ok(/Fornitore di prova/.test(await docSec.textContent()), 'kick-off: azienda nei metadati');
+    await page.click('.cp-struct-item:has-text("MASTERPLAN")');
+    await page.waitForSelector('.cp-gantt li.componente');
+    ok(await page.locator('.cp-gantt li').count() === 5, 'kick-off: piano di progetto letto dal Gantt');
+    await page.click('.cp-struct-item:has-text("INTRODUZIONE")');
+    await page.waitForSelector('.cp-view .cp-shape.cp-bg');
+    ok(await page.locator('.cp-view .cp-shape.cp-bg').count() >= 1, 'kick-off: le forme fisse del layout nell\'anteprima');
+    await page.click('.cp-struct-item:has-text("SINTESI CONTRATTO")');
+    await page.waitForSelector('.cp-stage .cp-table td.cp-th');
+    ok(await page.locator('.cp-stage .cp-table td[colspan="2"]').count() === 1, 'kick-off: tabella con la riga del totale unita');
+    await page.click('.cp-seg button:has-text("Modifica")');
+    await page.waitForSelector('.cp-cellgrid input');
+    const cell = page.locator('.cp-cellgrid input[aria-label="Cella 1,1"]');
+    await cell.fill('Sviluppo rivisto');
+    await page.waitForSelector('.cp-stage .cp-table td:has-text("Sviluppo rivisto")');
+    await page.waitForSelector('text=Modifiche salvate');
+    ok(true, 'kick-off: cella della tabella modificata e vista subito');
+    await page.click('button:has-text("Trova e sostituisci")');
+    await page.fill('.modal input[name=find]', 'Kick-off Progetto Prova');
+    await page.fill('.modal input[name=replace]', 'SAL 1 Progetto Prova');
+    await page.click('.modal button:has-text("Sostituisci")');
+    await page.waitForSelector('.cp-stage .cp-p:has-text("SAL 1 Progetto Prova")');
+    ok(true, 'kick-off: trova e sostituisci in tutte le slide');
+    await page.screenshot({ path: path.join(OUT, 'cippi-kickoff.png') });
+
+    // kick-off HSPI (indice numerato, organigramma, numeri, tabella disegnata) e il confronto con il PDF esportato
+    const projects = (await hacker.get('/api/projects')).data;
+    const pid = (Array.isArray(projects) ? projects : projects.projects || projects.list || [])[0].id;
+    const kid = (await hacker.put(`/api/cippi/import?projectId=${pid}&name=Kickoff_di_prova_v1.0.pptx`, kickoffHspi())).data.id;
     await hacker.put(`/api/cippi/docs/${kid}/appunti?name=esportazione.pdf`, pdfProva([{ title: 'Kick-Off', lines: ['Data Platform', '4 Maggio, 2026'] }, { title: 'INDICE', lines: ['Introduzione e Contesto', 'Piano di progetto'] }]));
     await page.goto(portal.base + `/cippi/#/doc/${kid}`);
     await page.reload();
     await page.waitForSelector('.cp-review .cp-view .cp-slide');
-    ok(await page.locator('.cp-struct-item .cp-kind.k-piano').count() === 1 && await page.locator('.cp-struct-item .cp-kind.k-organigramma').count() === 1 && await page.locator('.cp-struct-item .cp-kind.k-numeri').count() === 1, 'kick-off: piano, organigramma e numeri riconosciuti');
+    ok(await page.locator('.cp-struct-item .cp-kind.k-organigramma').count() === 1 && await page.locator('.cp-struct-item .cp-kind.k-numeri').count() === 1, 'kick-off HSPI: organigramma e numeri riconosciuti');
     ok(/forse un refuso/.test(await page.textContent('.cp-checks')), 'controlli: il refuso tra indice e titolo');
-    await page.click('.cp-struct-item:has-text("CATALOGO KPI")');
-    await page.waitForSelector('.cp-points .cp-tbl');
-    ok(await page.locator('.cp-points .cp-tbl tbody tr').count() === 3, 'tabella disegnata con le forme letta come tabella');
-    await page.click('.cp-sec summary:has-text("Memoria dei modelli")');
-    ok(await page.locator('a:has-text("Scarica impronta")').count() === 1, 'memoria dei modelli: impronta da scaricare');
+    const docSec2 = page.locator('.cp-sec:has(summary:has-text("Documento"))');
+    await docSec2.locator('summary').click();
+    ok(await docSec2.locator('a:has-text("Scarica impronta")').count() === 1, 'documento: impronta da scaricare per la memoria');
     await page.click('.cp-sec summary:has-text("Appunti")');
     await page.click('.cp-files button:has-text("Confronta")');
     await page.waitForSelector('.modal .cp-pdf');
     ok(/non è aggiornato/.test(await page.textContent('.modal')) && await page.locator('.modal .cp-pdf tbody tr').count() === 2, 'PDF confrontato pagina per slide');
     await page.screenshot({ path: path.join(OUT, 'cippi-pdf.png') });
-    await page.click('.modal .icon-btn[aria-label="Chiudi"], .modal button:has-text("Chiudi")').catch(() => page.keyboard.press('Escape'));
+    await page.keyboard.press('Escape');
 
     // telefono: un pannello alla volta
     const m = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
@@ -142,8 +203,8 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await m.goto(portal.base + '/cippi/#/doc/1?s=6');
     await m.waitForSelector('.cp-view .cp-slide');
     ok(!(await m.locator('.cp-tools').isVisible()), 'telefono: si vede solo il pannello di visione');
-    await m.click('.cp-tabs button:has-text("Punti chiave")');
-    ok(await m.locator('.cp-points').isVisible(), 'telefono: si passa ai punti chiave');
+    await m.click('.cp-tabs button:has-text("Descrizione")');
+    ok(await m.locator('.cp-points').isVisible(), 'telefono: si passa alla descrizione della slide');
     const overflow = await m.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     ok(overflow <= 1, 'telefono: niente scorrimento orizzontale');
     await m.screenshot({ path: path.join(OUT, 'cippi-telefono.png') });

@@ -1,17 +1,17 @@
 // GestioneCelle come app a se' (/celle/): stessa schermata del portale, nella sua finestra.
 // Si installa come app del browser oppure si apre dal collegamento di HSPI Client. Stessi account del portale.
 import { get } from '/js/api.js';
-import { h, icon, toastError } from '/js/ui.js';
+import { h, toastError } from '/js/ui.js';
 import { viewCelle } from '/js/celle.js';
 
 const root = document.getElementById('app');
-let saved = 'dark';
-try { saved = JSON.parse(localStorage.getItem('hspi.tema')) === 'light' ? 'light' : 'dark'; } catch { /* archivio locale non disponibile */ }
+// GestioneCelle ha il suo stile chiaro "Excel glass" (bianco e verde), indipendente dal tema del portale
 function applyTheme(name) {
   document.documentElement.dataset.theme = name;
   document.querySelector('meta[name="color-scheme"]').content = name;
 }
-applyTheme(saved);
+applyTheme('light');
+document.body.classList.add('cg-page');
 
 async function start() {
   const [state, catalogo] = await Promise.all([get('/api/state'), get('/api/catalogo').catch(() => ({ apps: [] }))]);
@@ -24,10 +24,6 @@ async function start() {
       h('a', { class: 'btn primary', href: '/' }, 'Accedi al portale'))));
     return;
   }
-  const dark = () => document.documentElement.dataset.theme !== 'light';
-  const themeBtn = h('button', { class: 'icon-btn', type: 'button', title: 'Tema chiaro o scuro', 'aria-label': 'Tema chiaro o scuro',
-    onclick: () => { const next = dark() ? 'light' : 'dark'; try { localStorage.setItem('hspi.tema', JSON.stringify(next)); } catch { /* niente */ } applyTheme(next); themeBtn.replaceChildren(icon(dark() ? 'sun' : 'moon')); } },
-  icon(dark() ? 'sun' : 'moon'));
   const view = h('div', { id: 'view' });
   root.replaceChildren(h('div', { class: 'main app-window' },
     h('header', { class: 'topbar' },
@@ -36,7 +32,6 @@ async function start() {
         me ? h('span', { class: 'chip' }, `v${me.version}`) : null),
       h('div', { class: 'spacer' }),
       h('a', { class: 'btn sm', href: '/#/home', title: `Torna al portale ${state.portalName}` }, '← Portale'),
-      themeBtn,
       h('span', { class: 'small muted only-desktop' }, state.user.name)),
     view));
   async function show() {

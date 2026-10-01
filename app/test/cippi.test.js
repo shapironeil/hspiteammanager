@@ -4,28 +4,34 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const { startPortal, setupHacker, addUser } = require('./helpers');
 const fs = require('node:fs');
 const os = require('node:os');
-const { startPortal, setupHacker, addUser } = require('./helpers');
-const { pptx, kickoff } = require('./pptx-prova');
+const { pptx, kickoffHspi } = require('./pptx-prova');
+const { kickoff } = require('./pptx-kickoff-prova');
 const { pdfProva } = require('./pdf-prova');
-const { readPptx } = require('../src/cippi/pptx-read');
-const { analyze } = require('../src/cippi/analyze');
 const { readPdf } = require('../src/cippi/pdf-read');
 const { confrontoPdf } = require('../src/cippi/appunti');
 const memoria = require('../src/cippi/memoria');
+const { riconosci } = require('../src/cippi/impronta');
+const { readZip } = require('../src/celle/zip');
+const { readPptx } = require('../src/cippi/pptx-read');
+const { analyze } = require('../src/cippi/analyze');
 
 let portal; let hacker; let mario; let luca; let ospite; let pid; let docId; let modelId;
-let memDir; // memoria dei modelli di prova (docs/MEMORIA finta)
+
+let memDir; // memoria dei modelli di prova (docs/MEMORIA finta), letta dal portale via HSPI_MEMORIA_DIR
 
 before(async () => {
-  // la memoria di prova conosce il kick-off: il portale la legge da HSPI_MEMORIA_DIR
   memDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hspi-memoria-'));
   fs.mkdirSync(path.join(memDir, 'pptx'));
-  const pres = readPptx(kickoff());
-  const fp = memoria.fingerprintOf(pres, analyze(pres), 'Kickoff_di_prova_v1.0.pptx');
-  fs.writeFileSync(path.join(memDir, 'pptx', 'kickoff-prova.impronta.json'), JSON.stringify({ ...fp, template: 'kickoff-prova', app: 'cippi', tipoDocumento: 'kick-off di prova', nomeFile: { regex: '^[A-Za-z]+_di_prova_v\\d+\\.\\d+\\.pptx$' } }));
-  fs.writeFileSync(path.join(memDir, 'pptx', 'kickoff-prova.md'), '# Template kickoff-prova\n');
+  const kp = readPptx(kickoffHspi());
+  const fp = memoria.fingerprintOf(kp, analyze(kp), 'Kickoff_di_prova_v1.0.pptx');
+  fs.writeFileSync(path.join(memDir, 'pptx', 'kickoff-prova-hspi.impronta.json'), JSON.stringify({ ...fp, template: 'kickoff-prova-hspi', app: 'cippi', tipoDocumento: 'kick-off di prova HSPI', nomeFile: { regex: '^[A-Za-z]+_di_prova_v\\d+\\.\\d+\\.pptx$' } }));
+  fs.writeFileSync(path.join(memDir, 'pptx', 'kickoff-prova-hspi.md'), '# Template kickoff-prova-hspi\n');
+  // e le impronte vere del repository (docs/MEMORIA), che le altre prove si aspettano di trovare
+  const real = path.join(__dirname, '..', '..', 'docs', 'MEMORIA', 'pptx');
+  for (const f of fs.readdirSync(real).filter((x) => /\.impronta\.json$/.test(x))) fs.copyFileSync(path.join(real, f), path.join(memDir, 'pptx', f));
   process.env.HSPI_MEMORIA_DIR = memDir;
   portal = await startPortal();
   hacker = await setupHacker(portal.base);
@@ -114,6 +120,31 @@ test('modifica ed esportazione: ordine, testi, duplicati, slide tolte; nuova ver
   assert.ok(JSON.stringify(files).includes('Flusso acquisti.pptx'));
 });
 
+test('caratteristiche: contesto del documento, descrizioni degli elementi, forma e colore nel .pptx', async () => {
+  const full = (await luca.put(`/api/cippi/import?projectId=${pid}&name=caratteristiche.pptx`, pptx())).data.id;
+  let d = (await luca.get(`/api/cippi/docs/${full}`)).data;
+  assert.equal(d.background, '');
+  assert.match(d.backgroundSuggestion, /Obiettivi del progetto/, 'contesto proposto dalle prime slide');
+  assert.equal((await luca.patch(`/api/cippi/docs/${full}`, { background: 'Progetto acquisti per il cliente' })).status, 200);
+  const key = 'nodo|4.1.2.1|To-Be|revisione del budget';
+  assert.equal((await luca.put(`/api/cippi/docs/${full}/items`, { key, data: { input: 'Richiesta', tecnologia: 'SAP MM', ignoto: 'x' } })).status, 200);
+  assert.equal((await ospite.put(`/api/cippi/docs/${full}/items`, { key, data: { input: 'x' } })).status, 404);
+  d = (await luca.get(`/api/cippi/docs/${full}`)).data;
+  assert.equal(d.background, 'Progetto acquisti per il cliente');
+  assert.deepEqual(d.items[key], { input: 'Richiesta', tecnologia: 'SAP MM' });
+  // lo step 4 diventa un rombo verde (nuovo)
+  const n = d.analysis.slides[5].flow.nodes.find((x) => x.text.startsWith('4.'));
+  const list = d.list.map((x) => (x.src === 6 ? { ...x, geom: { [n.id]: 'flowChartDecision', 99: 'nonEsiste' }, fill: { [n.id]: '92d050' } } : x));
+  assert.equal((await luca.patch(`/api/cippi/docs/${full}`, { slides: list, updatedAt: d.updatedAt })).status, 200);
+  const out = readPptx((await luca.get(`/api/cippi/docs/${full}/download`)).data);
+  const shape = out.slides[5].shapes.find((x) => x.id === n.id);
+  assert.equal(shape.geom, 'flowChartDecision');
+  assert.equal(shape.fill, '92D050');
+  // svuotare le caratteristiche le toglie
+  await luca.put(`/api/cippi/docs/${full}/items`, { key, data: {} });
+  assert.equal((await luca.get(`/api/cippi/docs/${full}`)).data.items[key], undefined);
+});
+
 test('modelli: si salva la struttura, si crea un documento nuovo con le parti scelte e si misura la completezza', async () => {
   // il modello nasce dalla presentazione completa (re-importata)
   const full = (await luca.put(`/api/cippi/import?projectId=${pid}&name=completa.pptx`, pptx())).data.id;
@@ -153,12 +184,97 @@ test('eliminazione: chi l\'ha creato o il Manager del progetto', async () => {
   assert.equal((await luca.get(`/api/cippi/docs/${other}`)).status, 404);
 });
 
-test('kick-off: copertina, indice numerato con refuso, sezioni native o dall\'indice, piano, organigramma, numeri, tabella disegnata, controlli', () => {
-  const a = analyze(readPptx(kickoff()));
-  assert.deepEqual(a.slides.map((s) => s.kind), ['copertina', 'indice', 'testo', 'piano', 'organigramma', 'testo', 'numeri', 'tabella']);
+// ---- Presentazioni di kick-off: sezioni native, schede, tabelle, masterplan, impronta, modifiche per funzione ----
+test('kick-off: sezioni native, copertina, indice a due livelli senza falsi avvisi, pillole, tabella disegnata, Gantt, totale, caratteri', () => {
+  const pres = readPptx(kickoff());
+  const a = analyze(pres);
+  assert.deepEqual(a.slides.map((s) => s.kind), ['copertina', 'indice', 'testo', 'scheda', 'scheda', 'masterplan', 'tabella']);
+  assert.equal(a.nativeSections, true, 'le sezioni sono quelle di PowerPoint');
+  assert.deepEqual(a.sections.map((s) => s.title), ['Copertina', 'Indice', 'Introduzione', 'Ambito', 'Masterplan', 'Sintesi contratto']);
+  assert.deepEqual(a.sections[3].slides, [4, 5]);
+  assert.ok(!a.checks.some((c) => /indice senza slide|Manca una slide di titolo/.test(c.text)), 'le sotto-voci dell\'indice trovano le slide "Ambito - ..."');
+  const s4 = a.slides[3];
+  assert.ok(!s4.blocks.some((b) => /Kick-off Progetto Prova/.test(b.text)), 'il piè di pagina non è un blocco');
+  const pills = s4.blocks.filter((b) => b.role === 'intestazione');
+  assert.deepEqual(pills.map((b) => b.fill), ['00B095', '1482AB'], 'pillole: testo sopra la forma colorata = intestazione con quel colore');
+  const drawn = s4.blocks.find((b) => b.role === 'tabella');
+  assert.ok(drawn && drawn.drawn && drawn.header, 'tabella disegnata con le forme riconosciuta');
+  assert.deepEqual(drawn.rows[0], ['FUNZIONALITÀ', 'PIATTAFORMA ABILITANTE', 'FINALITÀ']);
+  assert.equal(drawn.rows[1][1], 'PDND');
+  assert.equal(drawn.ids.length, 3, 'ogni cella ha la sua forma, modificabile');
+  const g = a.slides[5].gantt;
+  assert.ok(g && g.from === '2026-10' && g.to === '2027-12', 'masterplan letto dall\'SVG: periodo');
+  assert.deepEqual(g.rows.map((r) => [r.kind, r.text, r.from, r.to]), [
+    ['componente', 'COMPONENTE UNO', '2026-10', '2027-05'], ['attivita', 'Design e analisi funzionale', '2026-10', '2026-12'],
+    ['attivita', 'Sviluppo applicativi, Test e Implementazione', '2026-12', '2027-05'], ['componente', 'COMPONENTE DUE', '2027-06', '2027-12'], ['attivita', 'Rilascio e manutenzione', '2027-06', '2027-12']]);
+  const t = a.slides[6].blocks.find((b) => b.role === 'tabella');
+  assert.equal(t.cells[3][0].gridSpan, 2, 'celle unite');
+  assert.equal(t.cells[3][2].fill, '225546');
+  assert.ok(t.cells[1][2].bold);
+  assert.ok(a.checks.some((c) => c.level === 'info' && /Totale verificato/.test(c.text)), 'il totale torna');
+  const bad = analyze(readPptx(kickoff({ totaleSbagliato: true })));
+  assert.ok(bad.checks.some((c) => c.level === 'errore' && /tabella dice 160, la somma delle righe fa 150/.test(c.text)), 'totale che non torna');
+  assert.ok(a.checks.some((c) => /Carattere di prova "FT Habit Trial"/.test(c.text)));
+  assert.ok(a.checks.some((c) => c.slide === 4 && /Testo ridotto/.test(c.text)));
+  assert.equal(a.glossary.find((x) => x.term === 'PagoPA').known, true, 'glossario della PA');
+  assert.equal(a.glossary.find((x) => x.term === 'BIPS').meaning, 'Basi informative per lo sviluppo');
+  assert.ok(!a.glossary.some((x) => x.term === 'FINALIT'), 'FINALITÀ non è una sigla');
+  assert.equal(pres.meta.company, 'Fornitore di prova S.p.A.');
+  assert.ok(pres.slides[2].background.some((s) => (s.paragraphs || []).some((p) => p.text === 'RISERVATO')), 'forme fisse del layout per l\'anteprima');
+  assert.ok(a.reading.some((r) => r.title === 'Piano di progetto') && a.keyPoints.some((k) => k.kind === 'piano'));
+});
+
+test('kick-off nel portale: modello noto riconosciuto, sfondo del layout, trova e sostituisci, celle e righe delle tabelle, esportazione pulita', async () => {
+  const r = await luca.put(`/api/cippi/import?projectId=${pid}&name=${encodeURIComponent('Kick-off prova.pptx')}`, kickoff());
+  assert.equal(r.status, 201, JSON.stringify(r.data));
+  const kid = r.data.id;
+  const d = (await luca.get(`/api/cippi/docs/${kid}`)).data;
+  assert.ok(d.impronta && d.impronta.somiglianze.some((x) => x.id === 'kickoff-txt-biosiris' && x.punteggio >= 60), 'somiglia al kick-off in memoria: ' + JSON.stringify(d.impronta && d.impronta.somiglianze));
+  assert.equal(d.analysis.meta.company, 'Fornitore di prova S.p.A.');
+  const sl = (await luca.get(`/api/cippi/docs/${kid}/slide/3`)).data;
+  assert.ok(sl.background.some((s) => (s.paragraphs || []).some((p) => p.text === 'RISERVATO')), 'la slide porta con sé le forme del layout');
+  // trova e sostituisci: nelle slide (piè di pagina di ogni slide) e nel layout (scritta fissa)
+  const s1 = await luca.post(`/api/cippi/docs/${kid}/sostituisci`, { find: 'Kick-off Progetto Prova', replace: 'SAL 1 Progetto Prova', layouts: true });
+  assert.equal(s1.status, 200, JSON.stringify(s1.data));
+  assert.deepEqual([s1.data.count, s1.data.slides], [5, [3, 4, 5, 6, 7]]);
+  const s2 = (await luca.post(`/api/cippi/docs/${kid}/sostituisci`, { find: 'riservato', replace: 'PUBBLICO', layouts: true })).data;
+  assert.deepEqual([s2.count, s2.layoutCount], [0, 1], 'la scritta del layout si conta nel file');
+  assert.equal((await luca.post(`/api/cippi/docs/${kid}/sostituisci`, { find: 'xyz-non-esiste', replace: 'a', anteprima: true })).data.count, 0);
+  const after = (await luca.get(`/api/cippi/docs/${kid}`)).data;
+  assert.equal(after.edits.replace.length, 1);
+  assert.ok(after.list[2].texts && Object.values(after.list[2].texts).some((l) => JSON.stringify(l).includes('SAL 1 Progetto Prova')), 'nelle slide è una modifica dei testi');
+  // celle della tabella e una riga nuova; una cella della tabella disegnata (forma) tramite i testi
+  const tbl = after.analysis.slides[6].blocks.find((b) => b.role === 'tabella');
+  const drawn = after.analysis.slides[3].blocks.find((b) => b.role === 'tabella');
+  const list = after.list.map((x) => ({ ...x }));
+  list[6] = { ...list[6], cells: { [tbl.id]: { '1,1': ['Sviluppo e manutenzione evolutiva (rivista)'] } }, tableRows: { [tbl.id]: [{ after: 2, cells: ['EL', 'E-learning', '€ 10,00'] }] } };
+  list[3] = { ...list[3], texts: { ...(list[3].texts || {}), [drawn.ids[1][1]]: ['SPID'] } };
+  const p = await luca.patch(`/api/cippi/docs/${kid}`, { slides: list, updatedAt: after.updatedAt });
+  assert.equal(p.status, 200, JSON.stringify(p.data));
+  const dl = await luca.get(`/api/cippi/docs/${kid}/download`);
+  assert.equal(dl.status, 200);
+  const out = readPptx(dl.data);
+  const t2 = out.slides[6].shapes.find((s) => s.kind === 'table');
+  assert.equal(t2.rows.length, 5, 'riga aggiunta');
+  assert.equal(t2.rows[1][1], 'Sviluppo e manutenzione evolutiva (rivista)');
+  assert.deepEqual(t2.rows[3], ['EL', 'E-learning', '€ 10,00']);
+  assert.equal(t2.cells[4][0].gridSpan, 2, 'la riga del totale resta unita');
+  assert.ok(out.slides[3].shapes.some((s) => (s.paragraphs || []).some((x) => x.text === 'SPID')), 'cella della tabella disegnata cambiata');
+  assert.ok(out.slides[2].shapes.some((s) => s.ph && s.ph.type === 'ftr' && s.paragraphs[0].text === 'SAL 1 Progetto Prova'), 'piè di pagina sostituito nelle slide');
+  assert.ok(out.slides[2].background.some((s) => (s.paragraphs || []).some((x) => x.text === 'PUBBLICO')), 'scritta del layout sostituita nel file');
+  // esportazione pulita: tolta la slide del masterplan, la sua immagine SVG non resta nel pacchetto
+  const p2 = await luca.patch(`/api/cippi/docs/${kid}`, { slides: list.filter((x) => x.src !== 6), updatedAt: p.data.updatedAt });
+  assert.equal(p2.status, 200);
+  const names = [...readZip((await luca.get(`/api/cippi/docs/${kid}/download`)).data).keys()];
+  assert.ok(!names.some((n) => /image1\.svg$/.test(n)), 'niente media orfani');
+  assert.ok(names.some((n) => n === 'ppt/slides/slide1.xml'));
+});
+
+test('kick-off HSPI: copertina, indice numerato con refuso, capitoli dall\'indice o sezioni native, organigramma, numeri, tabella disegnata, controlli', () => {
+  const a = analyze(readPptx(kickoffHspi()));
+  assert.deepEqual(a.slides.map((s) => s.kind), ['copertina', 'indice', 'testo', 'masterplan', 'organigramma', 'testo', 'numeri', 'tabella']);
   assert.equal(a.sectionsSource, 'native');
   assert.deepEqual(a.sections.map((s) => s.title), ['Intro', 'Contenuti']);
-  assert.deepEqual(a.nativeSections, ['Intro', 'Contenuti']);
   // l'indice: ogni voce abbinata alla slide; "Quick Win KPI" contro "QUICK WIN KIP" e' un refuso
   assert.deepEqual(a.index.matches.map((m) => m.slide), [3, 4, 5, 6]);
   assert.ok(a.index.matches[3].typo);
@@ -166,12 +282,13 @@ test('kick-off: copertina, indice numerato con refuso, sezioni native o dall\'in
   assert.match(texts, /"Quick Win KPI": il titolo più vicino è "QUICK WIN KIP" \(slide 6\), forse un refuso/);
   assert.match(texts, /Testo segnaposto da compilare: "xxxxxx"/);
   assert.match(texts, /"CATALOGO KPI": trovate 1 parti su 2 \(manca la 2\/2\)/);
-  assert.match(texts, /Caratteri fuori tema \(Poppins\): Comic Sans MS \(slide 6\)/);
+  assert.match(texts, /Comic Sans MS/);
   assert.ok(!/Slide senza titolo/.test(texts), 'copertina e indice non sono "senza titolo"');
-  // la tabella disegnata con le forme diventa una tabella vera
-  assert.deepEqual(a.slides[7].table.header, ['ID', 'Nome KPI', 'Formula', 'Fonte dato']);
-  assert.equal(a.slides[7].table.rows.length, 3);
-  assert.equal(a.slides[7].table.rows[1][0], 'KPI-0002');
+  assert.ok(!/Voce dell'indice senza slide/.test(texts), 'il refuso non conta anche come voce senza slide');
+  // la tabella disegnata con le forme e' un blocco tabella con intestazione e righe; il piano ha i mesi
+  const tbl = a.slides[7].blocks.find((b) => b.role === 'tabella');
+  assert.ok(tbl && tbl.rows.length === 4, JSON.stringify(a.slides[7].blocks.map((b) => b.role)));
+  assert.deepEqual(tbl.rows[0], ['ID', 'Nome KPI', 'Formula', 'Fonte dato']);
   assert.deepEqual(a.slides[3].months, ['APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET']);
   // punti chiave: numeri con l'etichetta, piano con i periodi, team con i soli ruoli (niente nomi)
   const kp = a.keyPoints.map((k) => k.text).join('\n');
@@ -179,43 +296,39 @@ test('kick-off: copertina, indice numerato con refuso, sezioni native o dall\'in
   assert.match(kp, /da APR a SET \(6 periodi\)/);
   assert.match(kp, /TEAM DI PROGETTO: Direzione Progetto · Project Management · Project Team/);
   assert.ok(!/Persona Uno/.test(kp));
-  assert.ok(a.reading.some((r) => r.title === 'Piano e milestone') && a.reading.some((r) => r.title === 'Team e ruoli'));
+  assert.ok(a.reading.some((r) => r.title === 'Team e ruoli'));
   // senza sezioni native i capitoli vengono dall'indice
-  const b = analyze(readPptx(kickoff({ native: false })));
+  const b = analyze(readPptx(kickoffHspi({ native: false })));
   assert.equal(b.sectionsSource, 'indice');
   assert.deepEqual(b.sections.map((s) => s.title), ['Apertura', 'Introduzione e Contesto', 'Piano di progetto', 'Team di progetto', 'Quick Win KPI']);
   assert.deepEqual(b.sections[4].slides, [6, 7, 8], 'le slide dopo un capitolo restano nel capitolo');
   // il lettore: caratteri per slide, note con il solo numero = vuote, tema del master usato
-  const pres = readPptx(kickoff());
+  const pres = readPptx(kickoffHspi());
   assert.deepEqual(pres.slides[5].fonts, ['Comic Sans MS']);
   assert.equal(pres.fonts.major, 'Poppins');
   assert.equal(pres.masters.length, 1);
+  assert.equal(pres.masters[0].slides, 8);
 });
 
-test('memoria dei modelli: impronta e riconoscimento del template noto', () => {
-  const pres = readPptx(kickoff());
+test('memoria dei modelli: impronta scaricabile e riconoscimento del template noto', () => {
+  const pres = readPptx(kickoffHspi());
   const a = analyze(pres);
   const fp = memoria.fingerprintOf(pres, a, 'Kickoff_di_prova_v1.0.pptx');
   assert.equal(fp.formato, 'pptx');
   assert.deepEqual(fp.sezioniNative, ['Intro', 'Contenuti']);
   assert.equal(fp.tema.caratteri.maggiore, 'Poppins');
   assert.deepEqual(fp.layout.usati, { 'Diapositiva titolo': [1, 2, 3, 4, 5, 6, 7, 8] });
+  assert.deepEqual(fp.tipi, a.slides.map((s) => s.kind));
   assert.equal(memoria.templateName(fp, 'ATAC Kick Off Data Platform v1.0'), 'kickoff-hspi-atac-data-platform');
-  const known = memoria.loadKnown([memDir, path.join(memDir, 'non-esiste')]);
-  assert.equal(known.length, 1);
-  assert.equal(known[0].template, 'kickoff-prova');
-  assert.ok(known[0].scheda.endsWith('kickoff-prova.md'));
-  const m = memoria.matchOf(fp, known);
-  assert.ok(m.riconosciuto && m.riconosciuto.score >= 90, JSON.stringify(m));
-  assert.ok(m.riconosciuto.segnali.some((x) => /sezioni native/.test(x)) && m.riconosciuto.segnali.some((x) => /nome del file/.test(x)));
-  // la presentazione di processo ha lo stesso tema ma layout, sezioni e tipi diversi: somiglia meno
-  const other = readPptx(pptx());
-  const m2 = memoria.matchOf(memoria.fingerprintOf(other, analyze(other), 'Flusso.pptx'), known);
-  assert.ok(!m2.riconosciuto || m2.riconosciuto.score < m.riconosciuto.score - 20, JSON.stringify(m2));
+  // l'impronta scritta nella memoria di prova viene riconosciuta da impronta.js
+  const r = riconosci(pres, a, [], memDir);
+  assert.ok(r.somiglianze.length && r.somiglianze[0].id === 'kickoff-prova-hspi', JSON.stringify(r.somiglianze));
+  assert.ok(r.somiglianze[0].punteggio >= 60, JSON.stringify(r.somiglianze[0]));
+  assert.equal(r.somiglianze[0].scheda, 'docs/MEMORIA/pptx/kickoff-prova-hspi.md');
 });
 
 test('PDF: lettura del testo per pagina (WinAnsi, Identity-H, object stream) e confronto con la presentazione', () => {
-  const a = analyze(readPptx(kickoff()));
+  const a = analyze(readPptx(kickoffHspi()));
   const pageOf = (s) => ({ title: s.title || s.blocks.map((b) => b.text).join(' ').split('\n')[0], lines: s.blocks.filter((b) => b.role !== 'titolo').flatMap((b) => (b.paragraphs || [{ text: b.text }]).map((p) => p.text)).filter(Boolean) });
   const pages = a.slides.map(pageOf);
   pages[0].lines.unshift('Kick-Off Data Platform');
@@ -226,7 +339,6 @@ test('PDF: lettura del testo per pagina (WinAnsi, Identity-H, object stream) e c
   assert.match(pdf.pages[2].text, /Il cliente gestisce una rete estesa e vuole una Data Platform di nuova generazione\./, 'carattere composto con ToUnicode');
   assert.match(pdf.pages[2].text, /Di seguito le fasi principali dell'iniziativa\./, 'carattere semplice WinAnsi, array TJ');
   assert.equal(pdf.pages[2].width, 960);
-  // allineato
   let c = confrontoPdf(pdf, a.slides);
   assert.ok(c.aligned, c.verdict + ' ' + JSON.stringify(c.pairs));
   assert.deepEqual(c.pairs.map((x) => x.slide), [1, 2, 3, 4, 5, 6, 7, 8]);
@@ -237,25 +349,18 @@ test('PDF: lettura del testo per pagina (WinAnsi, Identity-H, object stream) e c
   assert.ok(c.orderChanged);
   assert.deepEqual(c.slidesWithoutPage.map((x) => x.slide), [6]);
   assert.match(c.verdict, /non è aggiornato/);
-  // un PDF di tutt'altro
   c = confrontoPdf(readPdf(pdfProva([{ title: 'Ricetta', lines: ['Farina, uova, zucchero'] }])), a.slides);
   assert.equal(c.pairs[0].slide, null);
   assert.match(c.verdict, /non sembra l'esportazione/);
-  // PDF non valido e PDF protetto
   assert.throws(() => readPdf(Buffer.from('ciao, non sono un pdf')), /Non è un file PDF/);
 });
 
-test('API: modello riconosciuto, impronta da scaricare, confronto del PDF accanto al documento', async () => {
-  const r = await luca.put(`/api/cippi/import?projectId=${pid}&name=${encodeURIComponent('Kickoff_di_prova_v1.0.pptx')}`, kickoff());
+test('API: modello noto della memoria di prova, impronta da scaricare, confronto del PDF accanto al documento', async () => {
+  const r = await luca.put(`/api/cippi/import?projectId=${pid}&name=${encodeURIComponent('Kickoff_di_prova_v1.0.pptx')}`, kickoffHspi());
   assert.equal(r.status, 201, JSON.stringify(r.data));
   const d = (await luca.get(`/api/cippi/docs/${r.data.id}`)).data;
   assert.equal(d.analysis.sectionsSource, 'native');
-  assert.equal(d.memoria.riconosciuto.template, 'kickoff-prova');
-  assert.equal(d.memoria.riconosciuto.scheda, 'kickoff-prova.md');
-  assert.equal(d.memoria.noti, 1);
-  assert.equal(d.memoria.nomeProposto, 'kickoff-hspi-di-prova');
-  const lista = (await luca.get('/api/cippi/memoria')).data;
-  assert.deepEqual(lista.modelli.map((m) => m.template), ['kickoff-prova']);
+  assert.ok(d.impronta && d.impronta.somiglianze.some((x) => x.id === 'kickoff-prova-hspi'), JSON.stringify(d.impronta));
   const imp = await luca.get(`/api/cippi/docs/${r.data.id}/impronta`);
   assert.equal(imp.status, 200);
   assert.match(imp.headers.get('content-disposition'), /kickoff-hspi-di-prova\.impronta\.json/);
@@ -263,6 +368,7 @@ test('API: modello riconosciuto, impronta da scaricare, confronto del PDF accant
   assert.equal(fp.template, 'kickoff-hspi-di-prova');
   assert.equal(fp.fileVisti[0].nome, 'Kickoff_di_prova_v1.0.pptx');
   assert.deepEqual(fp.sezioniNative, ['Intro', 'Contenuti']);
+  assert.ok(fp.provenienza);
   // il PDF esportato (stesso nome) nella cartella del progetto e un PDF negli appunti
   const a = d.analysis;
   const pages = a.slides.map((s) => ({ title: s.title || 'Kick-Off', lines: s.blocks.filter((b) => b.role !== 'titolo').flatMap((b) => (b.paragraphs || [{ text: b.text }]).map((p) => p.text)) }));

@@ -16,24 +16,30 @@ const crypto = require('node:crypto');
 const config = require('../config');
 const db = require('../db');
 const ex = require('../explorer');
-const { readPptx, mediaOf } = require('../cippi/pptx-read');
+const { readPptx, mediaOf, partsXml } = require('../cippi/pptx-read');
 const { analyze, templateOf, compareToTemplate, norm } = require('../cippi/analyze');
 const { build } = require('../cippi/pptx-write');
 const { baseDeck } = require('../cippi/pptx-new');
-const { fingerprintOf, loadKnown, matchOf, templateName } = require('../cippi/memoria');
+const { riconosci } = require('../cippi/impronta');
+const { fingerprintOf, templateName } = require('../cippi/memoria');
 const { readPdf } = require('../cippi/pdf-read');
 const { confrontoPdf } = require('../cippi/appunti');
+const E = require('../cippi/pptx-edit');
 const { route, HttpError } = require('../http');
 const projects = require('./projects');
 
 const DIR = path.join(config.DATA_DIR, 'cippi');
 const SRC = path.join(DIR, 'sorgenti');
 const CACHE = path.join(DIR, 'analisi');
-const ANALYZER = 4; // si alza quando cambia l'analisi: le analisi salvate si rifanno
-// memoria dei modelli: le impronte dei template noti (docs/MEMORIA/<formato>/<template>.impronta.json)
-const MEMORIA_DIRS = process.env.HSPI_MEMORIA_DIR ? [process.env.HSPI_MEMORIA_DIR] : [path.join(config.CODE_ROOT, 'docs', 'MEMORIA'), path.join(config.CODE_ROOT, 'docs', 'memoria')];
+const ANALYZER = 7; // si alza quando cambia l'analisi: le analisi salvate si rifanno
+// memoria dei modelli: docs/MEMORIA (nelle prove, una cartella a parte)
+const MEMORIA_DIR = process.env.HSPI_MEMORIA_DIR || undefined;
 const KINDS = ['chiave', 'nota', 'domanda', 'da-fare'];
 const STATUSES = ['bozza', 'in revisione', 'approvato'];
+// forme che si possono scegliere per uno step (attivita', decisione, inizio/fine, documento, sistema, nota)
+const GEOMS = ['rect', 'roundRect', 'flowChartProcess', 'flowChartDecision', 'diamond', 'flowChartTerminator', 'homePlate', 'flowChartDocument', 'flowChartMagneticDisk', 'ellipse', 'borderCallout1', 'flowChartPredefinedProcess', 'parallelogram'];
+// caratteristiche di un elemento (step, attore, processo, blocco): testi liberi
+const ITEM_FIELDS = ['descrizione', 'tecnologia', 'input', 'output', 'tempi', 'criticita', 'responsabile', 'obiettivo', 'note'];
 
 function readBody(req, limit = 200 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
@@ -226,18 +232,15 @@ function pdfCollegati(p, d) {
     .filter((r) => { const b = norm(path.basename(r.name, path.extname(r.name))); return b === base || (base.length > 8 && (b.startsWith(base) || base.startsWith(b))); })
     .map((r) => ({ name: r.name, size: r.size, updatedAt: r.updated_at, url: `/api/explorer/${space(p)}/view?path=${encodeURIComponent(r.path)}`, space: space(p), path: r.path, pdf: true }));
 }
-// Impronta del documento e confronto con i modelli noti della memoria
-function memoriaOf(doc, pres, analysis) {
-  const impronta = fingerprintOf(pres, analysis, doc.source_name);
-  const known = loadKnown(MEMORIA_DIRS);
-  const m = matchOf(impronta, known);
-  const pub = (x) => x && { ...x, scheda: x.scheda ? path.basename(x.scheda) : null };
-  return { riconosciuto: pub(m.riconosciuto), candidati: m.candidati.map(pub), noti: known.length, nomeProposto: templateName(impronta, doc.name), impronta };
-}
 route('GET', '/api/cippi/docs/:id', {}, (ctx) => {
   const { doc, project: p, canManage, canEdit } = openDoc(ctx.user, ctx.params.id);
-  const { analysis } = load(doc.source_sha);
+  const { pres, analysis } = load(doc.source_sha);
   const tplId = Number(ctx.query.get('modello')) || doc.template_id;
+  // modelli noti che somigliano: dalla memoria dei file analizzati (docs/MEMORIA) e dai modelli salvati visibili
+  const known = db.all("SELECT id, name, template FROM cippi_docs WHERE kind = 'modello' AND deleted_at IS NULL AND id != ? AND (project_id = ? OR shared = 1)", doc.id, p.id)
+    .map((m) => { try { return { id: m.id, name: m.name, template: JSON.parse(m.template || '{}') }; } catch { return null; } }).filter(Boolean);
+  let impronta = null;
+  try { impronta = riconosci(pres, analysis, known, MEMORIA_DIR); } catch { impronta = null; }
   let confronto = null;
   if (tplId) {
     const t = db.get("SELECT * FROM cippi_docs WHERE id = ? AND kind = 'modello' AND deleted_at IS NULL", tplId);
@@ -245,37 +248,39 @@ route('GET', '/api/cippi/docs/:id', {}, (ctx) => {
   }
   const users = new Map(db.all('SELECT id, name FROM users').map((u) => [u.id, u.name]));
   const glossary = new Map(db.all('SELECT term, meaning FROM cippi_glossary WHERE project_id = ?', p.id).map((g) => [g.term, g.meaning]));
-  const { pres } = load(doc.source_sha);
   ctx.json(200, {
     ...brief(doc, ctx.user, { project: p.name }),
     canManage, canEdit,
     list: JSON.parse(doc.slides),
     template: doc.kind === 'modello' ? JSON.parse(doc.template) : null,
     analysis: { ...analysis, glossary: analysis.glossary.map((g) => ({ ...g, meaning: glossary.get(g.term) || g.meaning })) },
-    memoria: memoriaOf(doc, pres, analysis),
-    pdfCollegati: pdfCollegati(p, doc),
     points: db.all('SELECT * FROM cippi_points WHERE doc_id = ? ORDER BY slide, id', doc.id).map((x) => ({
       id: x.id, slide: x.slide, kind: x.kind, text: x.text, status: x.status, auto: !!x.auto, author: users.get(x.created_by) || '', createdAt: x.created_at,
     })),
     celle: celleLinks(p, analysis),
     appunti: appunti(p, doc),
+    pdfCollegati: pdfCollegati(p, doc),
     confronto,
+    background: doc.background || '',
+    backgroundSuggestion: doc.background ? '' : suggestBackground(analysis),
+    items: Object.fromEntries(db.all('SELECT key, data FROM cippi_items WHERE doc_id = ?', doc.id).map((r) => [r.key, JSON.parse(r.data)])),
+    geoms: GEOMS,
+    edits: JSON.parse(doc.edits || '{}'),
+    impronta,
   });
 });
 
-// Modelli noti della memoria (docs/MEMORIA): per sapere cosa Cippi riconosce
-route('GET', '/api/cippi/memoria', {}, (ctx) => {
-  ctx.json(200, { cartelle: MEMORIA_DIRS, modelli: loadKnown(MEMORIA_DIRS).map((k) => ({ template: k.template, formato: k.formato, app: k.app, tipoDocumento: k.tipoDocumento, scheda: k.scheda ? path.basename(k.scheda) : null, fileVisti: (k.data.fileVisti || []).length })) });
-});
 // L'impronta del documento, da salvare in docs/MEMORIA/pptx/<nome>.impronta.json per riconoscerlo in futuro
+// (con i campi letti da impronta.js e qualcosa in piu': caratteri usati, testi fissi dei layout, master, tipi di slide)
 route('GET', '/api/cippi/docs/:id/impronta', {}, (ctx) => {
   const { doc } = openDoc(ctx.user, ctx.params.id);
   const { pres, analysis } = load(doc.source_sha);
-  const m = memoriaOf(doc, pres, analysis);
-  const out = { template: m.nomeProposto, formato: 'pptx', app: 'cippi', tipoDocumento: '', fornitore: '', fileVisti: [{ nome: doc.source_name, slide: analysis.slides.length, analizzato: db.now().slice(0, 10) }], ...m.impronta };
-  delete out.nomeFile;
+  const fp = fingerprintOf(pres, analysis, doc.source_name);
+  const name = templateName(fp, doc.name);
+  delete fp.nomeFile;
+  const out = { template: name, formato: 'pptx', app: 'cippi', tipoDocumento: '', fornitore: '', fileVisti: [{ nome: doc.source_name, slide: analysis.slides.length, analizzato: db.now().slice(0, 10) }], provenienza: { agente: '', sessione: '', ramo: '', commit: '', nota: 'impronta scaricata da Cippi: completare provenienza, tipoDocumento e fornitore' }, ...fp };
   const body = JSON.stringify(out, null, 2);
-  ctx.res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body), 'Cache-Control': 'no-store', 'Content-Disposition': `attachment; filename="${m.nomeProposto.replace(/[^\w.-]/g, '_')}.impronta.json"` });
+  ctx.res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body), 'Cache-Control': 'no-store', 'Content-Disposition': `attachment; filename="${name.replace(/[^\w.-]/g, '_')}.impronta.json"` });
   ctx.res.end(body);
 });
 // Un PDF accanto al documento (appunti, o l'esportazione nella cartella del progetto): testo per pagina e confronto
@@ -296,13 +301,39 @@ route('GET', '/api/cippi/docs/:id/appunti/pdf', {}, (ctx) => {
   ctx.json(200, { name: path.basename(at.rel), path: at.rel, info: pdf.info, pages: pdf.pages.map((pg) => ({ n: pg.n, title: pg.title, lines: pg.lines.length, text: pg.text })), confronto: confrontoPdf(pdf, slides) });
 });
 
+// Contesto proposto: i testi delle prime slide di testo (obiettivi, ambito, risultati)
+function suggestBackground(a) {
+  const first = a.slides.filter((s) => s.kind === 'testo' || s.kind === 'scheda').slice(0, 3);
+  const out = [];
+  for (const s of first) {
+    out.push(s.title);
+    for (const b of s.blocks) if (b.role !== 'titolo' && b.role !== 'navigazione' && b.role !== 'immagine' && b.text) out.push(b.text.replace(/\s*\n\s*/g, ' ').trim());
+  }
+  return out.filter(Boolean).join('\n').slice(0, 3000);
+}
+
+// Caratteristiche di un elemento: la chiave e' stabile tra le versioni (codice del processo + testo dello step, ...)
+route('PUT', '/api/cippi/docs/:id/items', {}, async (ctx) => {
+  const { doc, canEdit } = openDoc(ctx.user, ctx.params.id);
+  if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
+  const b = await ctx.body();
+  const key = clean(b.key, 400, 'Elemento');
+  const data = {};
+  for (const f of ITEM_FIELDS) if (b.data && b.data[f] != null && String(b.data[f]).trim()) data[f] = String(b.data[f]).slice(0, 5000);
+  if (!Object.keys(data).length) db.run('DELETE FROM cippi_items WHERE doc_id = ? AND key = ?', doc.id, key);
+  else db.run(`INSERT INTO cippi_items(doc_id, key, data, updated_by, updated_at) VALUES(?,?,?,?,?)
+    ON CONFLICT(doc_id, key) DO UPDATE SET data = excluded.data, updated_by = excluded.updated_by, updated_at = excluded.updated_at`, doc.id, key, JSON.stringify(data), ctx.user.id, db.now());
+  ctx.json(200, { ok: true });
+});
+
 // Forme di una slide di origine (per l'anteprima nel pannello di visione)
 route('GET', '/api/cippi/docs/:id/slide/:n', {}, (ctx) => {
   const { doc } = openDoc(ctx.user, ctx.params.id);
   const { pres } = load(doc.source_sha);
   const s = pres.slides[Number(ctx.params.n) - 1];
   if (!s) throw new HttpError(404, 'Slide non trovata.');
-  ctx.json(200, { n: s.n, layout: s.layout, shapes: s.shapes, notes: s.notes, theme: pres.theme, fonts: pres.fonts, ratio: pres.ratio });
+  const edits = JSON.parse(doc.edits || '{}');
+  ctx.json(200, { n: s.n, layout: s.layout, shapes: s.shapes, background: withReplaces(s.background || [], edits.replace), notes: s.notes, theme: pres.theme, fonts: pres.fonts, ratio: pres.ratio });
 });
 route('GET', '/api/cippi/docs/:id/media', {}, (ctx) => {
   const { doc } = openDoc(ctx.user, ctx.params.id);
@@ -331,8 +362,51 @@ function cleanSlides(list, max) {
       }
     }
     if (s.note) out.note = clean(s.note, 2000);
+    // forma (es. rettangolo -> rombo) e colore di riempimento delle forme
+    for (const k of ['geom', 'fill']) {
+      if (!s[k] || typeof s[k] !== 'object') continue;
+      const m = {};
+      for (const [id, v] of Object.entries(s[k])) {
+        if (!/^\d{1,7}$/.test(id)) continue;
+        if (k === 'geom' && GEOMS.includes(v)) m[id] = v;
+        if (k === 'fill' && /^[0-9A-Fa-f]{6}$/.test(v)) m[id] = v.toUpperCase();
+      }
+      if (Object.keys(m).length) out[k] = m;
+    }
+    // tabelle: testo delle celle ("riga,colonna" -> righe di testo) e righe nuove clonate da una riga esistente
+    if (s.cells && typeof s.cells === 'object') {
+      out.cells = {};
+      for (const [fid, cells] of Object.entries(s.cells)) {
+        if (!/^\d{1,7}$/.test(fid) || !cells || typeof cells !== 'object') continue;
+        const c = {};
+        for (const [k, lines] of Object.entries(cells)) if (/^\d{1,3},\d{1,3}$/.test(k) && Array.isArray(lines)) c[k] = lines.slice(0, 50).map((l) => clean(typeof l === 'string' ? l : l && l.text, 2000));
+        if (Object.keys(c).length) out.cells[fid] = c;
+      }
+      if (!Object.keys(out.cells).length) delete out.cells;
+    }
+    if (s.tableRows && typeof s.tableRows === 'object') {
+      out.tableRows = {};
+      for (const [fid, rows] of Object.entries(s.tableRows)) {
+        if (!/^\d{1,7}$/.test(fid) || !Array.isArray(rows) || !rows.length) continue;
+        out.tableRows[fid] = rows.slice(0, 100).map((r) => ({ after: Math.max(0, Number(r && r.after) || 0), cells: (Array.isArray(r && r.cells) ? r.cells : []).slice(0, 50).map((c) => clean(Array.isArray(c) ? c.join('\n') : c, 2000)) }));
+      }
+      if (!Object.keys(out.tableRows).length) delete out.tableRows;
+    }
     return out;
   });
+}
+// Modifiche a livello di documento: trova e sostituisci nei layout e nei master
+function cleanEdits(e) {
+  const out = {};
+  if (e && Array.isArray(e.replace)) {
+    out.replace = e.replace.slice(0, 200).map((r) => ({ find: clean(r && r.find, 200), replace: clean(r && r.replace, 500), matchCase: !!(r && r.matchCase), whole: !!(r && r.whole) })).filter((r) => r.find);
+  }
+  return out;
+}
+// I testi di forme con le sostituzioni applicate (per l'anteprima di layout e master)
+function withReplaces(shapes, replaces) {
+  if (!replaces || !replaces.length) return shapes;
+  return shapes.map((s) => (s.paragraphs ? { ...s, paragraphs: s.paragraphs.map((p) => ({ ...p, text: replaces.reduce((t, r) => t.replace(E.regexOf(r.find, r), r.replace), p.text) })) } : s));
 }
 route('PATCH', '/api/cippi/docs/:id', {}, async (ctx) => {
   const { doc, canManage, canEdit } = openDoc(ctx.user, ctx.params.id);
@@ -341,8 +415,10 @@ route('PATCH', '/api/cippi/docs/:id', {}, async (ctx) => {
   const sets = []; const vals = [];
   if (b.name !== undefined) { sets.push('name = ?'); vals.push(clean(b.name, 120, 'Nome')); }
   if (b.description !== undefined) { sets.push('description = ?'); vals.push(clean(b.description, 1000)); }
+  if (b.background !== undefined) { sets.push('background = ?'); vals.push(String(b.background || '').slice(0, 20000)); }
   if (b.status !== undefined) { if (!STATUSES.includes(b.status)) throw new HttpError(400, 'Stato non valido.'); sets.push('status = ?'); vals.push(b.status); }
   if (b.shared !== undefined) { if (!canManage || doc.kind !== 'modello') throw new HttpError(403, 'Solo chi gestisce il modello può condividerlo.'); sets.push('shared = ?'); vals.push(b.shared ? 1 : 0); }
+  if (b.edits !== undefined) { sets.push('edits = ?'); vals.push(JSON.stringify(cleanEdits(b.edits))); }
   if (b.slides !== undefined) {
     // conflitto: qualcun altro ha salvato nel frattempo
     if (b.updatedAt && b.updatedAt !== doc.updated_at) throw new HttpError(409, 'Il documento è stato modificato da un altro utente: ricarica per vedere le modifiche.');
@@ -365,7 +441,7 @@ route('DELETE', '/api/cippi/docs/:id', {}, (ctx) => {
 // ---- Esportazione ----------------------------------------------------------------------------------
 const fileNameOf = (d) => `${safeName(d.name)}.pptx`;
 function built(doc) {
-  try { return build(sourceBuf(doc.source_sha), JSON.parse(doc.slides)); } catch (err) { throw err instanceof HttpError ? err : new HttpError(err.status || 500, err.message); }
+  try { return build(sourceBuf(doc.source_sha), JSON.parse(doc.slides), JSON.parse(doc.edits || '{}')); } catch (err) { throw err instanceof HttpError ? err : new HttpError(err.status || 500, err.message); }
 }
 route('GET', '/api/cippi/docs/:id/download', {}, (ctx) => {
   const { doc } = openDoc(ctx.user, ctx.params.id);
@@ -392,9 +468,68 @@ route('POST', '/api/cippi/docs/:id/salva-versione', {}, async (ctx) => {
   // le note per slide restano attaccate alla stessa posizione
   const list = analysis.slides.map((s, i) => ({ src: s.n, ...(old[i] && old[i].note ? { note: old[i].note } : {}) }));
   const now = db.now();
-  db.run('UPDATE cippi_docs SET source_sha = ?, source_name = ?, slides = ?, summary = ?, version = version + 1, updated_at = ? WHERE id = ?', sha, fileNameOf(doc), JSON.stringify(list), summaryOf(analysis), now, doc.id);
+  db.run("UPDATE cippi_docs SET source_sha = ?, source_name = ?, slides = ?, summary = ?, edits = '{}', version = version + 1, updated_at = ? WHERE id = ?", sha, fileNameOf(doc), JSON.stringify(list), summaryOf(analysis), now, doc.id);
   db.log(ctx, 'cippi.versione', `${p.name}: ${doc.name} v${doc.version + 1}`);
   ctx.json(200, { space: space(p), path: rel, version: doc.version + 1, updatedAt: now });
+});
+
+// ---- Trova e sostituisci in tutto il documento ---------------------------------------------------------
+// Nelle slide (testi e celle delle tabelle) diventa una modifica dei testi, come quelle fatte a mano; nei layout e
+// nei master (piè di pagina, scritte fisse) resta una regola applicata all'esportazione. Con "anteprima" conta e basta.
+route('POST', '/api/cippi/docs/:id/sostituisci', {}, async (ctx) => {
+  const { doc, canEdit } = openDoc(ctx.user, ctx.params.id);
+  if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
+  const b = await ctx.body();
+  const find = clean(b.find, 200, 'Testo da cercare');
+  const replace = clean(b.replace, 500);
+  const opts = { matchCase: !!b.matchCase, whole: !!b.whole };
+  const re = E.regexOf(find, opts);
+  const hits = (t) => (String(t || '').match(re) || []).length;
+  const { pres } = load(doc.source_sha);
+  const list = JSON.parse(doc.slides);
+  let count = 0;
+  const where = [];
+  list.forEach((entry, i) => {
+    const src = pres.slides[entry.src - 1];
+    if (!src) return;
+    let n = 0;
+    for (const sh of src.shapes) {
+      if (sh.hidden) continue;
+      if (sh.kind === 'sp' && sh.paragraphs) {
+        const cur = entry.texts && entry.texts[sh.id] ? entry.texts[sh.id].map((l) => (typeof l === 'string' ? { text: l, lvl: 0 } : l)) : sh.paragraphs.map((p) => ({ text: p.text, lvl: p.lvl || 0 }));
+        const m = cur.reduce((a, l) => a + hits(l.text), 0);
+        if (!m) continue;
+        n += m;
+        entry.texts = entry.texts || {};
+        entry.texts[sh.id] = cur.map((l) => ({ text: String(l.text || '').replace(re, replace), lvl: l.lvl || 0 }));
+      } else if (sh.kind === 'table' && sh.cells) {
+        sh.cells.forEach((row, r) => row.forEach((c, k) => {
+          const key = `${r},${k}`;
+          const cur = entry.cells && entry.cells[sh.id] && entry.cells[sh.id][key] ? entry.cells[sh.id][key].join('\n') : c.text;
+          const m = hits(cur);
+          if (!m) return;
+          n += m;
+          entry.cells = entry.cells || {}; entry.cells[sh.id] = entry.cells[sh.id] || {};
+          entry.cells[sh.id][key] = cur.replace(re, replace).split('\n');
+        }));
+      }
+    }
+    if (n) { count += n; where.push(i + 1); }
+  });
+  // layout e master: si conta direttamente nel file (anche i segnaposto del piè di pagina, che l'anteprima non mostra)
+  let layoutCount = 0;
+  if (b.layouts) {
+    const parts = partsXml(sourceBuf(doc.source_sha), /^ppt\/(slideLayouts|slideMasters)\/[^/]+\.xml$/);
+    for (const xml of Object.values(parts)) layoutCount += E.replaceText(xml, find, replace, opts).count;
+  }
+  const now = db.now();
+  if (!b.anteprima && (count || layoutCount)) {
+    const edits = JSON.parse(doc.edits || '{}');
+    if (b.layouts && layoutCount) edits.replace = (edits.replace || []).concat([{ find, replace, ...opts }]).slice(-200);
+    db.run('UPDATE cippi_docs SET slides = ?, edits = ?, updated_at = ? WHERE id = ?', JSON.stringify(cleanSlides(list, pres.slides.length)), JSON.stringify(cleanEdits(edits)), now, doc.id);
+    db.log(ctx, 'cippi.sostituito', `${doc.name}: "${find}" → "${replace}" (${count + layoutCount})`);
+  }
+  ctx.json(200, { count, layoutCount, slides: where, updatedAt: now });
 });
 
 // ---- Punti chiave e note della revisione ----------------------------------------------------------
