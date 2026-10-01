@@ -5,6 +5,7 @@ import { viewHome, viewPrograms, viewFiles, viewProfile } from './views-main.js'
 import { viewProjects, resetProjects } from './views-projects.js';
 import { viewExplorer } from './explorer.js';
 import { viewPercorso } from './percorso.js';
+import { viewTrama } from './trama.js';
 import { maybeShowTour, showTour } from './tour.js';
 import { viewAccounts, viewLogs, viewIssues, viewSystem, viewRoles, viewTeamStats } from './views-admin.js';
 
@@ -22,6 +23,7 @@ const NAV = [
   { id: 'home', label: 'Home', icon: 'home', min: 'dipendente', view: viewHome, dynamic: true },
   { id: 'progetti', label: 'Progetti', icon: 'briefcase', min: 'dipendente', view: viewProjects, reset: resetProjects },
   { id: 'esplora', label: 'Esplora file', icon: 'folder', min: 'dipendente', view: viewExplorer },
+  { id: 'trama', label: 'Trama', icon: 'tree', min: 'dipendente', view: viewTrama },
   // Verbale Studio e' un'app a se' (pagina /verbali/), con gli stessi account e gli stessi progetti.
   { id: 'verbali', label: 'Verbale Studio', icon: 'note', min: 'dipendente', href: '/verbali/' },
   { id: 'programmi', label: 'Programmi', icon: 'apps', min: 'dipendente', view: viewPrograms },

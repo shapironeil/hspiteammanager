@@ -1,6 +1,6 @@
 # HSPI Team Manager
 
-Portale interno (beta) per il team HSPI: account con ruoli, progetti con le persone autorizzate, **Esplora file** con cartelle vere (personali e di progetto), **Verbale Studio** integrato, programmi che si aprono dal portale con la loro guida, scambio file, log e pannello di controllo. Si installa anche sul telefono come app.
+Portale interno (beta) per il team HSPI: account con ruoli, progetti con le persone autorizzate, **Esplora file** con cartelle vere (personali e di progetto), **Verbale Studio** integrato, **Trama** per le mappe dei processi, programmi che si aprono dal portale con la loro guida, scambio file, log e pannello di controllo. Si installa anche sul telefono come app.
 
 > **Stato:** v0.5 — in locale sul PC che lo ospita. Da usare con dati di prova finché non sono decisi i punti in `docs/PROGETTI-E-DATI.md`.
 
@@ -27,6 +27,7 @@ I permessi dipendono dal **grado** (Stage, Dipendente, PM manager, Manager, Seni
 | Progetti: solo quelli di cui si è membri | ✓ | ✓ + crea e sceglie le persone | ✓ tutti |
 | Esplora file: i miei file e le cartelle dei miei progetti (cartelle, caricamento, anteprima, modifica testi, versioni, cestino, ricerca) | ✓ | ✓ | ✓ tutti i progetti |
 | Verbale Studio: verbali dei progetti di cui si è membri | ✓ | ✓ + addestra l'AI del progetto | ✓ + importazione, gestione AI locale |
+| Trama: mappe dei processi dei progetti di cui si è membri | ✓ | ✓ + protegge voci e approva eliminazioni | ✓ |
 | Programmi: apri dal portale e leggi la guida | ✓ | ✓ + modifica descrizione e guida | ✓ |
 | File inviati: carica, invia, ricevi | ✓ | ✓ | ✓ + tutti i file |
 | Profilo, avatar, cambio password, segnala un problema | ✓ | ✓ | ✓ |
@@ -48,6 +49,7 @@ Prove nel browser (solo sul PC di sviluppo, serve Playwright): `node test/browse
 | `docs/PROGETTI-E-DATI.md` | Come sono trattati i file dei progetti, permessi, decisioni aperte |
 | `docs/INTEGRAZIONE-APP.md` | Archivio unico, Verbale Studio nel portale, importazione dal vecchio programma, API di Esplora file |
 | `docs/BACKUP-E-AGGIORNAMENTI.md` | Versione unica, aggiornamento sicuro, backup automatici, ripristino |
+| `docs/TRAMA.md` | Trama: mappe dei processi (macro, processi, micro) con import/export del file Excel BPB |
 | `docs/RUOLI.md` | Gradi del team, Hacker nascosto, account in blocco, ospiti a tempo nei progetti, statistiche |
 | `docs/TELEFONO.md` | Usare e installare il portale dal telefono con Tailscale (HTTPS) |
 | `docs/DIPENDENZE.md` | Albero delle dipendenze, struttura delle cartelle, regole per aggiungere cose |

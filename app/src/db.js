@@ -187,6 +187,72 @@ const MIGRATIONS = [
   );
   CREATE INDEX idx_access_user ON project_access_log(user_id);
   `,
+  // 7 - Trama: mappe di processi (macro N, processo N.N, micro N.N.N) per progetto
+  `
+  CREATE TABLE trama_maps (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    created_by INTEGER,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  CREATE TABLE trama_nodes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    map_id INTEGER NOT NULL,
+    parent_id INTEGER,
+    level INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    name TEXT NOT NULL DEFAULT '',
+    macro_code INTEGER,
+    ambito TEXT NOT NULL DEFAULT '',
+    dipartimenti TEXT NOT NULL DEFAULT '',
+    note TEXT NOT NULL DEFAULT '',
+    responsible_id INTEGER,
+    due_date TEXT,
+    status TEXT NOT NULL DEFAULT '',
+    protected INTEGER NOT NULL DEFAULT 0,
+    created_by INTEGER,
+    created_at TEXT NOT NULL,
+    updated_by INTEGER,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    deleted_batch TEXT
+  );
+  CREATE INDEX idx_trama_nodes_map ON trama_nodes(map_id, parent_id, position);
+  CREATE INDEX idx_trama_nodes_due ON trama_nodes(responsible_id, due_date);
+  CREATE TABLE trama_comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    node_id INTEGER NOT NULL,
+    user_id INTEGER,
+    text TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  CREATE INDEX idx_trama_comments_node ON trama_comments(node_id);
+  CREATE TABLE trama_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    map_id INTEGER NOT NULL,
+    node_id INTEGER,
+    user_id INTEGER,
+    action TEXT NOT NULL,
+    detail TEXT,
+    at TEXT NOT NULL
+  );
+  CREATE INDEX idx_trama_history_node ON trama_history(node_id);
+  CREATE TABLE trama_delete_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    node_id INTEGER NOT NULL,
+    map_id INTEGER NOT NULL,
+    requested_by INTEGER,
+    reason TEXT,
+    created_at TEXT NOT NULL,
+    decided_by INTEGER,
+    decided_at TEXT,
+    decision TEXT
+  );
+  `,
 ];
 
 function migrate() {
