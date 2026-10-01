@@ -2,12 +2,13 @@
 
 Cippi è l'app del portale per le presentazioni PowerPoint, come i documenti di chiusura progetto con i flussi To-Be. Si apre dal menu del portale, da **App e programmi** oppure all'indirizzo `/cippi/`. Si può installare come app del browser o scaricare sul PC con HSPI Client (vedi `docs/APP.md`).
 
-Cippi fa quattro cose:
+Cippi fa cinque cose:
 
 1. **Legge** una presentazione e ne ricostruisce la struttura.
 2. **Aiuta a rivederla**: punti chiave, domande, controlli, confronto To-Be / As-Is.
 3. **La modifica**: testi, ordine, slide duplicate o tolte. Poi la riesporta in `.pptx` con la stessa grafica.
 4. **Ne fa un modello**, da cui si creano presentazioni nuove e con cui si misura quanto un documento è completo.
+5. **Lavora per funzioni** (v0.2): slide nuove dai layout del modello, agenda con l'indicatore della sezione, immagini, tabelle, data, pulizia dei layout e la **presentazione SAL** generata dai dati. Riconosce i **modelli noti** della memoria del team.
 
 ## Come legge una presentazione
 
@@ -99,6 +100,26 @@ Tre pannelli; sul telefono uno alla volta, con le schede in alto.
   - Un modello lo vedono le persone del progetto.
   - Chi l'ha creato (o un Manager del progetto) può **condividerlo con tutti**.
 
+## Funzioni (v0.2): per funzioni, non slide per slide
+
+Dal documento aperto, con il pannello **Funzioni** (`#/doc/<id>?funzioni=1`, oppure `CippiFunzioni.open(id)` dal pulsante del pannello strumenti). Ogni funzione produce una **nuova versione** del file nella cartella del progetto (la precedente resta tra le versioni) e Cippi rianalizza.
+
+| Funzione | Cosa fa |
+|---|---|
+| **Nuova slide** | Da un **layout del modello** (titolo e contenuto, due contenuti, solo titolo, intestazione sezione…): titolo, testo con i livelli, tabella nativa (stile tabella del file), note del relatore, posizione. I segnaposto del layout portano posizioni, caratteri e colori. Se il layout non ha segnaposto, le caselle vanno nelle posizioni standard. |
+| **Agenda** | Elenco numerato automatico con il **rettangolo-indicatore** sulla voce corrente. Se il modello ha già una slide "Agenda" la clona (caselle libere, numerazione e indicatore compresi); altrimenti la crea dal layout. Con i **divisori** aggiunge una slide "Intestazione sezione" per voce. |
+| **Immagine** | Una slide con l'immagine nel **segnaposto immagine** del layout (o nell'area del contenuto), senza deformarla. |
+| **Data** | Scrive la data nei segnaposto data delle slide (la copertina). |
+| **Pulizia** | Toglie layout, master, temi e immagini che nessuna slide usa (i modelli nati unendo più presentazioni ne hanno decine). |
+| **Togli slide** | Toglie le slide indicate, con le note. |
+| **Presentazione SAL** | Dai **dati del SAL** (gli stessi del verbale Word, vedi `WORD.md`) genera dentro il modello: copertina compilata, agenda ripetuta prima di ogni sezione con l'indicatore spostato, sintesi, piano di lavoro a celle con i mesi, una slide per servizio con attività e deliverable, tabella di raccordo, consuntivazione per componente RTI e per attività, fatturazione e prospetto (ritenuta 0,5%, IVA 22%), rischi e prossimi passi. Le slide d'esempio del modello vengono tolte. |
+
+**Modello aziendale**: un `.pptx` si importa direttamente come modello (`Importa` con `modello=1`): restano i suoi master e layout veri, e da lì si creano le slide nuove. I modelli elencano i layout disponibili.
+
+**Modelli noti**: all'importazione Cippi confronta il file con le impronte in `docs/MEMORIA/pptx/` (nome del file, formato, tema, caratteri, layout, testi fissi, immagini del brand). Se corrisponde, il documento dice quale modello è e quali funzioni usare. Oggi conosce la presentazione SAL del progetto R-CAP.AC e il kick-off TXT/BIOSIRIS.
+
+**Controlli nuovi**: segnaposto da compilare ("Titolo", "Testo", "Titolo 1", "[Inserire …]"), voci dell'agenda senza slide.
+
 ## Dove stanno le cose
 
 | Cosa | Dove |
@@ -110,7 +131,7 @@ Tre pannelli; sul telefono uno alla volta, con le schede in alto.
 
 **Permessi:** vede e modifica un documento chi vede il progetto. Lo elimina chi l'ha creato o un Manager del progetto. I file nella cartella del progetto restano.
 
-## Limiti di questa versione (0.1)
+## Limiti di questa versione (0.2)
 
 - Legge solo `.pptx`. I vecchi `.ppt` vanno salvati come `.pptx` da PowerPoint.
 - L'anteprima è fedele nella disposizione, nei colori e nei testi, ma non è PowerPoint:
@@ -119,6 +140,8 @@ Tre pannelli; sul telefono uno alla volta, con le schede in alto.
   - i caratteri sono quelli del PC.
 - In Modifica si cambiano i testi delle forme e l'ordine delle slide. Il testo modificato prende lo stile del paragrafo che sostituisce, ma i grassetti dentro una frase vanno rifatti in PowerPoint. Tabelle e flussi si cambiano in PowerPoint.
 - Gli appunti (PDF, Word) si archiviano e si aprono, ma Cippi non li legge.
+- Le slide generate dalle funzioni usano i segnaposto del layout: il risultato è fedele al modello in PowerPoint, mentre l'anteprima di Cippi mostra i testi senza i caratteri del layout.
+- L'indicatore dell'agenda viene posizionato calcolando l'altezza delle righe (carattere, interlinea): con elenchi molto lunghi può servire un ritocco in PowerPoint.
 
 ## Proposte per le prossime versioni
 
@@ -144,6 +167,11 @@ Tre pannelli; sul telefono uno alla volta, con le schede in alto.
 | `POST /api/cippi/docs/:id/salva-versione` | salva nella cartella del progetto e rianalizza |
 | `POST /api/cippi/docs/:id/modello` | salva come modello |
 | `POST /api/cippi/models/:id/nuovo` | `{projectId, name, parts: [{part, count}], vuoto}`: crea da un modello |
+| `GET /api/cippi/docs/:id/layouts` | i layout del file (segnaposto, immagine, testi fissi) e le sezioni della presentazione SAL |
+| `POST /api/cippi/docs/:id/funzioni` | `{azioni: [{tipo: slide\|agenda\|data\|testi\|compila\|rimuovi\|pulisci, …}]}`: applica le azioni in ordine e salva una nuova versione |
+| `PUT /api/cippi/docs/:id/slide-immagine?layout=&title=&body=&at=&name=` | slide con l'immagine (il corpo è l'immagine) |
+| `POST /api/cippi/docs/:id/sal` | `{projectId, dati, name, sezioni, ripetiAgenda, divisori, pulisci}`: presentazione SAL nuova, con questo file come modello |
+| `PUT /api/cippi/import?projectId=&name=&modello=1` | importa un `.pptx` direttamente come modello aziendale |
 | `POST /api/cippi/docs/:id/points` | aggiunge un punto: `{slide, kind: chiave\|nota\|domanda\|da-fare, text}` |
 | `PATCH /api/cippi/points/:id` | modifica un punto |
 | `DELETE /api/cippi/points/:id` | elimina un punto |
@@ -158,6 +186,10 @@ Tre pannelli; sul telefono uno alla volta, con le schede in alto.
 | `app/src/cippi/analyze.js` | struttura, flussi, controlli, modello |
 | `app/src/cippi/pptx-write.js` | esportazione |
 | `app/src/cippi/pptx-new.js` | presentazione base e presentazioni di prova |
+| `app/src/cippi/pptx-build.js` | slide nuove dai layout, agenda, immagini, tabelle, data, pulizia, note |
+| `app/src/cippi/sal-deck.js` | la presentazione SAL dai dati (`app/src/sal.js`) |
+| `app/src/modelli.js` | riconoscimento dei modelli noti (`docs/MEMORIA`) |
+| `app/public/cippi/funzioni.js` | pannello Funzioni (modulo a sé) |
 | `app/src/routes/cippi.js` | API |
 | `app/public/cippi/` | interfaccia |
 

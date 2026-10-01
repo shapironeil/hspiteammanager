@@ -1,10 +1,10 @@
 {
   "id": "verbale-studio",
   "name": "Verbale Studio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "released": "2026-10-01",
   "summary": "Verbali delle riunioni dai transcript di Teams, con video, punti chiave ed email di riepilogo.",
-  "description": "Revisione del transcript in sincrono con la registrazione, punti chiave per ruolo, email di riepilogo, storico dei checkpoint per progetto. Con HSPI Client l'AI locale (Ollama) gira sul tuo PC.",
+  "description": "Revisione del transcript in sincrono con la registrazione, punti chiave per ruolo, email di riepilogo, storico dei checkpoint per progetto. Con HSPI Client l'AI locale (Ollama) gira sul tuo PC. Motore Word: il verbale SAL compilato dai punti del checkpoint e dai dati del SAL dentro il modello del team, con controlli ed economics calcolati.",
   "web": "/verbali/",
   "color": "#c96442",
   "icon": "icon.svg",
@@ -18,9 +18,22 @@
     "does": "AI locale con Ollama: installazione, modelli, riscrittura, addestramento, chat"
   },
   "novita": [
-    { "version": "1.0.0", "date": "2026-10-01", "items": [
-      "Diventa un'app del catalogo: si apre nella sua finestra e si scarica sul PC con HSPI Client.",
-      "Il motore dell'AI locale arriva con l'app e si aggiorna da solo."
-    ] }
+    {
+      "version": "1.1.0",
+      "date": "2026-10-01",
+      "items": [
+        "Verbale SAL in Word: dal checkpoint (menu ⋯) il modello del team si compila con sintesi, rischi, decisioni, servizi, attività, importi per mese, consuntivazione, fatturazione (ritenuta 0,5%, IVA 22%), firme. Il file va nella cartella del checkpoint.",
+        "Motore Word: lettura della struttura di un .docx, riconoscimento dei modelli noti, controlli (segnaposto, prospetto economico, codici), modelli Word del progetto in Verbali/Modelli.",
+        "Con un modello Cippi si crea insieme anche la presentazione SAL."
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-10-01",
+      "items": [
+        "Diventa un'app del catalogo: si apre nella sua finestra e si scarica sul PC con HSPI Client.",
+        "Il motore dell'AI locale arriva con l'app e si aggiorna da solo."
+      ]
+    }
   ]
 }

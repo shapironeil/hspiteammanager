@@ -209,18 +209,21 @@ class Deck {
     const pic = phs.find((p) => p.type === 'pic');
     const dt = phs.find((p) => p.type === 'dt');
     const num = phs.find((p) => p.type === 'sldNum');
-    if (title && opts.title !== undefined) shapes.push(phSp(title, 'Titolo', paraXml(opts.title)));
+    // casella di testo libera, per i layout senza il segnaposto adatto (titolo e corpo nelle posizioni standard)
+    const box = (name, r, inner, extra = '') => `<p:sp><p:nvSpPr><p:cNvPr id="${id++}" name="${esc(name)}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${r.x}" y="${r.y}"/><a:ext cx="${r.w}" cy="${r.h}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr><p:txBody><a:bodyPr wrap="square"${extra}><a:normAutofit/></a:bodyPr><a:lstStyle/>${inner}</p:txBody></p:sp>`;
+    const STD = { title: { x: Math.round(this.W * 0.069), y: Math.round(this.H * 0.053), w: Math.round(this.W * 0.862), h: Math.round(this.H * 0.098) }, body: { x: Math.round(this.W * 0.069), y: Math.round(this.H * 0.196), w: Math.round(this.W * 0.862), h: Math.round(this.H * 0.634) } };
+    if (opts.title !== undefined) shapes.push(title ? phSp(title, 'Titolo', paraXml(opts.title)) : box('Titolo', STD.title, paraXml(opts.title, { sz: 2800, bold: true }), ' anchor="b"'));
     if (sub && opts.subtitle !== undefined) shapes.push(phSp(sub, 'Sottotitolo', paraXml(opts.subtitle)));
     let bodyRect = bodies[0] && bodies[0].x != null ? bodies[0] : null;
     let usedBodies = 0;
-    if (opts.body !== undefined && bodies[0]) { shapes.push(phSp(bodies[0], 'Contenuto', paraXml(opts.body, opts.bodyStyle || {}))); usedBodies = 1; }
+    if (opts.body !== undefined) { shapes.push(bodies[0] ? phSp(bodies[0], 'Contenuto', paraXml(opts.body, opts.bodyStyle || {})) : box('Contenuto', STD.body, paraXml(opts.body, { sz: 1800, ...(opts.bodyStyle || {}) }))); usedBodies = 1; if (!bodies[0]) bodyRect = STD.body; }
     if (opts.body2 !== undefined && bodies[1]) { shapes.push(phSp(bodies[1], 'Contenuto 2', paraXml(opts.body2, opts.bodyStyle || {}))); usedBodies = 2; }
     if (dt && opts.date !== undefined) shapes.push(phSp(dt, 'Data', paraXml(opts.date)));
     if (num) shapes.push(`<p:sp><p:nvSpPr><p:cNvPr id="${id++}" name="Numero diapositiva"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="sldNum" sz="quarter"${num.idx ? ` idx="${num.idx}"` : ''}/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:fld id="{B6F15528-21DE-4FAA-801E-634DDDAF4B2B}" type="slidenum"><a:rPr lang="it-IT"/><a:t>‹N›</a:t></a:fld></a:p></p:txBody></p:sp>`);
     // area libera per immagini e tabelle quando il layout non ha un segnaposto adatto
     const free = () => {
       const b = !usedBodies && bodyRect ? bodyRect : (bodies[usedBodies] && bodies[usedBodies].x != null ? bodies[usedBodies] : null);
-      if (b) return b;
+      if (b && b !== STD.body) return b;
       const top = title && title.y != null ? title.y + title.h + Math.round(this.H * 0.02) : Math.round(this.H * 0.2);
       return { x: Math.round(this.W * 0.069), y: top, w: Math.round(this.W * 0.862), h: Math.round(this.H * 0.93) - top };
     };
@@ -342,7 +345,7 @@ class Deck {
     if (src) made = this.cloneAgenda(src.part, items, current, opts);
     else {
       const layout = this.layoutOf(opts.layout) || this.layouts().find((l) => l.hasTitle && l.bodies >= 1) || this.layouts()[0];
-      const body = layout.placeholders.filter(isBodyPh)[0];
+      const body = layout.placeholders.filter(isBodyPh)[0] || { x: Math.round(this.W * 0.069), y: Math.round(this.H * 0.196), w: Math.round(this.W * 0.862), h: Math.round(this.H * 0.634) };
       const sz = opts.sz || 2400;
       const extra = [];
       if (current >= 0 && body && body.x != null) {

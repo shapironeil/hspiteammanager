@@ -2049,6 +2049,66 @@
     $('#videoPick').onclick = () => $('#videoFile').click();
     $('#transcriptFile').onchange = (e) => { const f = e.target.files[0]; if (f) importTranscriptFile(f); e.target.value = ''; };
     $('#videoFile').onchange = (e) => { const f = e.target.files[0]; if (f) uploadVideo(f); e.target.value = ''; };
+    // Verbale SAL in Word (motore Word) e, volendo, la presentazione in Cippi: i punti del checkpoint diventano i dati
+    // del SAL, i servizi e gli importi si completano nel riquadro dei dati; il file va nella cartella del checkpoint.
+    // le API del motore Word e del SAL sono del portale, non di Verbale Studio: niente riscrittura su /api/vs/
+    async function portalApi(method, url, body) {
+      const opts = { method, headers: { ...HSPI }, credentials: 'same-origin' };
+      if (body !== undefined) { opts.body = JSON.stringify(body); opts.headers['Content-Type'] = 'application/json'; }
+      const res = await fetch(url, opts);
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) sessionExpired();
+      if (!res.ok) throw new Error(data.error || `Errore ${res.status}`);
+      return data;
+    }
+    async function exportSalWord() {
+      await saveNow();
+      const pid = state.cp.projectId;
+      let modelli = { modelli: [] }; let cippi = { models: [] }; let base = { dati: {} }; let esempio = { dati: {} };
+      try { [modelli, cippi, base, esempio] = await Promise.all([portalApi('GET', `/api/word/modelli?projectId=${pid}`), portalApi('GET', '/api/cippi').catch(() => ({ models: [] })), portalApi('POST', '/api/sal/da-checkpoint', { projectId: pid, checkpointId: state.cp.id, template: state.tpl }), portalApi('GET', '/api/sal/esempio')]); } catch (e) { return toast(e.message, { error: true }); }
+      const dati = { ...base.dati, luogo: '', lotto: '1', numero: '', periodo: { da: '', a: '' }, servizi: esempio.dati.servizi, componentiRTI: esempio.dati.componentiRTI, rappresentantiPA: [], riferimenti: esempio.dati.riferimenti, deliverableCodifica: [] };
+      const opt = (v, t, sel) => `<option value="${esc(v)}"${sel ? ' selected' : ''}>${esc(t)}</option>`;
+      const v = await dialog('Verbale SAL in Word', `
+        <p class="muted small">I punti del checkpoint sono già nei dati (sintesi, milestone, rischi, decisioni). Completa servizi, attività e importi nel riquadro: i totali, la ritenuta e l'IVA li calcola il portale. I servizi d'esempio vanno sostituiti con quelli veri.</p>
+        <div class="row gap-6">
+          <label class="field grow"><span>Modello Word</span><select class="input" name="modello">${opt('esempio', 'Modello di prova (inventato)', !modelli.modelli.length)}${modelli.modelli.map((m) => opt(m.path, `${m.name}${m.modello ? ' · ' + m.modello.tipoDocumento : ''}`, true)).join('')}</select></label>
+          <label class="field grow"><span>Anche la presentazione (modello Cippi)</span><select class="input" name="cippi">${opt('', 'No')}${cippi.models.map((m) => opt(m.id, `${m.name} (${m.project})`)).join('')}</select></label>
+        </div>
+        <div class="row gap-6">
+          <label class="field"><span>SAL n.</span><input class="input" name="numero" type="number" min="1" placeholder="2" /></label>
+          <label class="field"><span>Periodo da</span><input class="input" name="da" type="date" /></label>
+          <label class="field"><span>Periodo a</span><input class="input" name="a" type="date" /></label>
+          <label class="field"><span>Luogo</span><input class="input" name="luogo" placeholder="Palermo" /></label>
+          <label class="field"><span>Lotto</span><input class="input" name="lotto" value="1" /></label>
+        </div>
+        <label class="field"><span>Dati del SAL (JSON: servizi, attività, importi per mese, rappresentanti, riferimenti)</span><textarea class="input mono" name="dati" rows="12" spellcheck="false">${esc(JSON.stringify(dati, null, 2))}</textarea></label>
+        <label class="check"><input type="checkbox" name="scarica" /> Scarica il file invece di salvarlo nella cartella del checkpoint</label>`, { okText: 'Crea il verbale', wide: true });
+      if (!v) return;
+      let d;
+      try { d = JSON.parse(v.dati); } catch (e) { return toast('I dati del SAL non sono un JSON valido: ' + e.message, { error: true }); }
+      if (v.numero) d.numero = Number(v.numero);
+      if (v.da || v.a) d.periodo = { ...(d.periodo || {}), da: v.da || (d.periodo || {}).da, a: v.a || (d.periodo || {}).a };
+      if (v.luogo) d.luogo = v.luogo;
+      if (v.lotto) d.lotto = v.lotto;
+      d.data = d.data || state.cp.date;
+      const body = { projectId: pid, modello: v.modello, dati: d, checkpointId: state.cp.id, nome: `Verbale SAL${d.numero ? ' ' + d.numero : ''} ${state.cp.date}` };
+      try {
+        if (v.scarica) {
+          const res = await fetch('/api/word/sal', { method: 'POST', headers: { ...HSPI, 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ ...body, scarica: true }) });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `Errore ${res.status}`);
+          download(`${body.nome}.docx`, await res.blob(), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        } else {
+          const r = await portalApi('POST', '/api/word/sal', body);
+          const warn = (r.controlli || []).filter((c) => c.level !== 'info');
+          toast(`Verbale creato: ${r.name}${warn.length ? ` · ${warn.length} cose da controllare: ${warn[0].text}` : ''}`, { action: 'Apri la cartella', onAction: () => openFolderRes(`${r.space}/${r.path.split('/').slice(0, -1).join('/')}`), ms: 9000 });
+          await openCheckpoint(state.cp.id);
+        }
+        if (v.cippi) {
+          const c = await portalApi('POST', `/api/cippi/docs/${v.cippi}/sal`, { projectId: pid, dati: d, name: `Presentazione SAL${d.numero ? ' ' + d.numero : ''} ${state.cp.date}` });
+          toast('Presentazione SAL creata in Cippi.', { action: 'Apri in Cippi', onAction: () => window.open(`/cippi/#/doc/${c.id}`, '_blank', 'noopener'), ms: 9000 });
+        }
+      } catch (e) { toast(e.message, { error: true, ms: 9000 }); }
+    }
     $('#moreBtn').onclick = (e) => { e.stopPropagation(); $('#moreMenu').hidden = !$('#moreMenu').hidden; };
     document.addEventListener('click', () => ($('#moreMenu').hidden = true));
     $('#moreMenu').onclick = async (e) => {
@@ -2064,6 +2124,7 @@
       if (act === 'export-txt') download(`${base}_transcript.txt`, Transcript.toTxt(cues(), header));
       if (act === 'export-vtt') download(`${base}_transcript.vtt`, Transcript.toVtt(cues()));
       if (act === 'export-json') download(`${base}_checkpoint.json`, JSON.stringify(state.cp, null, 2), 'application/json');
+      if (act === 'export-sal-docx') return exportSalWord();
       if (act === 'remove-video' && state.cp.video && await confirmDlg('Scollegare il video?', state.cp.video.external ? 'Il video resta nella cartella di lavoro: viene solo scollegato dal checkpoint.' : 'Il file video verrà eliminato dall\'archivio locale. Transcript e punti restano salvati.', 'Conferma', true)) {
         await api('DELETE', `/api/projects/${state.cp.projectId}/checkpoints/${state.cp.id}/video`);
         state.cp.video = null;

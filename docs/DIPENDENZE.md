@@ -39,6 +39,13 @@ avvia.bat
     │   └── src/explorer.js          cartelle vere, indice, versioni, cestino, streaming
     ├── src/routes/verbali.js        Verbale Studio (/api/vs/)
     │   └── src/verbali/             archivio.js, importa.js, ollama.js, docx.js, testi.js
+    ├── src/routes/word.js           motore Word (/api/word/): lettura, controlli, modelli, verbale SAL
+    │   └── src/word/                docx-read.js, docx-write.js, docx-new.js, sal-verbale.js, controlli.js
+    ├── src/routes/sal.js            dati del SAL (/api/sal/): esempio, calcola, da-checkpoint
+    │   └── src/sal.js               dati, calcoli e controlli del SAL (comune a Word e Cippi)
+    ├── src/routes/cippi.js          Cippi (/api/cippi/)
+    │   └── src/cippi/               pptx-read.js, analyze.js, pptx-write.js, pptx-new.js, pptx-build.js, sal-deck.js
+    ├── src/modelli.js               riconoscimento dei modelli noti (impronte in docs/MEMORIA)
     └── src/routes/admin.js          home, annunci, log, errori, sistema
         │
         ├── src/storage.js           unico modulo che tocca i file su disco

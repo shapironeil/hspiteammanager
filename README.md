@@ -28,9 +28,9 @@ I permessi dipendono dal **grado** (Stage, Dipendente, PM manager, Manager, Seni
 | Home, annunci | ✓ | ✓ + pubblica annunci | ✓ |
 | Progetti: solo quelli di cui si è membri | ✓ | ✓ + crea e sceglie le persone | ✓ tutti |
 | Esplora file: i miei file e le cartelle dei miei progetti (cartelle, caricamento, anteprima, modifica testi, versioni, cestino, ricerca) | ✓ | ✓ | ✓ tutti i progetti |
-| Verbale Studio: verbali dei progetti di cui si è membri | ✓ | ✓ + addestra l'AI del progetto | ✓ + importazione, gestione AI locale |
+| Verbale Studio: verbali dei progetti di cui si è membri, verbale SAL in Word dal modello del team | ✓ | ✓ + addestra l'AI del progetto | ✓ + importazione, gestione AI locale |
 | GestioneCelle: mappe dei processi dei progetti di cui si è membri | ✓ | ✓ + protegge voci e approva eliminazioni | ✓ |
-| Cippi: presentazioni dei progetti di cui si è membri (revisione, modifica, modelli) | ✓ | ✓ + elimina i documenti del progetto, condivide i modelli | ✓ |
+| Cippi: presentazioni dei progetti di cui si è membri (revisione, modifica, modelli, funzioni, presentazione SAL) | ✓ | ✓ + elimina i documenti del progetto, condivide i modelli | ✓ |
 | Programmi: apri dal portale e leggi la guida | ✓ | ✓ + modifica descrizione e guida | ✓ |
 | File inviati: carica, invia, ricevi | ✓ | ✓ | ✓ + tutti i file |
 | Profilo, avatar, cambio password, segnala un problema | ✓ | ✓ | ✓ |
@@ -42,8 +42,8 @@ I permessi dipendono dal **grado** (Stage, Dipendente, PM manager, Manager, Seni
 
 ## Prove automatiche
 
-Dalla cartella `app`: `node --test --test-concurrency=1 test/*.test.js` (API: account, Esplora file, Verbale Studio, sicurezza). Usano una cartella temporanea, mai i dati veri.
-Prove nel browser (solo sul PC di sviluppo, serve Playwright): `node test/browser/explorer.ui.js`, `verbali.ui.js`, `pwa.ui.js`.
+Dalla cartella `app`: `node --test --test-concurrency=1 test/*.test.js` (API: account, Esplora file, Verbale Studio, GestioneCelle, Cippi, motore Word, sicurezza). Usano una cartella temporanea, mai i dati veri.
+Prove nel browser (solo sul PC di sviluppo, serve Playwright): `node test/browser/explorer.ui.js`, `verbali.ui.js`, `cippi.ui.js`, `sal.ui.js`, `pwa.ui.js`.
 
 ## Documentazione
 
@@ -52,7 +52,9 @@ Prove nel browser (solo sul PC di sviluppo, serve Playwright): `node test/browse
 | `docs/PROGETTI-E-DATI.md` | Come sono trattati i file dei progetti, permessi, decisioni aperte |
 | `docs/INTEGRAZIONE-APP.md` | Archivio unico, Verbale Studio nel portale, importazione dal vecchio programma, API di Esplora file |
 | `docs/GITHUB.md` | Prove automatiche, pull request automatiche e programmate, dove vederle (anche nel portale) |
-| `docs/CIPPI.md` | Cippi: presentazioni PowerPoint, lettura della struttura, modalità Revisione, modelli, esportazione |
+| `docs/CIPPI.md` | Cippi: presentazioni PowerPoint, lettura della struttura, modalità Revisione, modelli, esportazione, funzioni (slide dai layout, agenda, presentazione SAL) |
+| `docs/WORD.md` | Motore Word (in Verbale Studio): lettura, controlli e compilazione dei `.docx` per funzioni, verbale SAL dai dati |
+| `docs/MEMORIA/README.md` | Memoria dei modelli di file analizzati: schede e impronte per riconoscerli |
 | `docs/APP.md` | App del portale (Verbale Studio, GestioneCelle): catalogo, versioni proprie, pacchetti scaricati da HSPI Client, come aggiungere un'app |
 | `docs/CLIENT.md` | Host e client: HSPI Client (installazione senza amministratore, aggiornamento dall'host, motore locale per l'AI), sito /benvenuto /guida /scarica |
 | `docs/BACKUP-E-AGGIORNAMENTI.md` | Versione unica, aggiornamento sicuro, backup automatici, ripristino |

@@ -29,6 +29,7 @@ require('./src/routes/verbali');
 require('./src/routes/celle');
 require('./src/routes/cippi');
 require('./src/routes/sal');
+require('./src/routes/word');
 const { accessUrls } = require('./src/routes/admin');
 
 const server = http.createServer(handle);

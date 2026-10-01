@@ -137,3 +137,71 @@ test('eliminazione: chi l\'ha creato o il Manager del progetto', async () => {
   assert.equal((await mario.del(`/api/cippi/docs/${other}`)).status, 200);
   assert.equal((await luca.get(`/api/cippi/docs/${other}`)).status, 404);
 });
+
+test('funzioni di alto livello: layout del modello, slide nuove, agenda con indicatore e divisori, data, pulizia; nuova versione', async () => {
+  const imp = await luca.put(`/api/cippi/import?projectId=${pid}&name=${encodeURIComponent('Base.pptx')}`, pptx());
+  const id = imp.data.id;
+  const lay = (await luca.get(`/api/cippi/docs/${id}/layouts`)).data;
+  assert.ok(lay.layouts.length >= 1 && lay.sezioni.some((s) => s.sezione === 'consuntivazione'));
+  const before = (await luca.get(`/api/cippi/docs/${id}`)).data;
+  const r = await luca.post(`/api/cippi/docs/${id}/funzioni`, { azioni: [
+    { tipo: 'agenda', items: ['Obiettivi', 'Processi', 'Conclusioni'], current: 1, at: 2, dividers: true },
+    { tipo: 'slide', layout: lay.layouts[0].name, title: 'Tabella di prova', table: { rows: [['Voce', 'Valore'], ['A', '€ 1,00'], ['B', '€ 2,00']] }, notes: 'Nota del relatore' },
+    { tipo: 'slide', title: 'Elenco', body: ['Primo', { text: 'Dettaglio', lvl: 1 }, 'Secondo'] },
+    { tipo: 'data', testo: '01/10/2026' },
+    { tipo: 'pulisci' },
+  ] });
+  assert.equal(r.status, 200, JSON.stringify(r.data));
+  assert.equal(r.data.version, before.version + 1);
+  assert.deepEqual(r.data.esiti.map((e) => e.tipo), ['agenda', 'slide', 'slide', 'data', 'pulisci']);
+  assert.deepEqual(r.data.esiti[0].dividers, [3, 4, 5], 'agenda in posizione 2, divisori subito dopo');
+  const after = (await luca.get(`/api/cippi/docs/${id}`)).data;
+  assert.equal(after.list.length, before.list.length + 6);
+  const s2 = after.analysis.slides[1];
+  assert.equal(s2.kind, 'indice');
+  assert.deepEqual(s2.entries, ['Obiettivi', 'Processi', 'Conclusioni']);
+  assert.ok(after.analysis.slides.slice(2, 5).every((s) => s.kind === 'divisore' || s.kind === 'testo'));
+  const tab = after.analysis.slides.find((s) => s.title === 'Tabella di prova');
+  assert.ok(tab && tab.blocks.some((b) => b.role === 'tabella' && b.rows[1][1] === '€ 1,00'), 'tabella nativa nella slide');
+  const el = after.analysis.slides.find((s) => s.title === 'Elenco');
+  assert.ok(el && el.blocks.some((b) => (b.paragraphs || []).some((p) => p.text === 'Dettaglio' && p.lvl === 1)));
+  assert.equal((await luca.post(`/api/cippi/docs/${id}/funzioni`, { azioni: [{ tipo: 'boh' }] })).status, 400);
+  assert.equal((await ospite.post(`/api/cippi/docs/${id}/funzioni`, { azioni: [{ tipo: 'data', testo: 'x' }] })).status, 404);
+  // immagine in una slide nuova (PNG minimo 1x1)
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
+  const img = await luca.put(`/api/cippi/docs/${id}/slide-immagine?title=${encodeURIComponent('Immagine')}&name=punto.png`, png);
+  assert.equal(img.status, 200, JSON.stringify(img.data));
+  const withImg = (await luca.get(`/api/cippi/docs/${id}`)).data;
+  const sl = (await luca.get(`/api/cippi/docs/${id}/slide/${withImg.list.length}`)).data;
+  assert.ok(sl.shapes.some((s) => s.kind === 'pic' && /ppt\/media\/image/.test(s.image || '')), 'immagine nel pacchetto');
+  assert.equal((await luca.get(`/api/cippi/docs/${id}/media?name=${encodeURIComponent(sl.shapes.find((s) => s.kind === 'pic').image)}`)).status, 200);
+  // il file e' una nuova versione nella cartella del progetto
+  const vers = (await luca.get(`/api/explorer/p${pid}/versions?path=${encodeURIComponent('Cippi/Base/Base.pptx')}`)).data;
+  assert.ok(Array.isArray(vers) ? vers.length >= 1 : JSON.stringify(vers).length > 2, 'versioni precedenti conservate');
+});
+
+test('presentazione SAL dai dati dentro un modello: copertina, agenda, tabelle, economics; modello importato come tale', async () => {
+  const SAL = require('../src/sal');
+  const m = await luca.put(`/api/cippi/import?projectId=${pid}&name=${encodeURIComponent('Modello aziendale.pptx')}&modello=1`, pptx());
+  assert.equal(m.status, 201, JSON.stringify(m.data));
+  const list = (await luca.get('/api/cippi')).data;
+  const model = list.models.find((x) => x.id === m.data.id);
+  assert.ok(model, 'importato direttamente come modello');
+  const r = await luca.post(`/api/cippi/docs/${m.data.id}/sal`, { projectId: pid, dati: SAL.esempio(), name: 'SAL 2 di prova' });
+  assert.equal(r.status, 201, JSON.stringify(r.data));
+  assert.equal(r.data.economics.totaleFattura, 30347.5);
+  const d = (await luca.get(`/api/cippi/docs/${r.data.id}`)).data;
+  const titles = d.analysis.slides.map((s) => s.title);
+  assert.ok(titles.includes('Sintesi') && titles.includes('Avanzamento del Piano di Lavoro') && titles.includes('Fatturazione attiva') && titles.includes('Rischi e prossimi passi'), titles.join(' | '));
+  assert.ok(titles.some((t) => /^A – Servizio di Sviluppo/.test(t)));
+  const gantt = d.analysis.slides.find((s) => s.title === 'Avanzamento del Piano di Lavoro');
+  assert.ok(gantt.blocks.some((b) => b.role === 'tabella' && b.rows[0].slice(2).join(',') === 'Aprile,Maggio,Giugno'));
+  const eco = d.analysis.slides.find((s) => s.title === 'Consuntivazione per attività');
+  assert.ok(eco.blocks.some((b) => b.role === 'tabella' && b.rows[b.rows.length - 1].includes('€ 40.000,00')));
+  assert.ok(d.analysis.slides.filter((s) => s.kind === 'indice').length >= 2, 'agenda ripetuta prima di ogni sezione');
+  assert.ok(!d.analysis.checks.some((c) => /Segnaposto/.test(c.text)), 'nessun segnaposto rimasto');
+  assert.equal((await luca.post(`/api/cippi/docs/${m.data.id}/sal`, { projectId: pid, dati: { periodo: { da: '2026-04-01', a: '2026-04-30' }, servizi: [{ nome: 'X', attivita: [{ nome: 'a', valore: 10, importiMese: [20] }] }] } })).status, 400, 'dati incoerenti rifiutati');
+  // riconoscimento: la presentazione di prova non e' un modello noto
+  assert.ok(!d.modello || !d.modello.corrisponde);
+  assert.ok(d.layouts.length >= 1 && d.funzioni.length >= 5);
+});
