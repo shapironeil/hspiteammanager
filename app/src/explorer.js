@@ -22,7 +22,7 @@ const VIEW = {
   '.txt': 'text/plain; charset=utf-8', '.md': 'text/plain; charset=utf-8', '.json': 'text/plain; charset=utf-8', '.csv': 'text/plain; charset=utf-8',
   '.log': 'text/plain; charset=utf-8', '.vtt': 'text/plain; charset=utf-8', '.srt': 'text/plain; charset=utf-8',
   '.html': 'text/html; charset=utf-8', '.htm': 'text/html; charset=utf-8',
-  '.mp4': 'video/mp4', '.m4v': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime',
+  '.mp4': 'video/mp4', '.m4v': 'video/mp4', '.webm': 'video/webm', '.mov': 'video/quicktime', '.mkv': 'video/x-matroska',
   '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.wav': 'audio/wav', '.ogg': 'audio/ogg',
 };
 const viewType = (name) => VIEW[path.extname(name).toLowerCase()] || null;

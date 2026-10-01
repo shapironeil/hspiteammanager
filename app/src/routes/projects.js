@@ -234,4 +234,4 @@ route('PUT', '/api/projects/:id/files', {}, async (ctx) => {
   ctx.json(201, { ok: true, replaced: exists });
 });
 
-module.exports = { baseDir, sync, canSee, canEdit, isMember };
+module.exports = { baseDir, sync, canSee, canEdit, isMember, folderName };
