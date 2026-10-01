@@ -274,11 +274,11 @@ export async function viewExplorer(el) {
     await panel.ready;
   };
 
-  side.append(
+  side.append(...[
     h('div', { class: 'small muted ex-side-title' }, 'Personale'),
     ...spaces.filter((s) => s.kind === 'personale').map((s) => spaceButton(s)),
     spaces.length > 1 ? h('div', { class: 'small muted ex-side-title' }, 'Progetti') : null,
-    ...spaces.filter((s) => s.kind === 'progetto').map((s) => spaceButton(s)));
+    ...spaces.filter((s) => s.kind === 'progetto').map((s) => spaceButton(s))].filter(Boolean)); // senza progetti niente scritta "null"
   function spaceButton(s) {
     return h('button', { class: 'nav-item ex-space', type: 'button', 'data-space': s.id, onclick: () => show(s.id, '').catch(toastError) },
       icon(s.kind === 'personale' ? 'user' : 'briefcase'), h('span', {}, s.label));

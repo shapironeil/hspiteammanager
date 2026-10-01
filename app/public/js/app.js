@@ -336,21 +336,38 @@ function renderShell() {
   }
 
   content = h('div', { id: 'view' });
-  shell = h('div', { class: 'shell' + (pinned ? ' pinned' : '') },
-    h('div', { class: 'scrim', onclick: () => shell.classList.remove('menu-open') }),
-    h('aside', { class: 'sidebar glass' },
+  const pinLabel = h('span', {}, pinned ? 'Sblocca il menu' : 'Blocca il menu');
+  const togglePin = () => {
+    const on = shell.classList.toggle('pinned');
+    store('hspi.menu', on ? 'fisso' : 'comparsa');
+    side.classList.remove('open');
+    pinLabel.textContent = on ? 'Sblocca il menu' : 'Blocca il menu';
+  };
+  // Menu dinamico: si apre passandoci sopra (dopo un attimo, per non aprirsi passando per caso),
+  // si richiude uscendo o dopo aver scelto una voce. Bloccato, resta aperto.
+  let hoverTimer = null;
+  const side = h('aside', {
+    class: 'sidebar glass',
+    onmouseenter: () => { clearTimeout(hoverTimer); hoverTimer = setTimeout(() => side.classList.add('open'), 140); },
+    onmouseleave: () => { clearTimeout(hoverTimer); side.classList.remove('open'); },
+    onclick: (e) => { if (e.target.closest('a.nav-item, button.nav-item')) { clearTimeout(hoverTimer); side.classList.remove('open'); e.target.closest('.nav-item').blur(); } },
+  },
       h('a', { class: 'side-brand', href: '#/home', title: 'Home', style: 'text-decoration:none;color:inherit' },
         h('img', { src: logoUrl(), alt: '' }), h('strong', {}, app.state.portalName)),
       nav,
       h('div', { class: 'side-foot' },
         link(PROFILE),
-        h('button', { class: 'nav-item', type: 'button', title: 'Esci', onclick: logout }, icon('logout'), h('span', {}, 'Esci')))),
+        h('button', { class: 'nav-item', type: 'button', title: 'Esci', onclick: logout }, icon('logout'), h('span', {}, 'Esci')),
+        h('button', { class: 'nav-item side-pin only-desktop', type: 'button', title: 'Tieni il menu aperto o fallo comparire', 'aria-label': 'Tieni il menu aperto o fallo comparire', onclick: togglePin }, icon('pin'), pinLabel)));
+  shell = h('div', { class: 'shell' + (pinned ? ' pinned' : '') },
+    h('div', { class: 'scrim', onclick: () => shell.classList.remove('menu-open') }),
+    side,
     h('div', { class: 'main' },
       h('header', { class: 'topbar' },
         h('button', { class: 'icon-btn only-mobile', type: 'button', 'aria-label': 'Apri il menu', onclick: () => shell.classList.add('menu-open') }, icon('menu')),
         h('button', {
           class: 'icon-btn only-desktop', type: 'button', 'aria-label': 'Blocca o sblocca il menu', title: 'Blocca o sblocca il menu',
-          onclick: () => { const on = shell.classList.toggle('pinned'); store('hspi.menu', on ? 'fisso' : 'comparsa'); },
+          onclick: togglePin,
         }, icon('menu')),
         h('a', { href: '#/home', title: 'Home', style: 'line-height:0' }, h('img', { class: 'topbar-logo', src: logoUrl(), alt: app.state.portalName })),
         h('div', { class: 'spacer' }),
