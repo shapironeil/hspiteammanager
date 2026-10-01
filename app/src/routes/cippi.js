@@ -165,10 +165,23 @@ route('POST', '/api/cippi/import-progetto', {}, async (ctx) => {
 });
 
 // .pptx presenti nelle cartelle dei progetti visibili (per importarli senza scaricarli e ricaricarli)
+const pptxInProject = (p) => db.all("SELECT path, name, size, updated_at FROM fs_index WHERE space = ? AND is_dir = 0 AND lower(name) LIKE '%.pptx' AND path NOT LIKE '.%' ORDER BY updated_at DESC LIMIT 200", space(p))
+  .filter((r) => !/(^|\/)\.(cestino|storico)\//.test(r.path));
+// Per ogni .pptx della cartella, il documento di MPoint che ne e' nato (la copia in Cippi/<nome>/ o il file importato sul posto)
+function docOfFile(p) {
+  const docs = db.all('SELECT id, folder, source_name FROM cippi_docs WHERE project_id = ? AND deleted_at IS NULL', p.id);
+  const byPath = new Map();
+  const byName = new Map();
+  for (const d of docs) {
+    byPath.set(`${d.folder}/${safeName(path.basename(d.source_name, path.extname(d.source_name)))}.pptx`, d.id);
+    if (!byName.has(d.source_name)) byName.set(d.source_name, d.id);
+  }
+  return (r) => byPath.get(r.path) || byName.get(r.name) || null;
+}
 route('GET', '/api/cippi/file-progetto', {}, (ctx) => {
   const p = project(ctx.user, ctx.query.get('projectId'));
-  const rows = db.all("SELECT path, name, size, updated_at FROM fs_index WHERE space = ? AND is_dir = 0 AND lower(name) LIKE '%.pptx' AND path NOT LIKE '.%' ORDER BY updated_at DESC LIMIT 200", space(p));
-  ctx.json(200, rows.filter((r) => !/(^|\/)\.(cestino|storico)\//.test(r.path)).map((r) => ({ path: r.path, name: r.name, size: r.size, updatedAt: r.updated_at })));
+  const docOf = docOfFile(p);
+  ctx.json(200, pptxInProject(p).map((r) => ({ path: r.path, name: r.name, size: r.size, updatedAt: r.updated_at, docId: docOf(r) })));
 });
 
 // ---- Elenco ----------------------------------------------------------------------------------------
@@ -191,8 +204,24 @@ route('GET', '/api/cippi', {}, (ctx) => {
   const inList = ids.length ? `project_id IN (${ids.map(() => '?').join(',')})` : '0';
   const docs = db.all(`SELECT * FROM cippi_docs WHERE deleted_at IS NULL AND kind = 'documento' AND ${inList} ORDER BY updated_at DESC`, ...ids);
   const models = db.all(`SELECT * FROM cippi_docs WHERE deleted_at IS NULL AND kind = 'modello' AND (${inList} OR shared = 1) ORDER BY name`, ...ids);
+  // Schermata iniziale: prima i file aperti di recente dalla persona, poi le cartelle dei progetti con il loro riepilogo
+  const seen = new Set([...docs, ...models].map((d) => d.id));
+  const recent = db.all(`SELECT r.doc_id AS id, r.opened_at AS openedAt FROM cippi_recenti r JOIN cippi_docs d ON d.id = r.doc_id
+    WHERE r.user_id = ? AND d.deleted_at IS NULL ORDER BY r.opened_at DESC LIMIT 24`, ctx.user.id).filter((r) => seen.has(r.id)).slice(0, 12);
+  const folderOf = (p) => {
+    const mine = docs.filter((d) => d.project_id === p.id);
+    const files = pptxInProject(p);
+    const docOf = docOfFile(p);
+    const last = [...mine.map((d) => d.updated_at), ...files.map((f) => f.updated_at)].sort().pop() || p.updated_at;
+    return {
+      id: p.id, name: p.name, client: p.client || '', status: p.status, canManage: projects.canEdit(ctx.user, p),
+      docs: mine.length, models: models.filter((d) => d.project_id === p.id).length,
+      files: files.length, daImportare: files.filter((f) => !docOf(f)).length, updatedAt: last,
+    };
+  };
   ctx.json(200, {
-    projects: visible.map((p) => ({ id: p.id, name: p.name, canManage: projects.canEdit(ctx.user, p) })),
+    projects: visible.map(folderOf),
+    recent,
     docs: docs.map((d) => brief(d, ctx.user, { project: visible.find((p) => p.id === d.project_id).name })),
     models: models.map((d) => {
       const t = JSON.parse(d.template || '{}');
@@ -222,6 +251,8 @@ function appunti(p, d) {
 route('GET', '/api/cippi/docs/:id', {}, (ctx) => {
   const { doc, project: p, canManage, canEdit } = openDoc(ctx.user, ctx.params.id);
   const { pres, analysis } = load(doc.source_sha);
+  // file recenti della schermata iniziale: l'ultima apertura di ogni documento, per persona
+  db.run('INSERT INTO cippi_recenti(user_id, doc_id, opened_at) VALUES(?,?,?) ON CONFLICT(user_id, doc_id) DO UPDATE SET opened_at = excluded.opened_at', ctx.user.id, doc.id, db.now());
   const tplId = Number(ctx.query.get('modello')) || doc.template_id;
   // modelli noti che somigliano: dalla memoria dei file analizzati (docs/MEMORIA) e dai modelli salvati visibili
   const known = db.all("SELECT id, name, template FROM cippi_docs WHERE kind = 'modello' AND deleted_at IS NULL AND id != ? AND (project_id = ? OR shared = 1)", doc.id, p.id)

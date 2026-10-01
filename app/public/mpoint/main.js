@@ -1,4 +1,5 @@
-// MPoint: presentazioni del team. Libreria (documenti e modelli) e modalita' Revisione:
+// MPoint: presentazioni del team. Schermata iniziale (file recenti, cartelle dei progetti, modelli), cartella di un
+// progetto (documenti e PowerPoint nella cartella, da importare con un clic) e modalita' Revisione:
 //   pannello STRUMENTI  (modalita', cosa mostrare, struttura per sezioni, percorso di lettura, controlli, glossario,
 //                        appunti, confronto con un modello)
 //   pannello VISIONE    (la slide disegnata, ordine di lettura e gerarchia dei blocchi, stato degli step, confronto
@@ -7,7 +8,7 @@
 //                        i testi dei blocchi si correggono qui)
 // Creazione da zero, da un modello, importazione da PC o dalla cartella del progetto; esportazione in .pptx.
 import { get, post, patch, del, upload, api } from '/js/api.js';
-import { h, icon, modal, confirmDialog, form, field, toast, toastError, fmtDate } from '/js/ui.js';
+import { h, icon, modal, confirmDialog, form, field, toast, toastError, fmtDate, fmtBytes } from '/js/ui.js';
 import { renderSlide } from '/mpoint/render.js';
 import { portalMenu } from '/js/menu-app.js';
 
@@ -45,18 +46,17 @@ const menuButton = () => { if (!menuBtn) menuBtn = portalMenu(state, { appName: 
 function topbar(...middle) {
   return h('header', { class: 'cp-top' },
     menuButton(),
-    h('a', { href: '#/', class: 'app-brand', title: 'Tutti i documenti' },
+    h('a', { href: '#/', class: 'app-brand', title: 'Inizio: file recenti e cartelle dei progetti' },
       h('img', { src: '/catalogo/mpoint/icon.svg', alt: '' }), h('strong', {}, 'MPoint'), me ? h('span', { class: 'chip' }, `v${me.version}`) : null),
     ...middle,
     h('div', { class: 'spacer' }),
     themeBtn());
 }
 
-// ---- Libreria ---------------------------------------------------------------------------------------
-async function viewLibrary() {
-  const d = await get('/api/cippi');
-  const tab = store('cippi.tab') || 'documenti';
-  const projectSelect = (name = 'projectId') => h('select', { name }, d.projects.map((p) => h('option', { value: String(p.id) }, p.name)));
+// ---- Finestre comuni: importa, crea da zero, nuovo da modello -----------------------------------------
+// Servono alla schermata iniziale e alla cartella di un progetto (dove il progetto e' gia' scelto).
+function dialogs(d, presetProject = null) {
+  const projectSelect = (name = 'projectId') => h('select', { name }, d.projects.map((p) => h('option', { value: String(p.id), selected: presetProject === p.id }, p.name)));
   const needProject = () => { if (!d.projects.length) { toastError(new Error('Non fai parte di nessun progetto: un documento appartiene sempre a un progetto.')); return true; } return false; };
 
   const importDialog = () => {
@@ -66,13 +66,13 @@ async function viewLibrary() {
     const proj = projectSelect();
     const loadFiles = async () => {
       fromProject.replaceChildren(h('option', { value: '' }, '— oppure scegli un file già nella cartella del progetto —'));
-      try { for (const f of await get(`/api/cippi/file-progetto?projectId=${proj.value}`)) fromProject.append(h('option', { value: f.path }, f.path)); } catch { /* niente */ }
+      try { for (const f of await get(`/api/cippi/file-progetto?projectId=${proj.value}`)) if (!f.docId) fromProject.append(h('option', { value: f.path }, f.path)); } catch { /* niente */ }
     };
     proj.addEventListener('change', loadFiles);
     loadFiles();
     const bar = h('div', { class: 'small muted' });
     const m = modal('Importa una presentazione', form([
-      field('Progetto', proj, 'Il documento lo vedono le persone del progetto. Il file viene copiato nella cartella del progetto, in MPoint/.'),
+      field('Progetto', proj, 'Il documento lo vedono le persone del progetto. Il file viene copiato nella cartella del progetto (sottocartella Cippi/).'),
       field('File PowerPoint (.pptx)', file),
       field('Dalla cartella del progetto', fromProject),
       field('Nome (facoltativo)', h('input', { type: 'text', name: 'nome', maxlength: '120', placeholder: 'il nome del file' })),
@@ -130,8 +130,17 @@ async function viewLibrary() {
       location.hash = `#/doc/${r.id}`;
     }), { wide: true });
   };
+  // i tre pulsanti in alto a destra
+  const buttons = () => h('div', { class: 'row', style: 'flex-wrap:wrap' },
+    h('button', { class: 'btn primary', type: 'button', onclick: importDialog }, icon('upload'), 'Importa PowerPoint'),
+    h('button', { class: 'btn', type: 'button', onclick: newBlank }, icon('plus'), 'Crea da zero'),
+    h('button', { class: 'btn', type: 'button', onclick: () => fromModel().catch(toastError) }, icon('copy'), 'Nuovo da modello'));
+  return { importDialog, newBlank, fromModel, buttons };
+}
 
-  const card = (x) => h('a', { class: 'cp-card glass', href: `#/doc/${x.id}`, 'data-doc': x.id },
+// Scheda di un documento o di un modello (anteprima della prima slide, stato, numeri). "when" e' la riga in basso.
+function docCard(x, D, when) {
+  return h('a', { class: 'cp-card glass', href: `#/doc/${x.id}`, 'data-doc': x.id },
     h('div', { class: 'cp-thumb', 'data-thumb': x.id }, h('span', { class: 'muted small' }, x.slides + ' slide')),
     h('div', { class: 'cp-card-body' },
       h('h3', {}, x.name),
@@ -143,34 +152,107 @@ async function viewLibrary() {
         x.score !== null ? h('span', { class: 'chip' + (x.score >= 85 ? ' ok' : x.score >= 60 ? ' warn' : ' danger'), title: 'Completezza e coerenza (controlli di MPoint)' }, `${x.score}%`) : null,
         x.points ? h('span', { class: 'chip warn', title: 'Domande e cose da fare aperte' }, `${x.points} aperti`) : null,
         x.shared ? h('span', { class: 'chip ok' }, 'condiviso') : null),
-      h('div', { class: 'small muted' }, `v${x.version} · aggiornato ${fmtDate(x.updatedAt)}`),
-      x.kind === 'modello' ? h('div', { class: 'row' }, h('button', { class: 'btn sm primary', type: 'button', onclick: (e) => { e.preventDefault(); fromModel(x).catch(toastError); } }, icon('plus'), 'Usa il modello')) : null));
+      h('div', { class: 'small muted' }, when || `v${x.version} · aggiornato ${fmtDate(x.updatedAt)}`),
+      x.kind === 'modello' ? h('div', { class: 'row' }, h('button', { class: 'btn sm primary', type: 'button', onclick: (e) => { e.preventDefault(); D.fromModel(x).catch(toastError); } }, icon('plus'), 'Usa il modello')) : null));
+}
+const grid = (list, D, when) => h('div', { class: 'cp-grid' }, list.map((x) => docCard(x, D, when && when(x))));
+const empty = (text) => h('div', { class: 'card glass empty' }, text);
+// Una sezione della schermata iniziale: icona, titolo, quanti, eventuale azione a destra
+const section = (id, title, ic, count, body, extra) => h('section', { class: 'cp-home-sec', 'data-sec': id },
+  h('div', { class: 'cp-home-head' }, icon(ic), h('h2', {}, title), count != null ? h('span', { class: 'chip' }, String(count)) : null, h('span', { class: 'spacer' }), extra || null),
+  body);
+const STATUS_LABEL = { attivo: 'attivo', 'in-pausa': 'in pausa', chiuso: 'chiuso' };
 
-  const tabs = h('div', { class: 'cp-tabs-lib', role: 'tablist' });
+// ---- Schermata iniziale: prima i file recenti, poi le cartelle dei progetti, poi i modelli -----------------------
+async function viewLibrary() {
+  const d = await get('/api/cippi');
+  const D = dialogs(d);
+  const all = [...d.docs, ...d.models];
+  const byId = new Map(all.map((x) => [x.id, x]));
+  // Recenti: quelli aperti dalla persona (ultimi per primi); se sono pochi, gli ultimi documenti aggiornati nel team
+  const recent = d.recent.filter((r) => byId.has(r.id)).map((r) => ({ ...byId.get(r.id), openedAt: r.openedAt }));
+  const ids = new Set(recent.map((x) => x.id));
+  for (const x of d.docs) { if (recent.length >= 8) break; if (!ids.has(x.id)) { recent.push(x); ids.add(x.id); } }
+  const whenRecent = (x) => (x.openedAt ? `aperto da te ${fmtDate(x.openedAt)}` : `aggiornato ${fmtDate(x.updatedAt)}`);
+
+  const folderCard = (p) => h('a', { class: 'cp-folder', href: `#/progetto/${p.id}`, 'data-project': p.id },
+    h('div', { class: 'cp-folder-icon', 'aria-hidden': 'true' }, icon('folder')),
+    h('div', { class: 'cp-folder-body' },
+      h('h3', {}, p.name),
+      h('div', { class: 'small muted ellipsis' }, p.client || 'Cartella del progetto'),
+      h('div', { class: 'row', style: 'gap:6px;flex-wrap:wrap' },
+        h('span', { class: 'chip' }, `${p.docs} ${p.docs === 1 ? 'documento' : 'documenti'}`),
+        p.models ? h('span', { class: 'chip' }, `${p.models} ${p.models === 1 ? 'modello' : 'modelli'}`) : null,
+        p.daImportare ? h('span', { class: 'chip warn', title: 'PowerPoint nella cartella del progetto non ancora aperti in MPoint' }, `${p.daImportare} da importare`) : null,
+        p.status !== 'attivo' ? h('span', { class: 'chip' }, STATUS_LABEL[p.status] || p.status) : null),
+      h('div', { class: 'small muted' }, `aggiornato ${fmtDate(p.updatedAt)}`)));
+
   const body = h('div', {});
-  const show = (t) => {
-    store('cippi.tab', t);
-    tabs.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
-    const list = t === 'modelli' ? d.models : d.docs;
-    body.replaceChildren(list.length ? h('div', { class: 'cp-grid' }, list.map(card))
-      : h('div', { class: 'card glass empty' }, t === 'modelli'
-        ? 'Nessun modello. Un modello è la "ricetta" di una presentazione ben fatta: apri un documento e usa "Salva come modello".'
-        : 'Nessun documento. Importa una presentazione PowerPoint o creane una da zero.'));
+  const draw = (q) => {
+    const k = nkey(q);
+    if (k) {
+      const hit = all.filter((x) => nkey(`${x.name} ${x.project} ${x.author}`).includes(k));
+      body.replaceChildren(section('risultati', 'Risultati', 'search', hit.length, hit.length ? grid(hit, D) : empty(`Nessun documento o modello per "${q}".`)));
+    } else {
+      body.replaceChildren(
+        section('recenti', 'Recenti', 'clock', recent.length, recent.length ? grid(recent.slice(0, 8), D, whenRecent)
+          : empty('Nessun file ancora. Importa una presentazione PowerPoint, creane una da zero oppure apri una cartella di progetto qui sotto.')),
+        section('progetti', 'Cartelle dei progetti', 'folder', d.projects.length, d.projects.length ? h('div', { class: 'cp-folders' }, d.projects.map(folderCard))
+          : empty('Non fai parte di nessun progetto: chiedi a un Manager di aggiungerti.')),
+        d.models.length ? section('modelli', 'Modelli', 'copy', d.models.length, grid(d.models, D)) : null);
+    }
     thumbs(body);
   };
-  tabs.append(
-    h('button', { type: 'button', 'data-t': 'documenti', onclick: () => show('documenti') }, `Documenti (${d.docs.length})`),
-    h('button', { type: 'button', 'data-t': 'modelli', onclick: () => show('modelli') }, `Modelli (${d.models.length})`));
+  const search = h('input', { type: 'search', class: 'cp-search', placeholder: 'Cerca un documento o un modello…', 'aria-label': 'Cerca', oninput: () => draw(search.value) });
   root.replaceChildren(h('div', { class: 'main app-window cp-lib' },
     topbar(),
     h('div', { class: 'page-head' },
       h('div', {}, h('h1', {}, 'MPoint'), h('p', { class: 'muted' }, 'Le presentazioni del team: MPoint le legge (sezioni, blocchi in ordine, gerarchia, flussi, legenda, sigle), propone i punti chiave e i controlli, e le rifà da un modello.')),
-      h('div', { class: 'row', style: 'flex-wrap:wrap' },
-        h('button', { class: 'btn primary', type: 'button', onclick: importDialog }, icon('upload'), 'Importa PowerPoint'),
-        h('button', { class: 'btn', type: 'button', onclick: newBlank }, icon('plus'), 'Crea da zero'),
-        h('button', { class: 'btn', type: 'button', onclick: () => fromModel().catch(toastError) }, icon('copy'), 'Nuovo da modello'))),
-    tabs, body));
-  show(tab);
+      h('div', { class: 'cp-head-actions' }, search, D.buttons())),
+    body));
+  draw('');
+}
+
+// ---- Cartella di un progetto: i suoi documenti, i PowerPoint nella cartella (da importare con un clic), i modelli ----
+async function viewProject(pid) {
+  const d = await get('/api/cippi');
+  const p = d.projects.find((x) => x.id === pid);
+  if (!p) throw new Error('Progetto non trovato, oppure non ne fai parte.');
+  const files = await get(`/api/cippi/file-progetto?projectId=${pid}`);
+  const D = dialogs(d, pid);
+  const docs = d.docs.filter((x) => x.projectId === pid);
+  const models = d.models.filter((x) => x.projectId === pid);
+  const toImport = files.filter((f) => !f.docId);
+  const importFile = async (f, btn) => {
+    btn.disabled = true; btn.textContent = 'Analisi…';
+    try { const r = await post('/api/cippi/import-progetto', { projectId: pid, path: f.path }); location.hash = `#/doc/${r.id}`; } catch (e) { btn.disabled = false; btn.textContent = 'Importa e analizza'; toastError(e); }
+  };
+  const fileRow = (f) => {
+    const dir = f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : '';
+    const btn = h('button', { class: 'btn sm primary', type: 'button' }, icon('upload'), 'Importa e analizza');
+    btn.onclick = () => importFile(f, btn);
+    return h('div', { class: 'cp-file', 'data-file': f.path },
+      icon('file'),
+      h('div', { class: 'grow' },
+        h('div', { class: 'ellipsis' }, f.name),
+        h('div', { class: 'small muted ellipsis' }, `${dir ? dir + ' · ' : ''}${fmtBytes(f.size)} · ${fmtDate(f.updatedAt)}`)),
+      f.docId ? h('a', { class: 'btn sm', href: `#/doc/${f.docId}` }, icon('play'), 'Apri in MPoint') : btn,
+      h('a', { class: 'icon-btn', title: 'Scarica il file', 'aria-label': `Scarica ${f.name}`, href: `/api/explorer/p${pid}/download?path=${enc(f.path)}` }, icon('download')));
+  };
+  const explorerHref = `/#/esplora?${new URLSearchParams({ spazio: `p${pid}`, ...(docs.length ? { percorso: 'Cippi' } : {}) })}`;
+  const sub = [p.client, p.status !== 'attivo' ? `progetto ${STATUS_LABEL[p.status] || p.status}` : ''].filter(Boolean).join(' · ') || 'Cartella del progetto';
+  root.replaceChildren(h('div', { class: 'main app-window cp-lib' },
+    topbar(h('nav', { class: 'cp-crumb', 'aria-label': 'Percorso' }, h('a', { href: '#/' }, 'Inizio'), h('span', { class: 'muted' }, '›'), h('strong', {}, p.name))),
+    h('div', { class: 'page-head' },
+      h('div', {}, h('h1', { class: 'cp-h1' }, h('span', { class: 'cp-folder-icon sm', 'aria-hidden': 'true' }, icon('folder')), p.name), h('p', { class: 'muted' }, sub)),
+      h('div', { class: 'cp-head-actions' }, D.buttons(),
+        h('a', { class: 'btn', href: explorerHref, title: 'La cartella del progetto nel portale' }, icon('external'), 'Apri in Esplora file'))),
+    section('documenti', 'Documenti', 'note', docs.length, docs.length ? grid(docs, D) : empty('Nessun documento in questo progetto. Importa un PowerPoint, creane uno da zero oppure scegli un file qui sotto.')),
+    section('file', 'PowerPoint nella cartella del progetto', 'file', files.length,
+      files.length ? h('div', { class: 'cp-files' }, files.map(fileRow)) : empty('Nessun file .pptx nella cartella del progetto. Chi carica un PowerPoint in Esplora file lo trova qui, pronto da importare.'),
+      toImport.length ? h('span', { class: 'chip warn' }, `${toImport.length} da importare`) : null),
+    models.length ? section('modelli', 'Modelli del progetto', 'copy', models.length, grid(models, D)) : null));
+  thumbs(root);
 }
 
 // Miniature: la prima slide di ogni documento, disegnata quando la scheda entra nello schermo
@@ -806,12 +888,14 @@ async function viewDoc(id, startAt) {
 // ---- Avvio e navigazione ---------------------------------------------------------------------------
 async function route() {
   const m = /^#\/doc\/(\d+)(?:\?s=(\d+))?/.exec(location.hash);
+  const pm = /^#\/progetto\/(\d+)/.exec(location.hash);
   try {
     if (m) await viewDoc(Number(m[1]), Number(m[2]) || 1);
+    else if (pm) await viewProject(Number(pm[1]));
     else await viewLibrary();
   } catch (err) {
     if (err.status === 401) return location.reload();
-    root.replaceChildren(h('div', { class: 'main app-window' }, topbar(), h('div', { class: 'card glass' }, h('h2', {}, 'Qualcosa non ha funzionato'), h('p', { class: 'muted' }, err.message), h('a', { class: 'btn', href: '#/' }, 'Torna ai documenti'))));
+    root.replaceChildren(h('div', { class: 'main app-window' }, topbar(), h('div', { class: 'card glass' }, h('h2', {}, 'Qualcosa non ha funzionato'), h('p', { class: 'muted' }, err.message), h('a', { class: 'btn', href: '#/' }, 'Torna all\'inizio'))));
   }
 }
 let lastRoute = '';

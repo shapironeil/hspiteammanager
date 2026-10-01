@@ -115,6 +115,18 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
 - *Processo*: codice, parti, protagonisti, sistemi, novità rispetto all'As-Is, e obiettivo e descrizione del processo.
 - *Contesto*: lo sfondo generale del documento (cliente, progetto, obiettivi, perimetro). Se manca si scrive qui; MPoint ne propone uno dalle prime slide.
 
+## Schermata iniziale: recenti, cartelle dei progetti, modelli
+
+All'apertura MPoint mostra, nell'ordine:
+
+1. **Recenti**: gli ultimi documenti aperti dalla persona (l'ultima apertura di ognuno sta in `cippi_recenti`, per persona); se sono meno di otto, si completano con gli ultimi documenti aggiornati nel team ("aggiornato il…" invece di "aperto da te il…").
+2. **Cartelle dei progetti**: una scheda per ogni progetto visibile, con quanti documenti e modelli ha, quanti PowerPoint nella cartella del progetto sono ancora **da importare** e l'ultimo aggiornamento. La scheda apre la cartella dentro MPoint (`#/progetto/<id>`).
+3. **Modelli**: quelli del team (dei progetti visibili e condivisi).
+
+La casella **Cerca** filtra documenti e modelli per nome, progetto e autore.
+
+La **cartella di un progetto** mostra i suoi documenti, poi i file `.pptx` presenti nella cartella del progetto (indice di Esplora file, cestino e versioni esclusi): quelli già importati rimandano al loro documento ("Apri in MPoint"), gli altri si importano con un clic (`POST /api/cippi/import-progetto`, il file resta dov'è). "Apri in Esplora file" porta alla cartella nel portale. I pulsanti Importa, Crea da zero e Nuovo da modello hanno già il progetto scelto.
+
 ## Creare, importare, salvare
 
 - **Importa PowerPoint**: dal PC, oppure scegliendo un `.pptx` già nella cartella del progetto.
@@ -162,10 +174,10 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
 
 | Metodo e indirizzo | Cosa |
 |---|---|
-| `GET /api/cippi` | progetti, documenti e modelli visibili |
+| `GET /api/cippi` | `recent` (ultimi documenti aperti dalla persona), `projects` (cartelle dei progetti con il riepilogo: documenti, modelli, file, da importare, ultimo aggiornamento), documenti e modelli visibili |
 | `PUT /api/cippi/import?projectId=&name=[&nome=]` | importa un `.pptx` (il corpo è il file) |
 | `POST /api/cippi/import-progetto` `{projectId, path}` | importa un `.pptx` della cartella del progetto |
-| `GET /api/cippi/file-progetto?projectId=` | `.pptx` presenti nella cartella del progetto |
+| `GET /api/cippi/file-progetto?projectId=` | `.pptx` presenti nella cartella del progetto, con `docId` se già importati |
 | `POST /api/cippi/nuovo` `{projectId, name}` | crea da zero |
 | `GET /api/cippi/docs/:id[?modello=ID]` | documento, analisi completa, punti, collegamenti a GestioneCelle, appunti, confronto con un modello |
 | `GET /api/cippi/docs/:id/slide/:n` | forme della slide di origine n (per l'anteprima) |

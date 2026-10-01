@@ -21,7 +21,7 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hspi-cippi-'));
   try {
     const hacker = await setupHacker(portal.base);
-    await hacker.post('/api/projects', { name: 'Acquisti' });
+    const pid = (await hacker.post('/api/projects', { name: 'Acquisti' })).data.id;
     const file = path.join(tmp, 'Flusso acquisti.pptx');
     fs.writeFileSync(file, pptx());
     browser = await playwright.chromium.launch();
@@ -139,7 +139,25 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await page.goto(portal.base + '/mpoint/#/');
     await page.reload();
     await page.waitForSelector('.cp-card .cp-thumb .cp-slide');
-    await page.screenshot({ path: path.join(OUT, 'mpoint-libreria.png') });
+    // schermata iniziale: prima i file recenti (l'ultimo aperto per primo), poi le cartelle dei progetti
+    const secs = await page.$$eval('.cp-home-sec', (l) => l.map((x) => x.dataset.sec));
+    ok(secs[0] === 'recenti' && secs[1] === 'progetti', 'inizio: prima i file recenti, poi le cartelle dei progetti');
+    ok(/Da zero/.test(await page.locator('[data-sec="recenti"] .cp-card').first().textContent()) && /aperto da te/.test(await page.textContent('[data-sec="recenti"]')), 'l\'ultimo documento aperto e\' il primo dei recenti');
+    ok(/Acquisti/.test(await page.textContent('.cp-folder[data-project]')) && /documenti/.test(await page.textContent('.cp-folder[data-project]')), 'cartella del progetto con quanti documenti');
+    await page.screenshot({ path: path.join(OUT, 'mpoint-inizio.png') });
+    await page.fill('.cp-search', 'zero');
+    ok(await page.locator('[data-sec="risultati"] .cp-card').count() === 1, 'ricerca per nome');
+    await page.fill('.cp-search', '');
+    // un PowerPoint caricato in Esplora file compare nella cartella del progetto, da importare con un clic
+    await hacker.put(`/api/explorer/p${pid}/file?path=&name=${encodeURIComponent('Dalla cartella.pptx')}`, pptx());
+    await page.click('.cp-folder[data-project]');
+    await page.waitForSelector('[data-sec="documenti"] .cp-card');
+    ok(/Acquisti/.test(await page.textContent('.cp-crumb')), 'cartella del progetto Acquisti aperta dentro MPoint');
+    ok(await page.locator('.cp-file').count() >= 2 && await page.locator('.cp-file a:has-text("Apri in MPoint")').count() >= 1, 'i PowerPoint della cartella: quelli gia\' importati si aprono');
+    await page.screenshot({ path: path.join(OUT, 'mpoint-cartella.png') });
+    await page.click('.cp-file[data-file="Dalla cartella.pptx"] button:has-text("Importa e analizza")');
+    await page.waitForSelector('.cp-docname:has-text("Dalla cartella")');
+    ok(true, 'importato con un clic dalla cartella del progetto');
 
     // kick-off: sezioni native, scheda Documento con il modello noto, trova e sostituisci, celle della tabella in Modifica
     const kfile = path.join(tmp, 'Kick-off prova.pptx');

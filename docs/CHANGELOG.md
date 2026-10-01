@@ -2,6 +2,9 @@
 
 La versione del portale sta in `version.json` (unica fonte) e compare nella pagina di accesso ("v0.10.0 beta") e in Sistema. Ogni app del catalogo ha la sua versione in `app/catalogo/<id>/app.json` e le sue novità in **App e programmi → Novità**.
 
+## 0.12.0 — 1 ottobre 2026
+- **MPoint 0.4.0, schermata iniziale nuova**: all'apertura prima i **file recenti** (gli ultimi aperti dalla persona, poi gli ultimi aggiornati nel team), poi le **cartelle dei progetti** (quanti documenti, modelli, PowerPoint ancora da importare, ultimo aggiornamento), poi i modelli; ricerca per nome. La **cartella di un progetto** si apre dentro MPoint: i suoi documenti, i PowerPoint presenti nella cartella del progetto (caricati in Esplora file: si importano con un clic; già importati: si aprono) e i modelli, con il collegamento alla cartella in Esplora file. Migrazione 12 (`cippi_recenti`: ultima apertura di ogni documento per persona).
+
 ## 0.11.0 — 1 ottobre 2026
 - **Cippi si chiama MPoint** (MPoint 0.3.0): pagina `/mpoint/`, i vecchi collegamenti `/cippi/` portano lì. I nomi interni (cartella `app/src/cippi`, rotte `/api/cippi`, tabelle `cippi_*`) restano: non si vedono.
 - **Le app non stanno più nel menu laterale** del portale: MPoint, GestioneCelle e Verbale Studio si aprono da **App e programmi**, ognuna nel suo ambiente. In alto a sinistra di ogni app c'è il **bottone che richiama il menu del portale** (Home, Progetti, Esplora file, App e programmi, …, Profilo, Esci) per tornare al portale o cambiare schermata; sostituisce il collegamento "← Portale". Le voci del menu stanno in `app/public/js/nav.js`, condivise dal portale e dalle app (`app/public/js/menu-app.js`).

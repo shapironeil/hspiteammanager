@@ -335,6 +335,16 @@ const MIGRATIONS = [
   `
   ALTER TABLE cippi_docs ADD COLUMN edits TEXT NOT NULL DEFAULT '{}';
   `,
+  // 12 - MPoint: file recenti per persona (ultima apertura di ogni documento), per la schermata iniziale
+  `
+  CREATE TABLE cippi_recenti (
+    user_id INTEGER NOT NULL,
+    doc_id INTEGER NOT NULL,
+    opened_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, doc_id)
+  );
+  CREATE INDEX idx_cippi_recenti_user ON cippi_recenti(user_id, opened_at);
+  `,
 ];
 
 function migrate() {

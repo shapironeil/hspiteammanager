@@ -68,6 +68,43 @@ test('importazione: archivio nella cartella del progetto, punti chiave automatic
   assert.equal((await luca.get(`/api/cippi/docs/${docId}/media?name=../../etc/passwd`)).status, 404);
 });
 
+test('schermata iniziale: file recenti per persona, cartelle dei progetti con il riepilogo, PowerPoint della cartella da importare', async () => {
+  // Luca ha aperto il documento (GET): e' il primo dei suoi recenti; Mario non ha aperto niente
+  const home = (await luca.get('/api/cippi')).data;
+  assert.equal(home.recent[0].id, docId, 'ultimo aperto per primo');
+  assert.ok(home.recent[0].openedAt);
+  assert.deepEqual((await mario.get('/api/cippi')).data.recent, [], 'i recenti sono per persona');
+  const folder = home.projects.find((p) => p.id === pid);
+  assert.equal(folder.name, 'Acquisti');
+  assert.equal(folder.docs, 1);
+  assert.equal(folder.files, 1, 'la copia in Cippi/<nome>/ conta tra i PowerPoint della cartella');
+  assert.equal(folder.daImportare, 0, 'la copia e\' gia\' un documento di MPoint');
+  assert.ok(folder.updatedAt && 'client' in folder && 'status' in folder);
+  // un PowerPoint caricato in Esplora file compare nella cartella, da importare
+  const up = await hacker.put(`/api/explorer/p${pid}/file?path=&name=${encodeURIComponent('Dalla cartella.pptx')}`, pptx());
+  assert.equal(up.status, 201, JSON.stringify(up.data));
+  let files = (await luca.get(`/api/cippi/file-progetto?projectId=${pid}`)).data;
+  const f = files.find((x) => x.name === 'Dalla cartella.pptx');
+  assert.ok(f && f.docId === null, 'non ancora importato');
+  assert.equal(files.find((x) => x.path === 'Cippi/Flusso acquisti/Flusso acquisti.pptx').docId, docId, 'la copia rimanda al suo documento');
+  assert.equal((await luca.get('/api/cippi')).data.projects.find((p) => p.id === pid).daImportare, 1);
+  // importato con un clic dalla cartella: ora rimanda al documento e non e' piu' da importare
+  const imp = await luca.post('/api/cippi/import-progetto', { projectId: pid, path: f.path });
+  assert.equal(imp.status, 201, JSON.stringify(imp.data));
+  files = (await luca.get(`/api/cippi/file-progetto?projectId=${pid}`)).data;
+  assert.equal(files.find((x) => x.name === 'Dalla cartella.pptx').docId, imp.data.id);
+  const after = (await luca.get('/api/cippi')).data;
+  assert.equal(after.projects.find((p) => p.id === pid).daImportare, 0);
+  assert.equal(after.projects.find((p) => p.id === pid).docs, 2);
+  // chi non e' nel progetto non vede la cartella
+  assert.equal((await ospite.get('/api/cippi')).data.projects.length, 0);
+  // il documento eliminato sparisce dai recenti
+  assert.equal((await luca.get(`/api/cippi/docs/${imp.data.id}`)).status, 200);
+  assert.equal((await luca.get('/api/cippi')).data.recent[0].id, imp.data.id);
+  assert.equal((await luca.del(`/api/cippi/docs/${imp.data.id}`)).status, 200);
+  assert.ok(!(await luca.get('/api/cippi')).data.recent.some((r) => r.id === imp.data.id));
+});
+
 test('revisione: punti chiave, domande, glossario del progetto', async () => {
   const p = await luca.post(`/api/cippi/docs/${docId}/points`, { slide: 6, kind: 'domanda', text: 'Chi approva sopra soglia?' });
   assert.equal(p.status, 201);

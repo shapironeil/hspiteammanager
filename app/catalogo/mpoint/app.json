@@ -1,16 +1,25 @@
 {
   "id": "mpoint",
   "name": "MPoint",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "released": "2026-10-01",
   "summary": "Presentazioni PowerPoint del team: le legge, propone i punti chiave e i controlli, le rifà da un modello.",
-  "description": "Importa un .pptx e ne ricostruisce la struttura: sezioni dall'indice, tipo di ogni slide, blocchi nell'ordine di lettura con la loro gerarchia, flussi a corsie (attori, step, decisioni Si/No, sistemi, rimandi), legenda dei colori, sigle. Modalità Revisione con pannello strumenti, visione e punti chiave; modifica dei testi e dell'ordine; modelli riutilizzabili; esportazione in .pptx con la stessa grafica. Legge le sezioni di PowerPoint, le schede con le pillole colorate, le tabelle (anche disegnate con le forme, con il controllo dei totali) e il masterplan a Gantt incollato come immagine; riconosce i modelli noti; trova e sostituisce in tutto il documento, piè di pagina compreso; modifica celle e righe delle tabelle.",
+  "description": "Importa un .pptx e ne ricostruisce la struttura: sezioni dall'indice, tipo di ogni slide, blocchi nell'ordine di lettura con la loro gerarchia, flussi a corsie (attori, step, decisioni Si/No, sistemi, rimandi), legenda dei colori, sigle. Modalità Revisione con pannello strumenti, visione e punti chiave; modifica dei testi e dell'ordine; modelli riutilizzabili; esportazione in .pptx con la stessa grafica. Legge le sezioni di PowerPoint, le schede con le pillole colorate, le tabelle (anche disegnate con le forme, con il controllo dei totali) e il masterplan a Gantt incollato come immagine; riconosce i modelli noti; trova e sostituisce in tutto il documento, piè di pagina compreso; modifica celle e righe delle tabelle. All'apertura: i file recenti, poi le cartelle dei progetti con i documenti e i PowerPoint presenti nella cartella, da importare con un clic.",
   "web": "/mpoint/",
   "color": "#5b4fd6",
   "icon": "icon.svg",
   "minPortal": "0.8.0",
   "engine": null,
   "novita": [
+    {
+      "version": "0.4.0",
+      "date": "2026-10-01",
+      "items": [
+        "Schermata iniziale nuova: prima i file recenti (gli ultimi che hai aperto tu, poi gli ultimi aggiornati nel team), poi le cartelle dei progetti, poi i modelli. Ricerca per nome in alto.",
+        "Cartella di un progetto dentro MPoint: i suoi documenti, i PowerPoint presenti nella cartella del progetto (quelli caricati in Esplora file si importano con un clic, quelli già importati si aprono) e i modelli; collegamento alla cartella in Esplora file.",
+        "Importa, Crea da zero e Nuovo da modello dalla cartella hanno già il progetto scelto."
+      ]
+    },
     {
       "version": "0.3.0",
       "date": "2026-10-01",
