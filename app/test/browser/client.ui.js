@@ -39,7 +39,7 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
         ok((await page.textContent('header.top [data-portal-name]')) === 'Portale Prova', `${p} (${label}): stesso nome del portale`);
         if (p === 'scarica') {
           await page.waitForSelector('#apps .card.app');
-          ok(await page.locator('#apps .card.app').count() === 2, 'scarica: le due app del catalogo con versione e novità');
+          ok(await page.locator('#apps .card.app').count() === 3, 'scarica: le tre app del catalogo con versione e novità');
         }
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         ok(overflow <= 1, `${p} (${label}) senza scorrimento orizzontale`);

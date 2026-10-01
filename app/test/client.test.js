@@ -73,7 +73,7 @@ test('l\'installer porta con se\' l\'indirizzo da cui e\' stato scaricato', asyn
 test('catalogo delle app: versioni proprie, pacchetti con impronta, icone e manifest per installarle nel browser', async () => {
   const c = JSON.parse((await get('/api/catalogo')).body);
   const ids = c.apps.map((a) => a.id);
-  assert.deepEqual(ids, ['gestione-celle', 'verbale-studio']);
+  assert.deepEqual(ids, ['cippi', 'gestione-celle', 'verbale-studio']);
   const v = JSON.parse((await get('/api/version')).body);
   for (const a of c.apps) {
     assert.match(a.version, /^\d+\.\d+\.\d+$/);

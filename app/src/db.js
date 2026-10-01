@@ -273,6 +273,52 @@ const MIGRATIONS = [
   DELETE FROM programs WHERE name = 'Verbale Studio' AND description = 'App per la redazione dei verbali.'
     AND file_id IS NULL AND folder IS NULL AND (url IS NULL OR url = '');
   `,
+  // 9 - Cippi: presentazioni (documenti e modelli), punti chiave della revisione, glossario del progetto
+  `
+  CREATE TABLE cippi_docs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'documento',
+    name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    source_sha TEXT NOT NULL,
+    source_name TEXT NOT NULL,
+    folder TEXT NOT NULL,
+    slides TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'bozza',
+    version INTEGER NOT NULL DEFAULT 1,
+    template_id INTEGER,
+    template TEXT,
+    shared INTEGER NOT NULL DEFAULT 0,
+    summary TEXT,
+    created_by INTEGER,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+  );
+  CREATE INDEX idx_cippi_docs_project ON cippi_docs(project_id, kind);
+  CREATE TABLE cippi_points (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_id INTEGER NOT NULL,
+    slide INTEGER,
+    kind TEXT NOT NULL DEFAULT 'chiave',
+    text TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'aperto',
+    auto INTEGER NOT NULL DEFAULT 0,
+    created_by INTEGER,
+    created_at TEXT NOT NULL,
+    updated_at TEXT
+  );
+  CREATE INDEX idx_cippi_points_doc ON cippi_points(doc_id, slide);
+  CREATE TABLE cippi_glossary (
+    project_id INTEGER NOT NULL,
+    term TEXT NOT NULL,
+    meaning TEXT NOT NULL DEFAULT '',
+    updated_by INTEGER,
+    updated_at TEXT,
+    PRIMARY KEY (project_id, term)
+  );
+  `,
 ];
 
 function migrate() {

@@ -1,6 +1,6 @@
 # App del portale (catalogo)
 
-Verbale Studio e GestioneCelle sono **app dedicate** del portale. Usano gli stessi account e gli stessi progetti del portale. Ognuna ha però la sua versione, la sua pagina, le sue novità e, se le serve, un proprio motore che gira sul PC dell'utente.
+Verbale Studio, GestioneCelle e Cippi sono **app dedicate** del portale. Usano gli stessi account e gli stessi progetti del portale. Ognuna ha però la sua versione, la sua pagina, le sue novità e, se le serve, un proprio motore che gira sul PC dell'utente.
 
 ## Come si usano (per il team)
 

@@ -26,6 +26,8 @@ const NAV = [
   { id: 'celle', label: 'GestioneCelle', icon: 'tree', min: 'dipendente', view: viewCelle },
   // Verbale Studio e' un'app a se' (pagina /verbali/), con gli stessi account e gli stessi progetti.
   { id: 'verbali', label: 'Verbale Studio', icon: 'note', min: 'dipendente', href: '/verbali/' },
+  // Cippi: presentazioni PowerPoint (lettura, revisione, modelli). App a se' (pagina /cippi/).
+  { id: 'cippi', label: 'Cippi', icon: 'image', min: 'dipendente', href: '/cippi/' },
   { id: 'programmi', label: 'App e programmi', icon: 'apps', min: 'dipendente', view: viewPrograms },
   { id: 'file', label: 'File inviati', icon: 'upload', min: 'dipendente', view: viewFiles },
   { id: 'team', label: (u) => (u.role === 'hacker' ? 'Account' : 'Team'), icon: 'users', min: 'manager', view: viewAccounts, group: 'Organizzazione' },

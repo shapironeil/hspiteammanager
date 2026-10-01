@@ -1,6 +1,6 @@
 # HSPI Team Manager
 
-Portale interno (beta) per il team HSPI: account con ruoli, progetti con le persone autorizzate, **Esplora file** con cartelle vere (personali e di progetto), **Verbale Studio** integrato, **GestioneCelle** per le mappe dei processi, programmi che si aprono dal portale con la loro guida, scambio file, log e pannello di controllo. Si installa anche sul telefono come app.
+Portale interno (beta) per il team HSPI: account con ruoli, progetti con le persone autorizzate, **Esplora file** con cartelle vere (personali e di progetto), **Verbale Studio** integrato, **GestioneCelle** per le mappe dei processi, **Cippi** per le presentazioni PowerPoint (lettura, revisione, modelli), programmi che si aprono dal portale con la loro guida, scambio file, log e pannello di controllo. Si installa anche sul telefono come app.
 
 > **Stato:** v0.5 — in locale sul PC che lo ospita. Da usare con dati di prova finché non sono decisi i punti in `docs/PROGETTI-E-DATI.md`.
 
@@ -30,6 +30,7 @@ I permessi dipendono dal **grado** (Stage, Dipendente, PM manager, Manager, Seni
 | Esplora file: i miei file e le cartelle dei miei progetti (cartelle, caricamento, anteprima, modifica testi, versioni, cestino, ricerca) | ✓ | ✓ | ✓ tutti i progetti |
 | Verbale Studio: verbali dei progetti di cui si è membri | ✓ | ✓ + addestra l'AI del progetto | ✓ + importazione, gestione AI locale |
 | GestioneCelle: mappe dei processi dei progetti di cui si è membri | ✓ | ✓ + protegge voci e approva eliminazioni | ✓ |
+| Cippi: presentazioni dei progetti di cui si è membri (revisione, modifica, modelli) | ✓ | ✓ + elimina i documenti del progetto, condivide i modelli | ✓ |
 | Programmi: apri dal portale e leggi la guida | ✓ | ✓ + modifica descrizione e guida | ✓ |
 | File inviati: carica, invia, ricevi | ✓ | ✓ | ✓ + tutti i file |
 | Profilo, avatar, cambio password, segnala un problema | ✓ | ✓ | ✓ |
@@ -51,6 +52,7 @@ Prove nel browser (solo sul PC di sviluppo, serve Playwright): `node test/browse
 | `docs/PROGETTI-E-DATI.md` | Come sono trattati i file dei progetti, permessi, decisioni aperte |
 | `docs/INTEGRAZIONE-APP.md` | Archivio unico, Verbale Studio nel portale, importazione dal vecchio programma, API di Esplora file |
 | `docs/GITHUB.md` | Prove automatiche, pull request automatiche e programmate, dove vederle (anche nel portale) |
+| `docs/CIPPI.md` | Cippi: presentazioni PowerPoint, lettura della struttura, modalità Revisione, modelli, esportazione |
 | `docs/APP.md` | App del portale (Verbale Studio, GestioneCelle): catalogo, versioni proprie, pacchetti scaricati da HSPI Client, come aggiungere un'app |
 | `docs/CLIENT.md` | Host e client: HSPI Client (installazione senza amministratore, aggiornamento dall'host, motore locale per l'AI), sito /benvenuto /guida /scarica |
 | `docs/BACKUP-E-AGGIORNAMENTI.md` | Versione unica, aggiornamento sicuro, backup automatici, ripristino |
