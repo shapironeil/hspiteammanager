@@ -93,3 +93,12 @@ Vedi `docs/MEMORIA/README.md` (indice generale) e `docs/MEMORIA/CONFLITTI.md`. L
 
 - Il motore Word e le estensioni di Cippi della sessione awesome-cray e le analisi ATAC della sessione ecstatic-planck: lavoro in corso, non pushato. Entrambe le sessioni sono state avvisate: quando faranno push, si integra con la stessa procedura.
 - Le pull request automatiche restano bloccate finché su GitHub non si attiva *Settings → Actions → General → Workflow permissions → "Allow GitHub Actions to create and approve pull requests"* (impostazione del repository, non del codice).
+
+## Seguito — 0.11.0 (stessa giornata)
+
+Richieste del proprietario dopo aver visto che `aggiorna.bat` restava a 0.8: le app non devono stare nel menu laterale ma aprirsi nel loro ambiente, con un bottone in alto a sinistra che richiama il menu del portale; Cippi si chiama MPoint.
+
+- **Fatto** (commit `665e3dc`, ramo `claude/integrazione-2026-10-01`, unito in `main` in fast-forward e pushato): `app/public/js/nav.js` (voci del menu condivise), `app/public/js/menu-app.js` (`portalMenu`, `mountPortalMenu`), bottone in MPoint, GestioneCelle e Verbale Studio (`menu-portale.js`, perché la CSP non ammette script dentro l'HTML); rinomina `app/public/cippi` → `app/public/mpoint`, `app/catalogo/cippi` → `app/catalogo/mpoint`, `docs/CIPPI.md` → `docs/MPOINT.md`; `/cippi/` rimanda a `/mpoint/`. Versioni: portale 0.11.0, MPoint 0.3.0, GestioneCelle 0.9.1, Verbale Studio 1.0.1.
+- **Provato**: `node --test --test-concurrency=1 test/*.test.js` 55/55; prove nel browser `cippi`, `celle`, `verbali`, `client`, `explorer`, `pwa`, `ruoli`, `sistema` tutte verdi; verifica dal punto di vista dell'utente con schermate (menu laterale senza app, App e programmi con MPoint, bottone e menu a tendina nelle tre app).
+- **Come lo vede il proprietario**: `aggiorna.bat` nella cartella HSPI, riavvio; la pagina di accesso e Sistema mostrano "v0.11.0 beta"; App e programmi → MPoint → Apri; in alto a sinistra il bottone ☰ apre il menu del portale.
+- **Lasciato aperto**: restyling "più professionale" di GestioneCelle oltre allo stile Excel-glass della 0.9.0, funzioni "classiche" del programma di riferimento in ogni app, collegamenti intelligenti in MPoint: da concordare con il proprietario dopo che avrà visto la 0.11.0.
