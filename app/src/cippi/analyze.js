@@ -35,6 +35,8 @@ function similarity(a, b) {
 const MONTHS = /(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre|january|february|march|april|may|june|july|august|september|october|november|december)\s*,?\s*\d{4}/i;
 const CODE = /(\d+(?:\.\d+)+)/;
 const STEP_NUM = /^(\d+)\s*\.(?!\d)\s*/;
+// testo di un segnaposto non compilato (quelli dei modelli e quelli che scrive Cippi quando crea da un modello)
+const PLACEHOLDER = /^(titolo( della slide| \d+)?|testo( del paragrafo)?|sottotitolo|intestazione|punto elenco|nota|etichetta|fare clic per .*|\[inserire[^\]]*\]|(titolo \d+\s*\n?\s*)+)$/i;
 
 // ---- Colori: tinta e saturazione, per confrontare i riempimenti con la legenda --------------
 function hsl(hex) {
@@ -69,7 +71,11 @@ function findTitle(slide) {
   // (le etichette delle corsie, strette a sinistra, non sono titoli)
   const top = cands.filter((s) => s.y < 14 && s.h < 20 && oneLine(s).length < 200 && !(s.x < 10 && s.w < 14));
   top.sort((a, b) => ((b.w >= 20) - (a.w >= 20)) || (maxSize(b) - maxSize(a)) || (a.y - b.y) || (b.w - a.w));
-  return top[0] || null;
+  if (top[0]) return top[0];
+  // titolo un po' piu' in basso (fino a un quarto della slide): la casella larga piu' in alto, se e' corta e sopra tutto il resto
+  const lower = cands.filter((s) => s.y < 25 && s.h < 20 && s.w >= 40 && oneLine(s).length < 60).sort((a, b) => a.y - b.y)[0];
+  if (lower && !cands.some((s) => s !== lower && s.y + 1 < lower.y)) return lower;
+  return null;
 }
 
 // Ordine di lettura: a righe (dall'alto), dentro la riga da sinistra; un blocco che occupa una colonna intera
@@ -415,6 +421,9 @@ function checksOf(slides, sections, index, procs) {
   for (const s of slides) {
     if (!s.title && !['copertina', 'chiusura', 'divisore', 'immagine', 'titolo', 'indice'].includes(s.kind)) add('avviso', s.n, 'Slide senza titolo.');
     if (s.hidden) add('info', s.n, 'Slide nascosta: non compare in presentazione.');
+    // segnaposto lasciati dal modello: "Titolo", "Testo", "Titolo 1", "[Inserire ...]", "Fare clic per..."
+    const left = s.blocks.filter((b) => b.role !== 'immagine' && b.role !== 'navigazione' && PLACEHOLDER.test(String(b.text || '').trim())).map((b) => String(b.text).replace(/\s*\n\s*/g, ' / ').slice(0, 40));
+    if (left.length) add('avviso', s.n, `Segnaposto da compilare: ${[...new Set(left)].join(', ')}.`);
   }
   if (slides.some((s) => s.kind === 'flusso') && !slides.some((s) => s.kind === 'legenda')) add('avviso', null, 'Ci sono flussi ma manca la legenda dei simboli e dei colori.');
   // parti numerate (1/3, 2/3, 3/3)

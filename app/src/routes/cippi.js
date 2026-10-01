@@ -20,13 +20,17 @@ const { readPptx, mediaOf } = require('../cippi/pptx-read');
 const { analyze, templateOf, compareToTemplate, norm } = require('../cippi/analyze');
 const { build } = require('../cippi/pptx-write');
 const { baseDeck } = require('../cippi/pptx-new');
+const { openDeck } = require('../cippi/pptx-build');
+const { salDeck, SEZIONI } = require('../cippi/sal-deck');
+const modelli = require('../modelli');
+const SAL = require('../sal');
 const { route, HttpError } = require('../http');
 const projects = require('./projects');
 
 const DIR = path.join(config.DATA_DIR, 'cippi');
 const SRC = path.join(DIR, 'sorgenti');
 const CACHE = path.join(DIR, 'analisi');
-const ANALYZER = 3; // si alza quando cambia l'analisi: le analisi salvate si rifanno
+const ANALYZER = 4; // si alza quando cambia l'analisi: le analisi salvate si rifanno
 const KINDS = ['chiave', 'nota', 'domanda', 'da-fare'];
 const STATUSES = ['bozza', 'in revisione', 'approvato'];
 
@@ -110,10 +114,15 @@ function uniqueFolder(p, name) {
   return folder;
 }
 // riassunto per gli elenchi (senza rileggere l'analisi)
-const summaryOf = (a) => JSON.stringify({ score: a.score, counts: a.counts, ratio: a.size.ratio, processes: a.processes.length, sections: a.sections.length });
+const summaryOf = (a, modello) => JSON.stringify({ score: a.score, counts: a.counts, ratio: a.size.ratio, processes: a.processes.length, sections: a.sections.length, modello: modello && modello.corrisponde ? { template: modello.template, punteggio: modello.punteggio, fascicolo: modello.fascicolo } : null });
+// il modello noto a cui somiglia (impronte in docs/MEMORIA)
+const riconosci = (buf, fileName, pres) => { try { return modelli.riconosci('pptx', { buf, fileName, pres }); } catch { return null; } };
+// i layout del file, per i modelli (si creano slide nuove da qui)
+const layoutsOf = (buf) => { try { return openDeck(buf).layouts().map((l) => ({ name: l.name, part: path.posix.basename(l.part), hasTitle: l.hasTitle, bodies: l.bodies, hasPicture: l.hasPicture, fixedTexts: l.fixedTexts.slice(0, 6) })); } catch { return []; } };
 function createDoc(ctx, p, buf, fileName, { name, kind = 'documento', templateId = null, slides = null, copyToProject = true }) {
   const sha = storeSource(buf);
-  const { analysis } = load(sha);
+  const { pres, analysis } = load(sha);
+  const modello = riconosci(buf, fileName, pres);
   const docName = clean(name || path.basename(fileName, path.extname(fileName)), 120, 'Nome');
   const folder = kind === 'modello' ? 'Cippi/Modelli' : uniqueFolder(p, docName);
   if (copyToProject) ex.writeBuffer(space(p), rootOf(p), `${folder}/${safeName(kind === 'modello' ? docName : path.basename(fileName, path.extname(fileName)))}.pptx`, buf, ctx.user.id, { keepHistory: true });
@@ -121,7 +130,7 @@ function createDoc(ctx, p, buf, fileName, { name, kind = 'documento', templateId
   const now = db.now();
   const r = db.run(`INSERT INTO cippi_docs(project_id, kind, name, source_sha, source_name, folder, slides, template_id, template, summary, created_by, created_at, updated_at)
     VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`, p.id, kind, docName, sha, clean(fileName, 200) || 'presentazione.pptx', folder, JSON.stringify(list), templateId,
-  kind === 'modello' ? JSON.stringify(templateOf(analysis)) : null, summaryOf(analysis), ctx.user.id, now, now);
+  kind === 'modello' ? JSON.stringify({ ...templateOf(analysis), layouts: layoutsOf(buf), modello: modello && modello.corrisponde ? modello.template : null }) : null, summaryOf(analysis, modello), ctx.user.id, now, now);
   const id = Number(r.lastInsertRowid);
   if (kind === 'documento' && !slides) autoPoints(id, analysis, ctx.user.id);
   db.log(ctx, kind === 'modello' ? 'cippi.modello-creato' : 'cippi.importato', `${p.name}: ${docName} (${list.length} slide)`);
@@ -135,7 +144,8 @@ route('PUT', '/api/cippi/import', {}, async (ctx) => {
   if (!/\.pptx$/i.test(fileName)) throw new HttpError(400, 'Cippi legge i file PowerPoint .pptx (salva i .ppt come .pptx).');
   const buf = await readBody(ctx.req);
   if (buf.length < 100) throw new HttpError(400, 'File vuoto.');
-  const id = createDoc(ctx, p, buf, fileName, { name: ctx.query.get('nome') || null });
+  // ?modello=1: il file entra direttamente come modello aziendale (master, layout e slide d'esempio restano suoi)
+  const id = createDoc(ctx, p, buf, fileName, { name: ctx.query.get('nome') || null, kind: ctx.query.get('modello') ? 'modello' : 'documento' });
   ctx.json(201, { id });
 });
 
@@ -173,7 +183,7 @@ const brief = (d, user, extra = {}) => {
     id: d.id, kind: d.kind, name: d.name, description: d.description, projectId: d.project_id, status: d.status, version: d.version,
     slides: slides.length, sourceName: d.source_name, folder: d.folder, shared: !!d.shared, updatedAt: d.updated_at, createdBy: d.created_by,
     author: (db.get('SELECT name FROM users WHERE id = ?', d.created_by) || {}).name || '',
-    score: a.score !== undefined ? a.score : null, counts: a.counts || {}, ratio: a.ratio || 16 / 9, processes: a.processes || 0,
+    score: a.score !== undefined ? a.score : null, counts: a.counts || {}, ratio: a.ratio || 16 / 9, processes: a.processes || 0, modello: a.modello || null,
     points: db.get("SELECT COUNT(*) AS n FROM cippi_points WHERE doc_id = ? AND status = 'aperto' AND kind IN ('domanda','da-fare')", d.id).n,
     ...extra,
   };
@@ -236,6 +246,9 @@ route('GET', '/api/cippi/docs/:id', {}, (ctx) => {
     celle: celleLinks(p, analysis),
     appunti: appunti(p, doc),
     confronto,
+    modello: riconosci(sourceBuf(doc.source_sha), doc.source_name, load(doc.source_sha).pres),
+    layouts: layoutsOf(sourceBuf(doc.source_sha)),
+    funzioni: Object.entries(SEZIONI).map(([k, v]) => ({ sezione: k, titolo: v })),
   });
 });
 
@@ -323,21 +336,113 @@ route('GET', '/api/cippi/docs/:id/download', {}, (ctx) => {
 });
 // Salva la versione nella cartella del progetto e la rende la nuova base del documento (le modifiche entrano nel file,
 // l'analisi si rifa' sul risultato). La versione precedente resta tra le versioni del file in Esplora file.
-route('POST', '/api/cippi/docs/:id/salva-versione', {}, async (ctx) => {
-  const { doc, project: p, canEdit } = openDoc(ctx.user, ctx.params.id, { kind: 'documento' });
-  if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
-  const buf = built(doc);
+// Un nuovo file diventa la base del documento: scritto nella cartella del progetto (la versione precedente resta tra le
+// versioni del file in Esplora file), archiviato tra le sorgenti, rianalizzato. Le note per slide restano alla stessa posizione.
+function newVersion(ctx, doc, p, buf, logAction, logText) {
   const rel = `${doc.folder}/${fileNameOf(doc)}`;
   ex.writeBuffer(space(p), rootOf(p), rel, buf, ctx.user.id, { keepHistory: true });
   const sha = storeSource(buf);
-  const { analysis } = load(sha);
+  const { pres, analysis } = load(sha);
   const old = JSON.parse(doc.slides);
-  // le note per slide restano attaccate alla stessa posizione
   const list = analysis.slides.map((s, i) => ({ src: s.n, ...(old[i] && old[i].note ? { note: old[i].note } : {}) }));
   const now = db.now();
-  db.run('UPDATE cippi_docs SET source_sha = ?, source_name = ?, slides = ?, summary = ?, version = version + 1, updated_at = ? WHERE id = ?', sha, fileNameOf(doc), JSON.stringify(list), summaryOf(analysis), now, doc.id);
-  db.log(ctx, 'cippi.versione', `${p.name}: ${doc.name} v${doc.version + 1}`);
-  ctx.json(200, { space: space(p), path: rel, version: doc.version + 1, updatedAt: now });
+  db.run('UPDATE cippi_docs SET source_sha = ?, source_name = ?, slides = ?, summary = ?, version = version + 1, updated_at = ? WHERE id = ?', sha, fileNameOf(doc), JSON.stringify(list), summaryOf(analysis, riconosci(buf, fileNameOf(doc), pres)), now, doc.id);
+  db.log(ctx, logAction, `${p.name}: ${doc.name} v${doc.version + 1}${logText ? ` (${logText})` : ''}`);
+  return { space: space(p), path: rel, version: doc.version + 1, updatedAt: now, slides: list.length };
+}
+route('POST', '/api/cippi/docs/:id/salva-versione', {}, async (ctx) => {
+  const { doc, project: p, canEdit } = openDoc(ctx.user, ctx.params.id, { kind: 'documento' });
+  if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
+  ctx.json(200, newVersion(ctx, doc, p, built(doc), 'cippi.versione'));
+});
+
+// ---- Funzioni di alto livello: slide nuove dai layout, agenda, data, pulizia ---------------------------
+// Il documento viene prima "cotto" con le modifiche in sospeso (build), poi si applicano le azioni in ordine e il
+// risultato diventa la nuova versione. Si lavora per funzioni, non slide per slide.
+const str = (v, max) => clean(v == null ? '' : v, max);
+function cleanLines(v, max = 60) {
+  if (v === undefined || v === null) return undefined;
+  const list = Array.isArray(v) ? v : String(v).split('\n');
+  return list.slice(0, max).map((l) => (typeof l === 'string' ? { text: str(l, 2000) } : {
+    text: str(l && l.text, 2000), lvl: Math.max(0, Math.min(8, Number(l && l.lvl) || 0)), bold: !!(l && l.bold), italic: !!(l && l.italic), numbered: l && l.numbered !== undefined ? !!l.numbered : undefined,
+    color: l && /^[0-9A-Fa-f]{6}$/.test(String(l.color || '')) ? String(l.color).toUpperCase() : undefined, sz: l && Number(l.sz) >= 600 && Number(l.sz) <= 9600 ? Number(l.sz) : undefined,
+  }));
+}
+function cleanTable(t) {
+  if (!t || !Array.isArray(t.rows)) return undefined;
+  const rows = t.rows.slice(0, 80).map((r) => (Array.isArray(r) ? r : [r]).slice(0, 24).map((c) => (c && typeof c === 'object'
+    ? { text: str(c.text, 500), bold: !!c.bold, span: Math.max(1, Math.min(24, Number(c.span) || 1)), fill: /^[0-9A-Fa-f]{6}$/.test(String(c.fill || '')) ? String(c.fill).toUpperCase() : null, color: /^[0-9A-Fa-f]{6}$/.test(String(c.color || '')) ? String(c.color).toUpperCase() : null, align: ['l', 'r', 'ctr'].includes(c.align) ? c.align : null }
+    : str(c, 500))));
+  return { rows, header: t.header !== false, widths: Array.isArray(t.widths) ? t.widths.map(Number) : undefined, sz: Number(t.sz) >= 600 && Number(t.sz) <= 4000 ? Number(t.sz) : undefined };
+}
+function slideOpts(az) {
+  return {
+    layout: str(az.layout, 120) || undefined, title: az.title !== undefined ? str(az.title, 500) : undefined, subtitle: az.subtitle !== undefined ? str(az.subtitle, 500) : undefined,
+    body: cleanLines(az.body), body2: cleanLines(az.body2), table: cleanTable(az.table), date: az.date !== undefined ? str(az.date, 60) : undefined,
+    notes: az.notes ? str(az.notes, 4000) : undefined, at: Number(az.at) >= 1 ? Number(az.at) : undefined,
+  };
+}
+function applyActions(deck, azioni) {
+  const esiti = [];
+  for (const az of azioni) {
+    const tipo = String(az && az.tipo || '');
+    if (tipo === 'slide') esiti.push({ tipo, ...deck.addSlide(slideOpts(az)) });
+    else if (tipo === 'agenda') esiti.push({ tipo, ...deck.addAgenda({ items: (Array.isArray(az.items) ? az.items : String(az.items || '').split('\n')).map((x) => str(x, 200)).filter(Boolean).slice(0, 30), current: az.current == null ? -1 : Number(az.current), from: Number(az.from) >= 1 ? Number(az.from) : undefined, layout: str(az.layout, 120) || undefined, title: str(az.title, 200) || undefined, at: Number(az.at) >= 1 ? Number(az.at) : undefined, dividers: !!az.dividers }) });
+    else if (tipo === 'data') esiti.push({ tipo, slides: deck.setDate(str(az.testo || az.text, 60)) });
+    else if (tipo === 'testi') { deck.setTexts(Number(az.slide), az.texts); esiti.push({ tipo, slide: Number(az.slide) }); }
+    else if (tipo === 'compila') esiti.push({ tipo, slide: Number(az.slide), ...deck.fillSlide(Number(az.slide), { title: az.title, subtitle: az.subtitle, date: az.date, body: cleanLines(az.body) }) });
+    else if (tipo === 'rimuovi') esiti.push({ tipo, rimosse: deck.removeSlides((Array.isArray(az.slides) ? az.slides : [az.slide]).map(Number)) });
+    else if (tipo === 'pulisci') esiti.push({ tipo, ...deck.clean() });
+    else throw new HttpError(400, `Azione sconosciuta: "${tipo}". Valide: slide, agenda, data, testi, compila, rimuovi, pulisci.`);
+  }
+  return esiti;
+}
+route('GET', '/api/cippi/docs/:id/layouts', {}, (ctx) => {
+  const { doc } = openDoc(ctx.user, ctx.params.id);
+  ctx.json(200, { layouts: layoutsOf(sourceBuf(doc.source_sha)), sezioni: Object.entries(SEZIONI).map(([k, v]) => ({ sezione: k, titolo: v })) });
+});
+route('POST', '/api/cippi/docs/:id/funzioni', {}, async (ctx) => {
+  const { doc, project: p, canEdit } = openDoc(ctx.user, ctx.params.id);
+  if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
+  const b = await ctx.body();
+  const azioni = Array.isArray(b.azioni) ? b.azioni : (b.tipo ? [b] : []);
+  if (!azioni.length || azioni.length > 60) throw new HttpError(400, 'Indica da 1 a 60 azioni.');
+  let deck;
+  try { deck = openDeck(built(doc)); } catch (err) { throw new HttpError(err.status || 500, err.message); }
+  let esiti;
+  try { esiti = applyActions(deck, azioni); } catch (err) { throw err instanceof HttpError ? err : new HttpError(err.status || 400, err.message); }
+  const v = newVersion(ctx, doc, p, deck.save(), 'cippi.funzioni', azioni.map((a) => a.tipo).join(', '));
+  ctx.json(200, { ...v, esiti });
+});
+// Slide con un'immagine (il corpo della richiesta e' l'immagine): nel segnaposto immagine del layout, senza deformarla
+route('PUT', '/api/cippi/docs/:id/slide-immagine', {}, async (ctx) => {
+  const { doc, project: p, canEdit } = openDoc(ctx.user, ctx.params.id);
+  if (!canEdit) throw new HttpError(403, 'Non puoi modificare questo documento.');
+  const q = ctx.query;
+  const data = await readBody(ctx.req, 25 * 1024 * 1024);
+  if (data.length < 50) throw new HttpError(400, 'Immagine vuota.');
+  const deck = openDeck(built(doc));
+  let made;
+  try {
+    made = deck.addSlide({ ...slideOpts({ layout: q.get('layout'), title: q.get('title'), body: q.get('body') ? q.get('body').split('\n') : undefined, at: q.get('at'), notes: q.get('notes') }), picture: { data, name: str(q.get('name'), 200) || 'immagine.png', descr: str(q.get('descr'), 300) } });
+  } catch (err) { throw new HttpError(err.status || 400, err.message); }
+  const v = newVersion(ctx, doc, p, deck.save(), 'cippi.funzioni', 'immagine');
+  ctx.json(200, { ...v, esiti: [{ tipo: 'immagine', ...made }] });
+});
+// Presentazione SAL dai dati (app/src/sal.js), costruita dentro il modello: un documento nuovo del progetto
+route('POST', '/api/cippi/docs/:id/sal', {}, async (ctx) => {
+  const { doc: m } = openDoc(ctx.user, ctx.params.id);
+  const b = await ctx.body();
+  const p = project(ctx.user, b.projectId || m.project_id);
+  const dati = SAL.calcola(b.dati || {});
+  const controlli = SAL.controlla(dati);
+  if (controlli.some((c) => c.level === 'errore') && !b.forza) throw new HttpError(400, `Dati del SAL da sistemare: ${controlli.filter((c) => c.level === 'errore').map((c) => c.text).join(' ')}`);
+  let buf;
+  try { buf = salDeck(sourceBuf(m.source_sha), dati, { sezioni: Array.isArray(b.sezioni) ? b.sezioni.map(String) : undefined, ripetiAgenda: b.ripetiAgenda !== false, divisori: !!b.divisori, pulisci: b.pulisci !== false, titolo: b.titolo ? str(b.titolo, 300) : undefined }); } catch (err) { throw new HttpError(err.status || 500, err.message); }
+  const name = clean(b.name, 120) || `SAL${dati.numero ? ` ${dati.numero}` : ''} ${dati.periodo.etichetta || ''}`.trim();
+  const id = createDoc(ctx, p, buf, `${safeName(name)}.pptx`, { name, templateId: m.kind === 'modello' ? m.id : null });
+  db.log(ctx, 'cippi.sal', `${p.name}: ${name} da ${m.name}`);
+  ctx.json(201, { id, controlli, economics: dati.economics });
 });
 
 // ---- Punti chiave e note della revisione ----------------------------------------------------------

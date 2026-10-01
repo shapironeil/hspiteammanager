@@ -1,4 +1,4 @@
-# Fascicolo SAL — cosa lega la presentazione e il verbale
+# Fascicolo SAL (R-CAP.AC) — cosa lega la presentazione e il verbale
 
 I due modelli SAL ricevuti il 1° ottobre 2026 appartengono allo stesso contesto e vanno pensati insieme.
 

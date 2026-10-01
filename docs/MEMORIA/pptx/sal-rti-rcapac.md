@@ -1,4 +1,4 @@
-# Modello: Presentazione SAL (PowerPoint)
+# sal-rti-rcapac (.pptx) — Presentazione SAL del progetto R-CAP.AC
 
 File ricevuto: `2026.02.23_Template_Presentazione_Sal_V1.00.pptx` (183 KB). Analizzato il 1° ottobre 2026. Nessun contenuto reale: e' lo scheletro.
 
@@ -55,7 +55,7 @@ Master 3 (layout 15, solo titolo con trinacria doppia) non e' usato da nessuna s
 - **Salva come modello** per la ricetta; in futuro **Registra modello aziendale** (da aggiungere) per conservare master e layout veri.
 - Modifica testi e ordine, duplica slide (per aggiungere slide "Titolo e contenuto"), Esporta `.pptx`.
 
-## Cosa manca (vedi proposta del 1° ottobre 2026)
+## Cosa manca 
 
 Slide nuove da un layout, agenda con numerazione e indicatore automatici, immagini nei segnaposto, tabelle, generazione del SAL da dati,
 aggiornamento della data in copertina, pulizia dei layout, controlli sui segnaposto non compilati.

@@ -1,0 +1,48 @@
+{
+  "template": "sal-rti-rcapac",
+  "formato": "docx",
+  "app": "verbale-studio",
+  "tipoDocumento": "verbale SAL (stato avanzamento lavori)",
+  "fornitore": "RTI del progetto R-CAP.AC (committente: Regione Siciliana)",
+  "fascicolo": "sal-rti-rcapac",
+  "fileVisti": [
+    { "nome": "2026.02.15_Verbale_SAL_Template_v1.00.docx", "pagine": 11, "modificato": "2026-06-30", "analizzato": "2026-10-01", "parole": 986 }
+  ],
+  "nomeFile": { "schema": "<AAAA.MM.GG>_Verbale_SAL_Template_v<maggiore>.<minore>.docx", "regex": "^\\d{4}\\.\\d{2}\\.\\d{2}_.*Verbale_SAL.*\\.docx$" },
+  "pagina": { "formato": "A4", "sezioni": ["portrait", "landscape", "portrait"], "primaPaginaDiversa": true, "margini": { "sup": 1417, "dx": 1134, "inf": 1134, "sx": 1134 } },
+  "tema": { "caratteri": { "maggiore": "Aptos Display", "minore": "Aptos" }, "accent1": "156082" },
+  "caratteriNelTesto": ["Titillium Web"],
+  "colori": { "intestazioniTabelle": ["002060", "1F497D", "17365D", "156082"], "righeDiGruppo": ["305496"], "celleChiare": ["DEEAF6", "DAE9F7"], "economics": ["A9D08E", "70AD47"], "titoli": "0F4761", "evidenziazioneSegnaposto": "yellow" },
+  "immagini": [
+    { "px": [2146, 136], "dove": "intestazione", "cosa": "striscia dei loghi" },
+    { "px": [225, 225], "dove": "pie' di pagina", "cosa": "stemma Regione Sicilia" },
+    { "px": [1251, 1405], "dove": "intestazione prima pagina", "cosa": "sfondo blu tessuto" }
+  ],
+  "stili": { "capitoli": ["Normal + numerazione numId 1", "Heading1"], "altri": ["Heading3", "BodyText", "TOC1", "NoSpacing"], "tabelle": ["Normal Table", "GridTable2-Accent1"] },
+  "campi": ["TOC \\h \\u \\z", "PAGEREF", "PAGE"],
+  "capitoli": ["Informazioni di verbalizzazione", "Rappresentanti Amministrazione", "Rappresentanti RTI", "Riferimenti", "Premessa", "Avanzamento Piano di Lavoro", "Avanzamento delle attività", "Consuntivazione", "Fatturazione attiva", "Accettazione"],
+  "sottotitoli": ["Tabella di raccordo – Codifica deliverable"],
+  "tabelle": 12,
+  "tabelleChiave": {
+    "informazioni": { "capitolo": 1, "colonne": 4, "intestazione": "Informazioni generali / Oggetto della sessione: SAL" },
+    "rappresentantiPA": { "capitolo": 2, "colonne": ["Nome e Cognome", "Ente di appartenenza", "Ruolo"] },
+    "rappresentantiRTI": { "capitolo": 3, "colonne": ["Nome e Cognome", "Società"] },
+    "riferimenti": { "capitolo": 4, "colonne": ["Identificativo", "Titolo/Descrizione"], "righe": ["Accordo Quadro", "Piano dei Fabbisogni", "Piano Operativo", "Contratto Esecutivo"] },
+    "gantt": { "capitolo": 6, "colonne": ["#", "Nome Attività", "Mese_1", "Mese_2", "Mese_3", "Mese_4", "Mese_n"], "gruppi": ["SVI", "SS", "GA"], "regola": "cella DAE9F7 = mese attivo" },
+    "deliverable": { "capitolo": 7, "colonne": ["#", "Denominazione del Deliverable", "Denominazione secondo codifica condivisa"], "stile": "GridTable2-Accent1" },
+    "componentiRTI": { "capitolo": 8, "colonne": ["Componente RTI", "Totale", "Avanzamento del SAL Economico attuale", "Avanzamento SAL economici precedenti", "% Progress totale attività al SAL Economico attuale"] },
+    "economics": { "capitolo": 8, "orientamento": "landscape", "colonne": ["Servizio", "Q.ta", "Tariffa", "#", "Nome Attività", "Valore attività", "[Inserire Mese_1-Anno]", "…", "[Inserire Mese_n-Anno]"], "intestazioniUnite": 3 },
+    "fatturazione": { "capitolo": 9, "colonne": ["Servizio", "Attività", "Totale", "Importo al SAL Economico Attuale (IVA esclusa)", "% consuntivazione servizio del SAL Economico attuale", "gg/pp"] },
+    "prospetto": { "capitolo": 9, "righe": ["Importo", "Ritenuta 0,5%", "Credito", "IVA al 22%", "TOTALE FATTURA"] },
+    "firme": { "capitoli": [9, 10], "ruoli": ["Per il RTI", "Il Responsabile Unico del Progetto", "Il Direttore dell’Esecuzione del Contratto"] }
+  },
+  "segnaposto": { "regex": "\\[[Ii]nserire [^\\]]+\\]", "date": ["gg.mm.aaaa", "__/__/____"], "valori": ["€", "%", "-"] },
+  "codici": { "servizio": "S_n", "attivita": "S_n.m", "attivitaBreve": "[A-Z]_n", "lotto": "L<n>", "mese": "Mese_n" },
+  "calcoli": { "ritenuta": 0.005, "iva": 0.22, "regole": ["credito = importo - ritenuta", "IVA = 22% del credito", "totale fattura = credito + IVA", "% progress = avanzamento cumulato / totale"] },
+  "riferimentoNormativo": "art. 11, comma 6, D.Lgs. 36/2023 (ritenuta 0,5%)",
+  "metadati": { "applicazione": "Microsoft Office Word 16", "docSecurity": 4, "commenti": 1, "revisioni": false, "customXml": "SharePoint" },
+  "punteggioMinimo": 60,
+  "word": {
+    "funzioniDaUsare": ["leggi struttura", "riconosci modello", "compila verbale SAL da dati", "dati dal checkpoint di Verbale Studio", "calcoli economici", "controlli", "esporta .docx nella cartella del progetto"]
+  }
+}

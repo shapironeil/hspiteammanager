@@ -1,4 +1,4 @@
-# Modello: Verbale SAL (Word)
+# sal-rti-rcapac (.docx) — Verbale SAL del progetto R-CAP.AC
 
 File ricevuto: `2026.02.15_Verbale_SAL_Template_v1.00.docx` (453 KB). Analizzato il 1° ottobre 2026.
 
