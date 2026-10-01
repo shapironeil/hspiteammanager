@@ -50,6 +50,7 @@ Prove nel browser (solo sul PC di sviluppo, serve Playwright): `node test/browse
 |---|---|
 | `docs/PROGETTI-E-DATI.md` | Come sono trattati i file dei progetti, permessi, decisioni aperte |
 | `docs/INTEGRAZIONE-APP.md` | Archivio unico, Verbale Studio nel portale, importazione dal vecchio programma, API di Esplora file |
+| `docs/GITHUB.md` | Prove automatiche, pull request automatiche e programmate, dove vederle (anche nel portale) |
 | `docs/CLIENT.md` | Host e client: HSPI Client (installazione senza amministratore, aggiornamento dall'host, motore locale per l'AI), sito /benvenuto /guida /scarica |
 | `docs/BACKUP-E-AGGIORNAMENTI.md` | Versione unica, aggiornamento sicuro, backup automatici, ripristino |
 | `docs/TRAMA.md` | Trama: mappe dei processi (macro, processi, micro) con import/export del file Excel BPB |

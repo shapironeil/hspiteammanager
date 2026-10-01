@@ -225,7 +225,41 @@ export async function viewSystem(el) {
           h('dt', {}, 'Sessioni attive'), h('dd', {}, String(s.counts.sessions)),
           h('dt', {}, 'Voci nel log'), h('dd', {}, String(s.counts.logs)))),
       hostCard(s),
+      githubCard(),
       backupCard()));
+}
+
+// Aggiornamenti e pull request su GitHub: versione installata e pubblicata, pull request aperte con l'esito delle prove.
+function githubCard() {
+  const box = h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Aggiornamenti e pull request')), h('div', { class: 'empty' }, 'Controllo GitHub…'));
+  const CHECK = { passate: ['ok', '✓ prove passate'], fallite: ['danger', '✗ prove fallite'], 'in corso': ['warn', '… prove in corso'], nessuna: ['', 'nessuna prova'] };
+  const load = async (fresh) => {
+    const g = await get('/api/github' + (fresh ? '?aggiorna=1' : ''));
+    const newer = g.mainVersion && g.mainVersion !== g.installed;
+    fill(box,
+      h('div', { class: 'card-head' }, h('h2', {}, 'Aggiornamenti e pull request'),
+        h('button', { class: 'icon-btn', type: 'button', title: 'Controlla adesso', 'aria-label': 'Controlla adesso', onclick: () => load(true).catch(toastError) }, icon('refresh'))),
+      g.error ? h('p', { class: 'form-error' }, g.error) : null,
+      h('dl', { class: 'kv' },
+        h('dt', {}, 'Installata'), h('dd', {}, g.installed),
+        h('dt', {}, 'Su GitHub (main)'), h('dd', {}, g.mainVersion || '—', newer ? h('span', { class: 'chip warn', style: 'margin-left:8px' }, 'nuova: lancia aggiorna.bat') : g.mainVersion ? h('span', { class: 'chip ok', style: 'margin-left:8px' }, 'aggiornato') : null)),
+      h('h3', { style: 'margin:16px 0 6px;font-size:15px' }, `Pull request aperte (${g.prs.length})`),
+      g.prs.length ? h('ul', { class: 'list' }, g.prs.map((p) => {
+        const [cls, label] = CHECK[p.checks.state] || CHECK.nessuna;
+        return h('li', {}, h('div', { class: 'grow' },
+          h('a', { class: 'title', href: p.url, target: '_blank', rel: 'noopener noreferrer', style: 'color:inherit;text-decoration:none;display:block' }, `#${p.number} ${p.title}`),
+          h('div', { class: 'meta' }, `${p.branch} · ${p.author || ''} · aggiornata ${fmtDate(p.updatedAt)}${p.draft ? ' · bozza' : ''}`)),
+        h('span', { class: `chip ${cls}` }, label));
+      })) : h('div', { class: 'empty' }, 'Nessuna pull request aperta.'),
+      h('p', { class: 'small muted', style: 'margin-top:10px' }, 'Le pull request si aprono da sole quando arriva un ramo nuovo e con un controllo ogni mattina. Per lanciarle a mano o cambiare l\'orario: ',
+        h('a', { href: g.actionsUrl || '#', target: '_blank', rel: 'noopener noreferrer' }, 'GitHub → Actions → Pull request automatica'), '. Il merge lo decidi sempre tu.'),
+      h('details', { class: 'detail' }, h('summary', {}, 'Repository'),
+        form([field('Repository GitHub', h('input', { type: 'text', name: 'repo', value: g.repo }), 'proprietario/nome, per esempio shapironeil/hspiteammanager'),
+          h('button', { class: 'btn sm', type: 'submit' }, 'Salva')], async (v) => { await patch('/api/github', v); toast('Repository salvato.'); load(true); })),
+      g.checkedAt ? h('div', { class: 'small muted' }, `Controllato ${fmtDate(g.checkedAt)}`) : null);
+  };
+  load(false).catch((err) => box.replaceChildren(h('h2', {}, 'Aggiornamenti e pull request'), h('p', { class: 'muted' }, err.message)));
+  return box;
 }
 
 // Stato dell'host: memoria, carico, persone collegate, pacchetto client.
@@ -243,6 +277,9 @@ function hostCard(s) {
     h('p', { class: 'small muted', style: 'margin-top:10px' }, 'L\'host conserva i file e li invia (anche i video, a pezzi). I lavori pesanti, come l\'AI locale, girano sul PC di ognuno con HSPI Client.'));
 }
 
+// replaceChildren scriverebbe "null" per le parti assenti: qui si saltano
+const fill = (el, ...parts) => el.replaceChildren(...parts.flat().filter((x) => x != null && x !== false));
+
 // Backup: elenco, "esegui adesso", destinazione e copia aggiuntiva (es. un altro server).
 function backupCard() {
   const box = h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Backup')), h('div', { class: 'empty' }, 'Carico…'));
@@ -256,7 +293,7 @@ function backupCard() {
       try { const r = await post('/api/backups'); toast(`Backup pronto: ${r.files} file (${r.copied} copiati, ${r.linked} già presenti).`); } catch (err) { toastError(err); }
       load();
     } }, 'Esegui adesso');
-    box.replaceChildren(
+    fill(box,
       h('div', { class: 'card-head' }, h('h2', {}, 'Backup'), now),
       h('p', { class: 'small muted', style: 'margin-bottom:10px' }, 'Ogni giorno il portale salva una copia completa di dati, progetti, immagini e web app. I file non cambiati non occupano spazio in più. Si fa anche prima di ogni aggiornamento. Per ripristinare: ripristina.bat nella cartella del portale.'),
       h('dl', { class: 'kv' },

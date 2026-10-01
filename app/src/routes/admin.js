@@ -201,6 +201,64 @@ route('PATCH', '/api/backups/settings', { role: 'hacker' }, async (ctx) => {
   ctx.json(200, { ok: true });
 });
 
+// --- GitHub: versione pubblicata su main e pull request aperte (solo Hacker) ----------------
+// Il repository e' pubblico: si legge senza credenziali. Risposte tenute 10 minuti (limite di GitHub: 60 richieste/ora).
+const GH_DEFAULT = 'shapironeil/hspiteammanager';
+let ghCache = { at: 0, repo: '', data: null };
+async function ghJson(url) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': 'HSPI-Team-Manager', Accept: 'application/vnd.github+json' } });
+    if (r.status === 403 || r.status === 429) throw new Error('troppe richieste da questa rete, riprova tra qualche minuto');
+    if (!r.ok) throw new Error(`GitHub ha risposto ${r.status}`);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+// indirizzi sostituibili solo per le prove automatiche
+const GH_API = process.env.HSPI_GITHUB_API || 'https://api.github.com';
+const GH_RAW = process.env.HSPI_GITHUB_RAW || 'https://raw.githubusercontent.com';
+async function githubStatus(repo) {
+  const api = `${GH_API}/repos/${repo}`;
+  const [version, pulls] = await Promise.all([
+    ghJson(`${GH_RAW}/${repo}/main/version.json`).then((v) => v.version).catch(() => null),
+    ghJson(`${api}/pulls?state=open&per_page=10`),
+  ]);
+  const prs = [];
+  for (const p of pulls.slice(0, 6)) {
+    let checks = { state: 'nessuna', total: 0 };
+    try {
+      const c = await ghJson(`${api}/commits/${p.head.sha}/check-runs?per_page=30`);
+      const runs = c.check_runs || [];
+      const failed = runs.filter((r) => ['failure', 'timed_out', 'cancelled', 'action_required'].includes(r.conclusion)).length;
+      const pending = runs.filter((r) => r.status !== 'completed').length;
+      checks = { total: runs.length, failed, pending, state: !runs.length ? 'nessuna' : failed ? 'fallite' : pending ? 'in corso' : 'passate' };
+    } catch { /* stato delle prove non disponibile */ }
+    prs.push({ number: p.number, title: p.title, url: p.html_url, branch: p.head.ref, author: p.user && p.user.login, draft: !!p.draft, createdAt: p.created_at, updatedAt: p.updated_at, checks });
+  }
+  return { repo, mainVersion: version, prs, actionsUrl: `https://github.com/${repo}/actions/workflows/pr-automatica.yml`, pullsUrl: `https://github.com/${repo}/pulls` };
+}
+route('GET', '/api/github', { role: 'hacker' }, async (ctx) => {
+  const repo = db.getSetting('githubRepo') || GH_DEFAULT;
+  const fresh = ctx.query.get('aggiorna') === '1';
+  if (!fresh && ghCache.data && ghCache.repo === repo && Date.now() - ghCache.at < 600000) return ctx.json(200, { ...ghCache.data, installed: config.VERSION, checkedAt: new Date(ghCache.at).toISOString() });
+  try {
+    const data = await githubStatus(repo);
+    ghCache = { at: Date.now(), repo, data };
+    ctx.json(200, { ...data, installed: config.VERSION, checkedAt: new Date().toISOString() });
+  } catch (err) {
+    ctx.json(200, { repo, installed: config.VERSION, error: `GitHub non raggiungibile: ${err.message}`, prs: [] });
+  }
+});
+route('PATCH', '/api/github', { role: 'hacker' }, async (ctx) => {
+  const b = await ctx.body();
+  const repo = String(b.repo || '').trim();
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new HttpError(400, 'Repository non valido: scrivi proprietario/nome.');
+  db.setSetting('githubRepo', repo);
+  ghCache = { at: 0, repo: '', data: null };
+  ctx.json(200, { ok: true });
+});
+
 // --- Versione (unica fonte: version.json) --------------------------------------
 // Pubblica (senza login): la leggono gli script di aggiornamento e il programma client.
 // Il portale e' raggiungibile solo da questo PC o via Tailscale, quindi non e' visibile da internet.

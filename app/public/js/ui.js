@@ -1,6 +1,13 @@
 // Mattoncini dell'interfaccia: creazione elementi, icone, finestre, avvisi, formati.
 // Il testo degli utenti passa sempre da h() come testo, mai come HTML.
 
+// Le parti assenti (null, false) di una schermata non devono comparire come testo "null":
+// replaceChildren del browser le scriverebbe, questa versione le salta (vale per tutto il portale).
+const nativeReplace = Element.prototype.replaceChildren;
+Element.prototype.replaceChildren = function replaceChildren(...nodes) {
+  return nativeReplace.apply(this, nodes.flat(Infinity).filter((n) => n != null && n !== false));
+};
+
 export function h(tag, attrs, ...children) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
