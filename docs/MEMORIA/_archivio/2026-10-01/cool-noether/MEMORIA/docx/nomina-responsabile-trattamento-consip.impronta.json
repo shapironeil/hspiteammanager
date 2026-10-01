@@ -14,16 +14,5 @@
     { "segnale": "testo 'Nomina Responsabile del trattamento dei dati' e 'art. 28 del Regolamento UE'", "peso": 2 },
     { "segnale": "run blu 0000FF corsivi tra < >", "peso": 1 },
     { "segnale": "21 paragrafi numerati senza titoli", "peso": 1 } ] },
-  "verbaleStudio": { "oggi": "solo testo piatto", "funzioniProposte": ["elenca scelte e campi", "compila guidato", "togli note per la PA", "controlla niente blu / niente linee vuote", "esporta .docx"] },
-  "provenienza": {
-    "agente": "cool-noether",
-    "sessione": "session_016fgi7494LKk88z4etQe9Lu",
-    "ramo": "claude/cool-noether-kv3o8c",
-    "commit": [
-      "74c4dad"
-    ],
-    "dataAnalisi": "2026-10-01",
-    "archivio": "docs/MEMORIA/_archivio/2026-10-01/cool-noether/MEMORIA/docx/nomina-responsabile-trattamento-consip.impronta.json",
-    "unificazione": "2026-10-01, ramo claude/integrazione-2026-10-01: impronta invariata, aggiunto solo questo campo"
-  }
+  "verbaleStudio": { "oggi": "solo testo piatto", "funzioniProposte": ["elenca scelte e campi", "compila guidato", "togli note per la PA", "controlla niente blu / niente linee vuote", "esporta .docx"] }
 }

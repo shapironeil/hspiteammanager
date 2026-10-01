@@ -29,16 +29,5 @@
   },
   "anomalieTipiche": ["residui di un'altra gara nelle caselle di testo della copertina", "stili e metadati di un altro modello", "sigla SS/SA incoerente", "refusi fissi (AMMNISTRAZIONE, Piano de Fabbisogni, IL servizio)", "riferimento al D.Lgs. 50/2016 invece del 36/2023", "sommario non aggiornato dopo i tagli", "DOCVARIABLE senza variabile", "segnaposto gialli rimasti", "quote RTI che non sommano 100%"],
   "sinergie": { "xlsx": "piano-di-lavoro-txt-biosiris: il cronoprogramma e le date di attivazione del cap. 6 sono le stesse del piano di lavoro", "pptx": "kickoff-txt-biosiris: ambito, componenti e masterplan", "docx": "sal-verbale (ramo awesome-cray): servizi e attività con gli stessi codici; riferimenti ad AQ, Piano dei Fabbisogni, Piano Operativo, CE" },
-  "verbaleStudio": { "oggi": "solo testo piatto (docxToText)", "funzioniProposte": ["riconosci modello", "leggi piano operativo (struttura in dati)", "controlla", "compila da oggetto contratto esecutivo", "taglia servizi non richiesti + rigenera sommario", "esporta .docx conservando copertina e stili", "confronta versioni", "pulisci residui"] },
-  "provenienza": {
-    "agente": "cool-noether",
-    "sessione": "session_016fgi7494LKk88z4etQe9Lu",
-    "ramo": "claude/cool-noether-kv3o8c",
-    "commit": [
-      "74c4dad"
-    ],
-    "dataAnalisi": "2026-10-01",
-    "archivio": "docs/MEMORIA/_archivio/2026-10-01/cool-noether/MEMORIA/docx/piano-operativo-consip-id2610.impronta.json",
-    "unificazione": "2026-10-01, ramo claude/integrazione-2026-10-01: impronta invariata, aggiunto solo questo campo"
-  }
+  "verbaleStudio": { "oggi": "solo testo piatto (docxToText)", "funzioniProposte": ["riconosci modello", "leggi piano operativo (struttura in dati)", "controlla", "compila da oggetto contratto esecutivo", "taglia servizi non richiesti + rigenera sommario", "esporta .docx conservando copertina e stili", "confronta versioni", "pulisci residui"] }
 }

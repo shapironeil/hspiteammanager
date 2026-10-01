@@ -49,17 +49,5 @@
     "tipiRiconosciuti": { "1": "testo (atteso copertina)", "2": "indice", "3": "testo", "4": "testo", "5": "schema (atteso scheda)", "6": "testo (atteso scheda)", "7": "scheda", "8": "scheda", "9": "scheda", "10": "scheda", "11": "testo (atteso scheda)", "12": "testo (atteso masterplan)", "13": "tabella" },
     "punteggio": 77,
     "falsiAvvisi": 6
-  },
-  "provenienza": {
-    "agente": "admiring-hopper",
-    "sessione": "session_01GqNo1MzxngbR1RQrFUDijL",
-    "ramo": "claude/admiring-hopper-dc5bp0",
-    "commit": [
-      "e5ab667",
-      "fff10ab"
-    ],
-    "dataAnalisi": "2026-10-01",
-    "archivio": "docs/MEMORIA/_archivio/2026-10-01/admiring-hopper/MEMORIA/pptx/kickoff-txt-biosiris.impronta.json",
-    "unificazione": "2026-10-01, ramo claude/integrazione-2026-10-01: impronta invariata, aggiunto solo questo campo"
   }
 }

@@ -247,18 +247,5 @@
       "confronta versioni",
       "esporta il Gantt verso Cippi (Masterplan)"
     ]
-  },
-  "provenienza": {
-    "agente": "cool-noether",
-    "sessione": "session_016fgi7494LKk88z4etQe9Lu",
-    "ramo": "claude/cool-noether-kv3o8c",
-    "commit": [
-      "0fe8189",
-      "8314b5a"
-    ],
-    "dataAnalisi": "2026-10-01",
-    "primaVersione": "docs/MODELLI-FILE/modelli.json (id excel-piano-di-lavoro-gantt), commit 0fe8189",
-    "archivio": "docs/MEMORIA/_archivio/2026-10-01/cool-noether/MEMORIA/xlsx/piano-di-lavoro-txt-biosiris.impronta.json",
-    "unificazione": "2026-10-01, ramo claude/integrazione-2026-10-01: impronta invariata, aggiunto solo questo campo"
   }
 }

@@ -29,16 +29,5 @@
     ]
   },
   "conoscenza": "kit-aq-id2610.conoscenza.json",
-  "verbaleStudio": { "oggi": "solo testo piatto", "funzioniProposte": ["riconosci famiglia", "estrai schede in dati", "consulta per codice", "controlla i documenti del progetto contro le appendici"] },
-  "provenienza": {
-    "agente": "cool-noether",
-    "sessione": "session_016fgi7494LKk88z4etQe9Lu",
-    "ramo": "claude/cool-noether-kv3o8c",
-    "commit": [
-      "74c4dad"
-    ],
-    "dataAnalisi": "2026-10-01",
-    "archivio": "docs/MEMORIA/_archivio/2026-10-01/cool-noether/MEMORIA/docx/appendici-aq-consip-id2610.impronta.json",
-    "unificazione": "2026-10-01, ramo claude/integrazione-2026-10-01: impronta invariata, aggiunto solo questo campo"
-  }
+  "verbaleStudio": { "oggi": "solo testo piatto", "funzioniProposte": ["riconosci famiglia", "estrai schede in dati", "consulta per codice", "controlla i documenti del progetto contro le appendici"] }
 }

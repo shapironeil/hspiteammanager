@@ -1,0 +1,83 @@
+{
+  "template": "sal-presentazione",
+  "formato": "pptx",
+  "app": "cippi",
+  "tipoDocumento": "presentazione di stato avanzamento lavori (SAL)",
+  "fornitore": "RTI non nominato nel file, per un'Amministrazione regionale; progetto R-CAP.AC (PN Capacità per la Coesione 2021-2027)",
+  "fileVisti": [
+    { "nome": "2026.02.23_Template_Presentazione_Sal_V1.00.pptx", "slide": 5, "dimensioneKB": 183, "parole": 13, "creato": "2025-05-05", "modificato": "2026-04-08", "analizzato": "2026-10-01" }
+  ],
+  "id": "sal-presentazione",
+  "tipo": "pptx",
+  "scheda": "docs/MEMORIA/pptx/sal-presentazione.md",
+  "fascicolo": "sal",
+  "nomeFile": "^\\d{4}\\.\\d{2}\\.\\d{2}_Template_Presentazione_Sal_V\\d+\\.\\d+\\.pptx$",
+  "nomeFileSchema": "AAAA.MM.GG_Template_Presentazione_Sal_Vn.nn.pptx",
+  "impronta": {
+    "formato": { "cx": 12192000, "cy": 6858000 },
+    "master": 4,
+    "layout": 24,
+    "layoutConTesto": { "Diapositiva titolo": ["R-CAP.AC", "Capacità per la Coesione 2021-2027"], "1_Diapositiva titolo": ["R-CAP.AC"] },
+    "carattere": "Titillium Web",
+    "colori": ["164194", "2F5496", "156082"],
+    "immagini": [{ "px": [2146, 136], "cosa": "striscia loghi" }, { "px": [612, 612], "cosa": "trinacria" }, { "px": [128, 128], "cosa": "sfondo invisibile" }],
+    "slideTipiche": ["copertina", "indice", "testo", "immagine", "immagine"]
+  },
+  "funzioni": ["importa", "analisi", "salva-come-modello", "modifica-testi", "duplica-slide", "esporta"],
+  "mancanti": ["slide-da-layout", "agenda-automatica", "immagine-nel-segnaposto", "tabelle", "genera-sal-da-dati", "data-copertina", "pulizia-layout", "controllo-segnaposto"],
+  "slide": { "cx": 12192000, "cy": 6858000, "formato": "Widescreen 16:9" },
+  "tema": {
+    "nome": "tema Office 2023 (standard)",
+    "colori": { "accent1": "156082" },
+    "coloriExtra": ["164194", "2F5496"],
+    "caratteri": { "maggiore": "Aptos Display", "minore": "Aptos" },
+    "caratteriNelleSlide": ["Titillium Web"],
+    "nota": "la scheda originale dice solo che il tema dichiara Aptos / Aptos Display e che accent1 è 156082: l'ordine maggiore/minore è quello standard di Office 2023, da verificare sul file; gli altri colori del tema non sono stati rilevati. Nelle slide tutto è Titillium Web e i blu del brand sono 164194 e 2F5496"
+  },
+  "layout": {
+    "disponibili": 24,
+    "master": 4,
+    "usati": { "Diapositiva titolo": [1], "Titolo e contenuto": [2, 3], "1_Layout personalizzato": [4], "Layout personalizzato": [5] },
+    "nonUsati": 18,
+    "daConservareNellaPulizia": [1, 13, 14, 16],
+    "pieDiPagina": "",
+    "nota": "nessun piè di pagina: data e numero di slide sono nei master; il layout 'Diapositiva titolo' porta i testi fissi del programma e la sigla R-CAP.AC"
+  },
+  "sezioniNative": [],
+  "sezioniNativeNota": "una sola sezione con il nome automatico 'Sezione predefinita': non è un segnale di riconoscimento",
+  "partiNellOrdine": [
+    { "parte": "copertina", "slide": [1], "layout": "Diapositiva titolo", "segnali": ["ph subTitle con il titolo dell'incontro", "ph dt con idx orfano 4294967295 e data come testo fisso", "striscia loghi 2146x136", "barra blu 164194 in basso", "trinacria 612x612 a destra"] },
+    { "parte": "indice", "slide": [2], "layout": "Titolo e contenuto", "segnali": ["TextBox 'Agenda' non segnaposto", "elenco buAutoNum arabicPeriod", "rettangolo senza riempimento con bordo accent1 19050 EMU come indicatore della sezione"] },
+    { "parte": "testo", "slide": [3], "layout": "Titolo e contenuto", "segnali": ["ph title", "ph body", "ph sldNum idx 4"] },
+    { "parte": "immagine", "slide": [4], "layout": "1_Layout personalizzato", "ripetibile": true, "segnali": ["ph title", "ph pic idx 11 a destra a tutta altezza", "ph body idx 12"] },
+    { "parte": "immagine", "slide": [5], "layout": "Layout personalizzato", "ripetibile": true, "segnali": ["ph body idx 1", "ph title", "ph pic idx 11"] }
+  ],
+  "metadati": { "creato": "2025-05-05", "modificato": "2026-04-08", "parole": 13, "sezioni": ["Sezione predefinita"], "changesInfos": true, "customXmlSharePoint": true, "etichettaMipRimossa": true },
+  "stileTabellaPredefinito": "Stile medio 2 - Colore 1 {5C22544A-7EE6-4342-B048-85BDC9FD1C3A}",
+  "riconoscimento": {
+    "nota": "pesi e punteggio minimo non ancora decisi: l'analisi originale dava solo l'elenco dei segnali. Il confronto attuale di impronta.js non guarda immagini, layout con testo e carattere usato",
+    "segnali": [
+      "nome file AAAA.MM.GG_Template_Presentazione_Sal_Vn.nn.pptx",
+      "4 master e 24 layout con doppioni",
+      "layout 'Diapositiva titolo' e '1_Diapositiva titolo' con i testi R-CAP.AC / Capacità per la Coesione 2021-2027",
+      "carattere Titillium Web in tutte le slide",
+      "colori 164194 e 2F5496; tema Office 2023 con accent1 156082",
+      "immagini 2146x136 (striscia loghi), 612x612 (trinacria), 128x128 (sfondo invisibile)",
+      "slide nell'ordine copertina, indice, testo, immagine, immagine"
+    ]
+  },
+  "sinergie": { "docx": "sal-verbale: stesso fascicolo SAL, stesso brand (striscia loghi 2146x136, Titillium Web), stesso oggetto dati 'SAL'" },
+  "cippi": { "versioneAnalisi": "0.1.0 (portale 0.8.1)", "punteggio": null, "note": "agenda e titolo della slide 2 trovati con la regola 'testo più grande in alto'; l'esportazione toglie changesInfos; l'immagine alpha 0 va ignorata nell'anteprima" },
+  "provenienza": {
+    "agente": "awesome-cray",
+    "sessione": "session_01WbrSz86BeYisrNNoJc7Eh5",
+    "ramo": "claude/awesome-cray-8lgn1k",
+    "commit": ["51e11c0"],
+    "dataAnalisi": "2026-10-01",
+    "fonte": "docs/memoria/modelli.json, voce id 'sal-presentazione' (tutti i campi originali conservati: id, tipo, app, scheda, fascicolo, nomeFile, impronta, funzioni, mancanti) e docs/memoria/modelli/sal-presentazione.md",
+    "schedaOriginale": "docs/memoria/modelli/sal-presentazione.md",
+    "notaDelFileOriginale": "Impronte dei modelli di file conosciuti. Nessun dato aziendale: solo struttura, stili e segni di riconoscimento.",
+    "archivio": "docs/MEMORIA/_archivio/2026-10-01/awesome-cray/memoria/",
+    "unificazione": "2026-10-01, ramo claude/integrazione-2026-10-01"
+  }
+}
