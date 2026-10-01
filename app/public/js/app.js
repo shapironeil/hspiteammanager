@@ -20,6 +20,8 @@ const NAV = [
   { id: 'home', label: 'Home', icon: 'home', min: 'dipendente', view: viewHome, dynamic: true },
   { id: 'progetti', label: 'Progetti', icon: 'briefcase', min: 'dipendente', view: viewProjects, reset: resetProjects },
   { id: 'esplora', label: 'Esplora file', icon: 'folder', min: 'dipendente', view: viewExplorer },
+  // Verbale Studio e' un'app a se' (pagina /verbali/), con gli stessi account e gli stessi progetti.
+  { id: 'verbali', label: 'Verbale Studio', icon: 'note', min: 'dipendente', href: '/verbali/' },
   { id: 'programmi', label: 'Programmi', icon: 'apps', min: 'dipendente', view: viewPrograms },
   { id: 'file', label: 'File inviati', icon: 'upload', min: 'dipendente', view: viewFiles },
   { id: 'team', label: (u) => (u.role === 'hacker' ? 'Account' : 'Team'), icon: 'users', min: 'manager', view: viewAccounts, group: 'Organizzazione' },
@@ -294,7 +296,7 @@ function renderShell() {
   const items = NAV.filter((n) => app.can(n.min));
   const pinned = store('hspi.menu') === 'fisso';
   const link = (n) => h('a', {
-    class: 'nav-item', href: `#/${n.id}`, 'data-id': n.id, title: typeof n.label === 'function' ? n.label(app.user) : n.label,
+    class: 'nav-item', href: n.href || `#/${n.id}`, 'data-id': n.id, title: typeof n.label === 'function' ? n.label(app.user) : n.label,
     // Cliccare la voce della schermata in cui si e' gia' la riporta al suo inizio.
     onclick: () => { if (n.reset) n.reset(); if (location.hash === `#/${n.id}`) navigate(); },
   },
@@ -366,7 +368,7 @@ function renderShell() {
 async function navigate(manual) {
   if (!shell || !shell.isConnected) return;
   const id = (location.hash.replace(/^#\//, '') || 'home').split('?')[0];
-  const entry = [...NAV, PROFILE].find((n) => n.id === id && app.can(n.min)) || NAV[0];
+  const entry = [...NAV, PROFILE].find((n) => n.id === id && n.view && app.can(n.min)) || NAV[0];
   shell.classList.remove('menu-open');
   setBackdrop(entry.dynamic ? 'dynamic' : 'static');
   shell.querySelectorAll('.nav-item[data-id]').forEach((a) => a.classList.toggle('active', a.dataset.id === entry.id));
