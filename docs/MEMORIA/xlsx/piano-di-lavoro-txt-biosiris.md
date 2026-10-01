@@ -1,8 +1,16 @@
-# Modello: Piano di lavoro di dettaglio (Gantt mensile a due livelli) — Excel
+# Template: piano-di-lavoro-txt-biosiris (.xlsx)
 
-Id: `excel-piano-di-lavoro-gantt` · App: **GestioneCelle** · Prima scheda: 2026-10-01 (file `…_PdL_di_dettaglio_v0.4.xlsx`, "PdL" = Piano di Lavoro).
+Piano di lavoro di dettaglio: Gantt mensile a due livelli. App: **GestioneCelle**. Impronta: `piano-di-lavoro-txt-biosiris.impronta.json`.
+
+## File visti
+
+| File | Modificato | Analizzato | Numeri |
+|---|---|---|---|
+| `BIOSIRIS_PdL_di_dettaglio_v0.4.xlsx` | 29/09/2026 | 01/10/2026 | 1 foglio, 6 work package, 46 fasi, 39 mesi (ott 2026 - dic 2029), 54 formule, 17 celle unite |
 
 ## 1. Che cos'è
+
+Sinergia con Cippi: la slide 12 (Masterplan) del template `kickoff-txt-biosiris` è la versione grafica di questo piano, con le fasi raggruppate in tre macro-fasi.
 
 Il piano di lavoro di un progetto pluriennale, in un solo foglio: a sinistra la **WBS a due livelli** (work package → fasi), a destra una **timeline per mesi** su cui le attività sono disegnate come **barre colorate**. Serve a mostrare al cliente e al team chi fa cosa e quando; è il "masterplan" che poi finisce anche nelle presentazioni (slide Masterplan del kick-off).
 
@@ -71,7 +79,7 @@ Il primo work package ("componenti trasversali") è diverso: fasi tecniche (asse
 5. Assenza di tabelle, convalide, formati condizionali; formule solo del tipo `=B5` / `=C22` / `=+B5`.
 6. Nome file con `PdL`, `Piano di lavoro`, `Gantt` o `Masterplan`.
 
-Impronta in `modelli.json` (`punteggio_minimo` 4).
+Impronta in `piano-di-lavoro-txt-biosiris.impronta.json` (`punteggioMinimo` 4).
 
 ## 6. Funzioni e caratteristiche trovate nel file
 
