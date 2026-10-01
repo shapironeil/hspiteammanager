@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scarica · HSPI Team Manager</title>
+  <link rel="icon" href="/img/logo.svg">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/sito/sito.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><img src="/img/logo.svg" alt=""><strong>HSPI Team Manager</strong><nav><a href="/benvenuto">Il portale</a><a href="/guida">Guida</a><a href="/scarica" class="on">Scarica</a><a href="/">Accedi</a></nav></header>
+  <section class="hero" style="padding-bottom:10px"><h1>Scarica HSPI Client</h1><p>Il programma per il tuo PC Windows: apre il portale, si aggiorna da solo e fa girare in locale i lavori pesanti.</p></section>
+  <div class="card download">
+    <div><div class="big">HSPI Client <span id="cv"></span></div><div class="muted" id="cs">Pacchetto ZIP con installa.bat</div></div>
+    <a class="btn primary" href="/scarica/HSPI-Client.zip" download>Scarica lo ZIP</a>
+  </div>
+  <h2>Installazione</h2>
+  <ol class="steps">
+    <li>Scarica lo ZIP qui sopra ed <b>estrailo</b> (tasto destro → Estrai tutto). Non avviarlo dall'interno dello ZIP.</li>
+    <li>Doppio clic su <code>installa.bat</code>. Il programma va in <code>%LOCALAPPDATA%\HSPI-Client</code>, senza diritti di amministratore. Se sul PC non c'è Node.js, lo scarica da qui (circa 80 MB, una volta sola).</li>
+    <li>Sul desktop trovi <b>HSPI</b>. Aprilo: si allinea alla versione del portale e apre il portale nel browser.</li>
+  </ol>
+  <h2>Prima di tutto</h2>
+  <div class="grid">
+    <div class="card"><h3>Tailscale</h3><p>Serve per raggiungere il portale. Installalo dal sito ufficiale (o dallo store sul telefono) e accetta l'invito ricevuto. Chiedi l'ok all'IT se il PC è aziendale.</p></div>
+    <div class="card"><h3>AI locale (facoltativa)</h3><p>Per l'AI di Verbale Studio installa Ollama: dal portale, Verbale Studio → AI locale, con HSPI Client aperto. Gira sul tuo PC.</p></div>
+    <div class="card"><h3>Aggiornamenti</h3><p>Automatici: a ogni avvio HSPI Client controlla la versione del portale e si aggiorna. Se qualcosa va storto resta la versione di prima.</p></div>
+  </div>
+
+  <footer>HSPI Team Manager · raggiungibile solo dalla rete privata del team (Tailscale). <span id="versione"></span></footer>
+</div>
+<script src="/sito/sito.js" defer></script>
+</body>
+</html>

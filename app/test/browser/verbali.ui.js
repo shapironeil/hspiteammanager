@@ -25,7 +25,7 @@ const VTT = 'WEBVTT\n\n00:00:01.000 --> 00:00:04.000\n<v Anna Rossi>Abbiamo comp
       const ctx = await browser.newContext({ viewport, isMobile: mobile, hasTouch: mobile });
       const page = await ctx.newPage();
       page.on('pageerror', (e) => errors.push(`${label}: ${e.message}`));
-      page.on('console', (m) => { if (m.type() === 'error' && !/401|404/.test(m.text())) errors.push(`${label} console: ${m.text()}`); });
+      page.on('console', (m) => { if (m.type() === 'error' && !/401|404|ERR_CONNECTION_REFUSED/.test(m.text())) errors.push(`${label} console: ${m.text()}`); });
       // senza accesso si torna al portale
       await page.goto(portal.base + '/verbali/');
       await page.waitForURL(portal.base + '/', { timeout: 8000 });

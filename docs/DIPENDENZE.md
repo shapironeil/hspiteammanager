@@ -79,6 +79,10 @@ hspiteammanager/
 ├── progetti/            file di lavoro dei progetti, MAI su GitHub
 ├── node-v22.22.2-win-x64/   Node.js portatile, MAI su GitHub
 ├── app/                 codice del portale (server + interfaccia)
+├── client/              HSPI Client: installa.bat, HSPI.bat, app/hspi-client.js (pacchetti preparati dall'host)
+├── version.json         unica fonte della versione (host e client)
+├── backup.bat / ripristina.bat   backup subito / ripristino da un backup
+├── Backup/              backup dell'host, MAI su GitHub
 ├── images/              risorse grafiche: logo/, background/, avatar/
 ├── docs/                documentazione
 ├── scripts/             script di servizio (primo download)

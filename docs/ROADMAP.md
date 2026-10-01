@@ -29,8 +29,13 @@
 - [x] v0.5: Esplora file (cartelle vere personali e di progetto, indice nel database, ricerca, versioni, cestino, modifica testi)
 - [x] v0.5: Verbale Studio dentro il portale, archivio nelle cartelle dei progetti, importazione dal vecchio programma
 - [x] v0.5: app installabile sul telefono (PWA) e guida Tailscale (`TELEFONO.md`)
+- [x] v0.6: versione unica (version.json), aggiornamento sicuro con backup e ritorno indietro, backup giornalieri e ripristino
+- [x] v0.6: gradi personalizzabili, Hacker nascosto, ospiti a tempo nei progetti, statistiche del team
+- [x] v0.6: Trama (mappe dei processi con import/export del file Excel BPB)
+- [x] v0.6: HSPI Client (installazione per utente, aggiornamento dall'host, motore locale per l'AI), sito /benvenuto /guida /scarica
 - [ ] Provare l'importazione con i dati veri di Verbale Studio sul PC del portale
-- [ ] Backup periodico della cartella `data/` e di `progetti/` (oggi: versioni e cestino, nessuna copia esterna)
+- [ ] Provare HSPI Client su un PC Windows aziendale e il file Excel di Trama in Excel 365
+- [ ] Scegliere la destinazione della copia aggiuntiva dei backup (l'altro server)
 - [ ] Decidere come trattare i file aziendali dei progetti (vedi `PROGETTI-E-DATI.md`)
 - [ ] Decidere come collegare gli altri PC: porta aperta dall'IT, oppure altra strada approvata
 - [ ] Prova con i primi colleghi

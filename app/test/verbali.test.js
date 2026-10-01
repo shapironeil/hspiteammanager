@@ -137,7 +137,7 @@ test('impostazioni del progetto, template comuni, apprendimento', async () => {
   await mario.put(`/api/vs/projects/${pid}/learning`, { counts: { a: 1 } });
   assert.deepEqual((await mario.get(`/api/vs/projects/${pid}/learning`)).data, { counts: { a: 1 } });
   // le azioni sul PC del portale sono dell'Hacker
-  assert.equal((await mario.post('/api/vs/ollama/pull', { model: 'qwen2.5:3b' })).status, 403);
+  assert.equal((await mario.post('/api/vs/ollama/pull', { model: 'qwen2.5:3b' })).status, 400, 'AI spenta sull\'host: si usa HSPI Client');
   assert.equal((await mario.post('/api/vs/ai/summary', {})).status, 400);
 });
 

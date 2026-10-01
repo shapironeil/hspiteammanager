@@ -19,13 +19,7 @@ const MIME = {
   '.webmanifest': 'application/manifest+json; charset=utf-8', '.mp3': 'audio/mpeg',
 };
 
-const SECURITY_HEADERS = {
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'Referrer-Policy': 'same-origin',
-  'Content-Security-Policy':
-    "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
-};
+const { SECURITY_HEADERS } = require('./http-headers');
 
 // Gestori extra per le web app ospitate (registrati da server.js per evitare dipendenze circolari).
 let appHandler = null;
@@ -133,6 +127,7 @@ async function handle(req, res) {
 
   try {
     if (!pathname.startsWith('/api/')) {
+      if (require('./downloads').handle(req, res, pathname)) return;
       if (appHandler && pathname.startsWith('/apps/') && appHandler.handle(req, res, pathname)) return;
       if (serveStatic(req, res, pathname)) return;
       if (appHandler && appHandler.handleFromReferer(req, res, pathname)) return;

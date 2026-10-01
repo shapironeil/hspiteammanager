@@ -135,7 +135,13 @@ route('GET', '/api/system', { role: 'hacker' }, (ctx) => {
       diskFreeBytes: storage.diskFreeBytes(),
       files: count('SELECT COUNT(*) AS n FROM files'),
     },
+    host: {
+      memTotal: os.totalmem(), memFree: os.freemem(), rss: process.memoryUsage().rss, heap: process.memoryUsage().heapUsed,
+      cpus: os.cpus().length, load: os.loadavg(), activeUsers: count('SELECT COUNT(DISTINCT user_id) AS n FROM sessions WHERE expires_at > ?', db.now()),
+      clientPackage: require('../client-package').info(),
+    },
     settings: {
+      hostAi: db.getSetting('hostAi') === '1',
       portalName: db.getSetting('portalName'),
       quotaGb: Number(db.getSetting('quotaGb')),
       maxFileMb: Number(db.getSetting('maxFileMb')),
@@ -158,6 +164,7 @@ route('PATCH', '/api/settings', { role: 'hacker' }, async (ctx) => {
   db.setSetting('portalName', portalName);
   db.setSetting('quotaGb', Math.round(quotaGb));
   db.setSetting('maxFileMb', Math.round(maxFileMb));
+  if (typeof b.hostAi === 'boolean') db.setSetting('hostAi', b.hostAi ? '1' : '0');
   db.log(ctx, 'impostazioni.modificate', `spazio ${Math.round(quotaGb)} GB, file max ${Math.round(maxFileMb)} MB`);
   ctx.json(200, { ok: true });
 });

@@ -202,6 +202,8 @@ export async function viewSystem(el) {
           field('Nome del portale', h('input', { type: 'text', name: 'portalName', maxlength: '60', value: s.settings.portalName }), 'Il nome mostrato nel login, nel menu e nella scheda del browser.'),
           field('Spazio totale assegnato (GB)', h('input', { type: 'number', name: 'quotaGb', min: '1', value: String(s.settings.quotaGb) }), 'Quanto spazio del disco può occupare in totale il portale con programmi e file caricati.'),
           field('Dimensione massima di un file (MB)', h('input', { type: 'number', name: 'maxFileMb', min: '1', value: String(s.settings.maxFileMb) }), 'Il limite per un singolo file caricato. 1024 MB = 1 GB.'),
+          h('label', { class: 'check' }, h('input', { type: 'checkbox', name: 'hostAi', checked: s.settings.hostAi }), 'AI locale (Ollama) anche sul PC del portale'),
+          h('p', { class: 'hint' }, 'Spenta = consigliato: l\'AI gira sul PC di ognuno con HSPI Client e il PC del portale resta leggero.'),
           h('button', { class: 'btn primary', type: 'submit' }, 'Salva impostazioni'),
         ], async (v) => { await patch('/api/settings', v); toast('Impostazioni salvate.'); await boot(); })),
       h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Risorse trovate')),
@@ -222,7 +224,23 @@ export async function viewSystem(el) {
           h('dt', {}, 'Account'), h('dd', {}, String(s.counts.users)),
           h('dt', {}, 'Sessioni attive'), h('dd', {}, String(s.counts.sessions)),
           h('dt', {}, 'Voci nel log'), h('dd', {}, String(s.counts.logs)))),
+      hostCard(s),
       backupCard()));
+}
+
+// Stato dell'host: memoria, carico, persone collegate, pacchetto client.
+function hostCard(s) {
+  const x = s.host;
+  const used = x.memTotal - x.memFree;
+  return h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Stato del PC del portale')),
+    h('div', { class: 'tile', style: 'padding:0' }, h('div', { class: 'label' }, 'Memoria usata dal PC'), h('div', { class: 'value' }, `${fmtBytes(used)}`),
+      h('div', { class: 'sub' }, `su ${fmtBytes(x.memTotal)} · il portale ne usa ${fmtBytes(x.rss)}`), meter(used / x.memTotal)),
+    h('dl', { class: 'kv', style: 'margin-top:14px' },
+      h('dt', {}, 'Processori'), h('dd', {}, String(x.cpus)),
+      x.load && x.load[0] ? [h('dt', {}, 'Carico (1/5/15 min)'), h('dd', {}, x.load.map((v) => v.toFixed(2)).join(' · '))] : null,
+      h('dt', {}, 'Persone collegate'), h('dd', {}, String(x.activeUsers)),
+      h('dt', {}, 'HSPI Client'), h('dd', {}, x.clientPackage ? h('a', { href: '/scarica' }, `versione ${x.clientPackage.version} · pagina Scarica`) : 'pacchetto non disponibile')),
+    h('p', { class: 'small muted', style: 'margin-top:10px' }, 'L\'host conserva i file e li invia (anche i video, a pezzi). I lavori pesanti, come l\'AI locale, girano sul PC di ognuno con HSPI Client.'));
 }
 
 // Backup: elenco, "esegui adesso", destinazione e copia aggiuntiva (es. un altro server).

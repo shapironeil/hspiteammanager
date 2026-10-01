@@ -1,0 +1,20 @@
+HSPI Client
+===========
+
+Il programma da installare sul proprio PC per usare il portale HSPI Team Manager.
+
+Che cosa fa
+- Si aggiorna da solo alla stessa versione del portale (lo scarica dal portale, non da internet).
+- Accende il "motore locale": l'AI locale (Ollama) e i lavori pesanti girano su questo PC,
+  cosi' il PC che ospita il portale resta leggero.
+- Apre il portale nel browser.
+
+Installazione
+1. Estrai lo ZIP (tasto destro -> Estrai tutto).
+2. Doppio clic su installa.bat. Non servono diritti di amministratore.
+3. Si crea il collegamento HSPI sul desktop.
+
+Dove sta
+%LOCALAPPDATA%\HSPI-Client  (programma, Node.js, indirizzo del portale in host.txt)
+
+Per toglierlo: cancella la cartella qui sopra e il collegamento sul desktop.

@@ -205,7 +205,7 @@ function authCard(title, subtitle, content) {
         h('h1', {}, title),
         subtitle ? h('p', { class: 'muted' }, subtitle) : null),
       content,
-      h('div', { class: 'auth-foot' }, `${app.state.portalName} · v${app.state.version} beta`))));
+      h('div', { class: 'auth-foot' }, `${app.state.portalName} · v${app.state.version} beta · `, h('a', { href: '/benvenuto' }, 'Cos\'è e come si installa')))));
   const first = root.querySelector('input');
   if (first) first.focus();
 }

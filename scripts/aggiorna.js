@@ -133,7 +133,7 @@ function swap(staged) {
 }
 // Solo i file che il programma porta con se': gli altri file messi dall'utente nella cartella restano.
 function isProgramFile(name) {
-  return /^(app|scripts|docs|branding|version\.json|README\.md|\.gitignore|.*\.bat)$/i.test(name);
+  return /^(app|client|scripts|docs|branding|version\.json|README\.md|\.gitignore|.*\.bat)$/i.test(name);
 }
 
 // Tiene le ultime 3 copie del programma sostituito (solo codice, mai dati).

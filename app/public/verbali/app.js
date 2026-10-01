@@ -50,7 +50,42 @@
     toast('Sessione scaduta: accedi di nuovo al portale.', { error: true });
     setTimeout(() => { location.href = '/'; }, 1500);
   }
+  // Motore locale di HSPI Client (sul PC di chi usa il portale): se c'e', l'AI locale gira li' e non sull'host.
+  const ENGINE = 'http://127.0.0.1:4320';
+  let engineOn = false;
+  async function detectEngine() {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 1200);
+      const r = await fetch(ENGINE + '/stato', { signal: ctrl.signal });
+      clearTimeout(t);
+      engineOn = r.ok && (await r.json()).app === 'hspi-client';
+    } catch { engineOn = false; }
+    document.body.classList.toggle('engine-on', engineOn);
+    return engineOn;
+  }
+  async function engine(method, pathname, body) {
+    const res = await fetch(ENGINE + pathname, { method, headers: body !== undefined ? { 'Content-Type': 'application/json' } : {}, body: body !== undefined ? JSON.stringify(body) : undefined });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Errore ${res.status}`);
+    return data;
+  }
+  // /api/ollama/* -> motore locale; il portale prepara solo testi ed esempi (lavoro leggero)
+  async function engineApi(method, url, body) {
+    const u = new URL(url, location.origin);
+    const what = u.pathname.replace('/api/ollama/', '');
+    if (what === 'status') {
+      const [st, info] = await Promise.all([engine('GET', '/ollama/status'), hostApi('GET', `/api/ollama/info${u.search}`)]);
+      return { ...st, trainedModel: info.trainedModel, trainingExamples: info.trainingExamples };
+    }
+    if (what === 'task' || what === 'train') return engine('POST', `/ollama/${what}`, await hostApi('POST', '/api/ollama/prepare', { ...body, kind: what }));
+    return engine(method, `/ollama/${what}`, body);
+  }
   async function api(method, url, body, raw) {
+    if (engineOn && url.startsWith('/api/ollama/')) return engineApi(method, url, body);
+    return hostApi(method, url, body, raw);
+  }
+  async function hostApi(method, url, body, raw) {
     const opts = { method, headers: { ...HSPI }, credentials: 'same-origin' };
     if (raw) opts.body = raw;
     else if (body !== undefined) { opts.body = JSON.stringify(body); opts.headers['Content-Type'] = 'application/json'; }
@@ -273,6 +308,7 @@
     state.settings = data.settings;
     state.workDir = data.workDir;
     applySettings();
+    await detectEngine();
     refreshOllama();
     const pid = LS.get('project', null);
     await selectProject(state.projects.find((p) => p.id === pid) ? pid : state.projects[0]?.id);
@@ -1612,13 +1648,11 @@
     const ctrl = new AbortController();
     dash.streaming = ctrl;
     try {
-      const res = await fetch(apiUrl('/api/ollama/chat'), {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { ...HSPI, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: cp.projectId, checkpointId: cp.id, messages: history, context: ctx, template: state.tpl, format: output === 'summary' ? summarySchema(state.tpl) : undefined }),
-        signal: ctrl.signal,
-      });
+      const chatBody = { projectId: cp.projectId, checkpointId: cp.id, messages: history, context: ctx, template: state.tpl, format: output === 'summary' ? summarySchema(state.tpl) : undefined };
+      // con HSPI Client l'AI risponde dal motore locale; il portale prepara solo il contesto
+      const res = engineOn
+        ? await fetch(ENGINE + '/ollama/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(await hostApi('POST', '/api/ollama/prepare', { ...chatBody, kind: 'chat' })), signal: ctrl.signal })
+        : await fetch(apiUrl('/api/ollama/chat'), { method: 'POST', credentials: 'same-origin', headers: { ...HSPI, 'Content-Type': 'application/json' }, body: JSON.stringify(chatBody), signal: ctrl.signal });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `Errore ${res.status}`);
       const reader = res.body.getReader();
       const dec = new TextDecoder();
@@ -1836,7 +1870,13 @@
     const current = state.settings.ollamaModel;
     const trained = st.trainedModel && installed.find((n) => n.startsWith(st.trainedModel));
     const pct = (j) => (j?.total ? Math.round((j.completed / j.total) * 100) : 0);
-    body.innerHTML = `
+    const where = engineOn
+      ? '<p class="note-box">L\'AI gira <b>sul tuo PC</b> grazie a HSPI Client: il PC del portale non viene appesantito.</p>'
+      : st.disabled
+        ? `<p class="note-box"><b>AI locale non disponibile da qui.</b> ${esc(st.message || '')} <a href="/scarica" target="_blank" rel="noopener">Scarica HSPI Client</a>, aprilo e ricarica questa pagina.</p>`
+        : '<p class="note-box">L\'AI gira <b>sul PC del portale</b>. Con HSPI Client girerebbe sul tuo PC.</p>';
+    if (st.disabled && !engineOn) { body.innerHTML = where; return; }
+    body.innerHTML = where + `
       <div class="card"><h3>1 · Ollama</h3>
         ${running ? `<p><span class="pill ok">In esecuzione</span> versione ${esc(st.version)}</p>` : `<p><span class="pill overdue">Non attivo</span> Ollama non risulta in esecuzione su questo computer.</p>
           <div class="row gap-6"><button class="btn btn-primary btn-sm" id="olInstall">${st.platform === 'win32' ? 'Scarica e installa Ollama' : 'Installa Ollama'}</button>

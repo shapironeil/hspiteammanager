@@ -337,31 +337,65 @@ function trainingExamples(list) {
   return out;
 }
 
-route('GET', '/api/vs/ollama/status', {}, h(async (ctx) => {
-  const pid = ctx.query.get('projectId');
-  const st = await ollama.status();
+// L'AI locale e' un lavoro pesante: di norma gira sul PC di ognuno (HSPI Client), non sull'host.
+// L'Hacker puo' riaccenderla sull'host da Sistema → Impostazioni ("AI locale anche sul PC del portale").
+const hostAiOn = () => db.getSetting('hostAi') === '1';
+const NO_HOST_AI = 'L\'AI locale gira sul tuo PC: installa e apri HSPI Client (pagina Scarica del portale). Sul PC del portale e\' spenta per non appesantirlo.';
+function needHostAi() { if (!hostAiOn()) throw new HttpError(400, NO_HOST_AI); }
+
+async function trainingInfo(ctx, pid) {
   let examples = 0;
   if (pid) { try { examples = trainingExamples(await A.list(A.openProject(ctx.user, pid))).length; } catch { /* progetto non visibile */ } }
-  ctx.json(200, {
-    ...st, recommended: ollama.RECOMMENDED, jobs: ollama.jobs, platform: process.platform,
-    trainedModel: pid ? ollama.trainedName(pid) : null, trainingExamples: examples, canManage: isHacker(ctx.user),
-  });
+  return { trainedModel: pid ? ollama.trainedName(pid) : null, trainingExamples: examples };
+}
+
+route('GET', '/api/vs/ollama/status', {}, h(async (ctx) => {
+  const extra = await trainingInfo(ctx, ctx.query.get('projectId'));
+  if (!hostAiOn()) return ctx.json(200, { running: false, models: [], disabled: true, message: NO_HOST_AI, recommended: ollama.RECOMMENDED, jobs: {}, platform: process.platform, canManage: false, ...extra });
+  const st = await ollama.status();
+  ctx.json(200, { ...st, recommended: ollama.RECOMMENDED, jobs: ollama.jobs, platform: process.platform, canManage: isHacker(ctx.user), ...extra });
 }));
-route('POST', '/api/vs/ollama/install', {}, h(async (ctx) => { needHacker(ctx); ctx.json(200, ollama.install()); }));
-route('POST', '/api/vs/ollama/start', {}, h(async (ctx) => { needHacker(ctx); ollama.startApp(); ctx.json(200, { ok: true }); }));
+// Informazioni del progetto per l'AI che gira sul client (nessuna chiamata a Ollama dall'host)
+route('GET', '/api/vs/ollama/info', {}, h(async (ctx) => {
+  ctx.json(200, { ...(await trainingInfo(ctx, ctx.query.get('projectId'))), model: settingsOf(ctx.user).ollamaModel, hostAi: hostAiOn() });
+}));
+// Prepara cio' che serve al motore locale del client: testi, contesto, esempi. Leggero per l'host.
+route('POST', '/api/vs/ollama/prepare', {}, h(async (ctx) => {
+  const b = await body(ctx);
+  const P = A.openProject(ctx.user, b.projectId);
+  const s = settingsOf(ctx.user);
+  const project = A.projectView(P);
+  if (b.kind === 'task') return ctx.json(200, { model: b.model || s.ollamaModel, project, author: s.author, task: b.task, text: String(b.text || '').slice(0, 4000) });
+  if (b.kind === 'train') {
+    if (!P.canEdit) throw new HttpError(403, 'Addestrare il modello del progetto spetta a un Manager del progetto o all\'Hacker.');
+    return ctx.json(200, { project, author: s.author, base: b.base || s.ollamaModel || 'qwen2.5:3b', examples: trainingExamples(await A.list(P)) });
+  }
+  if (b.kind === 'chat') {
+    const c = A.load(P, b.checkpointId);
+    const system = ollama.checkpointSystemPrompt({ project, author: s.author, checkpoint: c, context: b.context || {}, template: b.template });
+    const history = (Array.isArray(b.messages) ? b.messages : []).slice(-12).map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 12000) }));
+    return ctx.json(200, { model: s.ollamaModel, messages: [{ role: 'system', content: system }, ...history], format: b.format, numCtx: b.context && b.context.transcript ? 16384 : 8192 });
+  }
+  throw new HttpError(400, 'Richiesta non valida.');
+}));
+route('POST', '/api/vs/ollama/install', {}, h(async (ctx) => { needHostAi(); needHacker(ctx); ctx.json(200, ollama.install()); }));
+route('POST', '/api/vs/ollama/start', {}, h(async (ctx) => { needHostAi(); needHacker(ctx); ollama.startApp(); ctx.json(200, { ok: true }); }));
 route('POST', '/api/vs/ollama/pull', {}, h(async (ctx) => {
+  needHostAi();
   needHacker(ctx);
   const { model } = await body(ctx);
   if (!/^[\w.:/-]{2,80}$/.test(model || '')) throw new HttpError(400, 'Nome modello non valido.');
   ctx.json(200, ollama.pull(model));
 }));
 route('POST', '/api/vs/ollama/delete', {}, h(async (ctx) => {
+  needHostAi();
   needHacker(ctx);
   const { model } = await body(ctx);
   await ollama.removeModel(model);
   ctx.json(200, { ok: true });
 }));
 route('POST', '/api/vs/ollama/train', {}, h(async (ctx) => {
+  needHostAi();
   const b = await body(ctx);
   const P = A.openProject(ctx.user, b.projectId);
   if (!P.canEdit) throw new HttpError(403, 'Addestrare il modello del progetto spetta a un Manager del progetto o all\'Hacker.');
@@ -370,6 +404,7 @@ route('POST', '/api/vs/ollama/train', {}, h(async (ctx) => {
   ctx.json(200, await ollama.train({ project, author: s.author, base: b.base || s.ollamaModel || 'qwen2.5:3b', examples: trainingExamples(await A.list(P)) }));
 }));
 route('POST', '/api/vs/ollama/task', {}, h(async (ctx) => {
+  needHostAi();
   const b = await body(ctx);
   const P = A.openProject(ctx.user, b.projectId);
   const s = settingsOf(ctx.user);
@@ -381,6 +416,7 @@ route('POST', '/api/vs/ollama/task', {}, h(async (ctx) => {
 
 // Chat sul checkpoint: risposta in streaming (una riga JSON per pezzo di testo).
 route('POST', '/api/vs/ollama/chat', {}, h(async (ctx) => {
+  needHostAi();
   const b = await body(ctx);
   const P = A.openProject(ctx.user, b.projectId);
   const c = A.load(P, b.checkpointId);

@@ -40,7 +40,8 @@ if /i not "%HOST%"=="0.0.0.0" echo  Modalita' SOLO QUESTO PC: nessuna richiesta 
 echo.
 
 start "" /min cmd /c "timeout /t 2 /nobreak >nul & start http://localhost:%PORT%"
-"%NODE%" --disable-warning=ExperimentalWarning "%ROOT%app\server.js"
+rem  Memoria del portale limitata (768 MB): l'host deve restare leggero, i lavori pesanti vanno sui client.
+"%NODE%" --max-old-space-size=768 --disable-warning=ExperimentalWarning "%ROOT%app\server.js"
 
 echo.
 echo  Il portale si e' fermato.

@@ -6,6 +6,8 @@ Portale interno (beta) per il team HSPI: account con ruoli, progetti con le pers
 
 ## Avvio rapido (Windows)
 
+**Colleghi**: pagina `/scarica` del portale → HSPI Client (vedi `docs/CLIENT.md`). **Host**: come segue.
+
 1. Metti nella cartella del progetto la cartella di Node.js portatile (es. `node-v22.22.2-win-x64`, dallo ZIP "Windows Binary" di nodejs.org). Non serve installare niente.
 2. Doppio clic su **`avvia.bat`**: il portale parte solo su questo PC, senza richieste del firewall. Per aprirlo ai colleghi sulla stessa rete c'è **`avvia-rete.bat`** (serve il permesso del firewall, vedi `docs/ACCESSO-RETE.md`).
 3. Si apre `http://localhost:8080`. Il primo account che si registra (solo dal PC che ospita il portale) diventa **Hacker**.
@@ -48,6 +50,7 @@ Prove nel browser (solo sul PC di sviluppo, serve Playwright): `node test/browse
 |---|---|
 | `docs/PROGETTI-E-DATI.md` | Come sono trattati i file dei progetti, permessi, decisioni aperte |
 | `docs/INTEGRAZIONE-APP.md` | Archivio unico, Verbale Studio nel portale, importazione dal vecchio programma, API di Esplora file |
+| `docs/CLIENT.md` | Host e client: HSPI Client (installazione senza amministratore, aggiornamento dall'host, motore locale per l'AI), sito /benvenuto /guida /scarica |
 | `docs/BACKUP-E-AGGIORNAMENTI.md` | Versione unica, aggiornamento sicuro, backup automatici, ripristino |
 | `docs/TRAMA.md` | Trama: mappe dei processi (macro, processi, micro) con import/export del file Excel BPB |
 | `docs/RUOLI.md` | Gradi del team, Hacker nascosto, account in blocco, ospiti a tempo nei progetti, statistiche |
