@@ -66,6 +66,7 @@
 .cp-kind.k-divisore, .cp-kind.k-indice, .cp-kind.k-titolo, .cp-kind.k-copertina { color: var(--accent-soft); border-color: rgba(233, 162, 127, 0.45); }
 .cp-kind.k-legenda, .cp-kind.k-mappa { color: #9b8cff; border-color: rgba(155, 140, 255, 0.45); }
 .cp-kind.k-scheda, .cp-kind.k-tabella { color: #56b6d8; border-color: rgba(86, 182, 216, 0.45); }
+.cp-kind.k-piano, .cp-kind.k-organigramma, .cp-kind.k-numeri { color: #e0b454; border-color: rgba(224, 180, 84, 0.45); }
 
 .cp-reading { margin: 0; padding-left: 18px; font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
 .cp-checks { list-style: none; margin: 0; padding: 0; font-size: 12.5px; display: flex; flex-direction: column; gap: 5px; max-height: 40vh; overflow: auto; }
@@ -169,3 +170,15 @@
   .cp-docname { max-width: 60vw; }
   .cp-app { padding: 0 10px 12px; }
 }
+
+/* tabelle lette dalle forme e confronto PDF <-> presentazione */
+.cp-tblwrap { overflow: auto; max-width: 100%; margin: 6px 0 10px; }
+.cp-tbl { border-collapse: collapse; width: 100%; font-size: 12px; }
+.cp-tbl th, .cp-tbl td { border: 1px solid var(--border); padding: 3px 6px; text-align: left; vertical-align: top; }
+.cp-tbl th { background: rgba(127, 127, 127, 0.12); font-weight: 600; }
+.cp-pdf tr.ok td:first-child { border-left: 3px solid #6fcf97; }
+.cp-pdf tr.warn td:first-child { border-left: 3px solid #e0b454; }
+.cp-pdf tr.danger td:first-child { border-left: 3px solid #e5736f; }
+.cp-pdf-page pre { white-space: pre-wrap; font-size: 11px; max-height: 160px; overflow: auto; background: rgba(127, 127, 127, 0.08); padding: 6px; border-radius: 6px; }
+.cp-memoria b { display: block; }
+p.ok { color: #6fcf97; } p.warn { color: #e0b454; }

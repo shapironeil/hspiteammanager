@@ -8,9 +8,14 @@
 //      i rimandi ad altri processi, le note;
 //   4. il confronto To-Be / As-Is dello stesso processo (il Back Up contiene gli As-Is con gli stessi codici).
 //
-// Per ogni slide: tipo (copertina, indice, divisore, testo, legenda, flusso, mappa, scheda, tabella, chiusura),
-// titolo, blocchi nell'ordine in cui si leggono con il loro livello gerarchico. Per il documento: sezioni,
-// legenda dei colori, flussi ricostruiti (grafo), glossario, punti chiave, controlli di completezza, modello.
+// Per ogni slide: tipo (copertina, indice, divisore, testo, legenda, flusso, mappa, scheda, tabella, schema, piano,
+// organigramma, numeri, chiusura), titolo, blocchi nell'ordine in cui si leggono con il loro livello gerarchico.
+// Per il documento: sezioni (native di PowerPoint, dai capitoli dell'indice o dai divisori), legenda dei colori,
+// flussi ricostruiti (grafo), glossario, punti chiave, controlli di completezza, modello.
+//
+// Il secondo modo di leggere viene dalle presentazioni di kick-off e dalle offerte (ATAC Data Platform, ERP
+// Governance): copertina con data, indice numerato, contesto, obiettivi, approccio, piano (Gantt disegnato con le
+// forme), team (organigramma), punti di attenzione, numeri in evidenza e tabelle disegnate con le forme.
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 const textOf = (s) => (s.paragraphs || []).map((p) => p.text).join('\n').trim();
 const oneLine = (s) => textOf(s).replace(/\s*\n\s*/g, ' ').trim();
@@ -32,6 +37,42 @@ function similarity(a, b) {
   for (const w of A) if (B.has(w)) n++;
   return n / Math.min(A.size, B.size) - Math.abs(A.size - B.size) * 0.02;
 }
+// distanza di modifica tra due testi (per i refusi: "KPI" / "KIP")
+function levenshtein(a, b) {
+  if (a === b) return 0;
+  if (!a.length || !b.length) return Math.max(a.length, b.length);
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+// quanto una voce dell'indice somiglia a un titolo: uguale (1), uno contiene l'altro (0.9), stesse parole, oppure
+// un refuso di una o due lettere (typo = true)
+function closeness(entry, title) {
+  const a = norm(entry); const b = norm(title);
+  if (!a || !b) return { score: 0, typo: false };
+  if (a === b) return { score: 1, typo: false };
+  if (a.length >= 6 && (b.startsWith(a) || a.startsWith(b))) return { score: 0.9, typo: false };
+  const wa = a.split(' '); const wb = b.split(' ');
+  const d = levenshtein(a, b);
+  // stesso numero di parole e una o due lettere diverse: refuso. Una parola in piu' o in meno no.
+  if (wa.length === wb.length && d <= Math.max(1, Math.round(Math.max(a.length, b.length) * 0.12))) return { score: 0.85, typo: true };
+  const sim = similarity(a, b);
+  if (sim >= 0.6) {
+    const typo = wa.length === wb.length && wa.some((w, i) => w !== wb[i] && levenshtein(w, wb[i]) <= 2);
+    return { score: Math.min(0.84, sim), typo };
+  }
+  if (wa.length !== wb.length && d <= 4 && Math.min(a.length, b.length) > 12) return { score: 0.8, typo: false };
+  return { score: sim, typo: false };
+}
+const MONTH_LABEL = /^(gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic|jan|jun|jul|aug|sep|oct|dec)[a-z]*\.?$|^q[1-4]$|^(19|20)\d\d$|^[mw]\d{1,2}$/i;
+const BIG_NUMBER = /^[€$£]?\s*[+-]?\d[\d.,]*\s*(%|\+|k|m|mln|mld|€|gg|fte)?$/i;
+const PLACEHOLDER = /^(x{3,}|tbd|tbc|to ?do|n\/?d|lorem ipsum.*|\[[^\]]*(inserire|insert|nome|cliente|data|titolo)[^\]]*\]|<[^>]+>|da (completare|definire|inserire|compilare)|nome (del )?cliente|0[+%k])$/i;
+const PARTS = /^(.*?)\s*\((\d+)\s*\/\s*(\d+)\)\s*$/;
+const INDEX_WORD = /^(indice|agenda|sommario|index|contents|indice dei contenuti|table of contents|argomenti)$/i;
 const MONTHS = /(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre|january|february|march|april|may|june|july|august|september|october|november|december)\s*,?\s*\d{4}/i;
 const CODE = /(\d+(?:\.\d+)+)/;
 const STEP_NUM = /^(\d+)\s*\.(?!\d)\s*/;
@@ -56,7 +97,8 @@ function sameTint(a, b) {
 }
 
 // ---- Testi e blocchi ------------------------------------------------------------------------
-function isSlideNumber(s) { return (s.ph && s.ph.type === 'sldNum') || /^\d{1,3}$/.test(oneLine(s)); }
+// numero di slide: il segnaposto, oppure un numerino piccolo in un angolo (un "59" grande al centro e' un dato)
+function isSlideNumber(s) { return (s.ph && s.ph.type === 'sldNum') || (/^\d{1,3}$/.test(oneLine(s)) && maxSize(s) <= 16 && (s.y < 12 || s.y > 85 || s.x > 85) && s.w < 15); }
 function isBack(s) { return /^(back|indietro|torna)$/i.test(oneLine(s)) && (/arrow/i.test(s.geom || '') || s.w < 8); }
 const textShapes = (slide) => slide.shapes.filter((s) => !s.hidden && s.kind === 'sp' && s.paragraphs && s.paragraphs.some((p) => p.text.trim()) && s.x !== undefined);
 const maxSize = (s) => Math.max(0, ...(s.paragraphs || []).map((p) => p.size || 0));
@@ -65,6 +107,9 @@ function findTitle(slide) {
   const cands = textShapes(slide).filter((s) => !isSlideNumber(s) && !isBack(s));
   const ph = cands.find((s) => s.ph && /title/i.test(s.ph.type));
   if (ph) return ph;
+  // una forma chiamata "Title"/"Titolo" in alto: e' il titolo anche se non e' un segnaposto
+  const named = cands.find((s) => /^(title|titolo)\b/i.test(s.name || '') && s.y < 20 && oneLine(s).length < 200);
+  if (named) return named;
   // in alto (entro il 14% della slide), il testo piu' grande; a pari merito il piu' largo e il piu' in alto
   // (le etichette delle corsie, strette a sinistra, non sono titoli)
   const top = cands.filter((s) => s.y < 14 && s.h < 20 && oneLine(s).length < 200 && !(s.x < 10 && s.w < 14));
@@ -236,6 +281,60 @@ function flowOf(slide, legend, title) {
   };
 }
 
+// ---- Tabelle disegnate con le forme ------------------------------------------------------------
+// Una tabella "a mano": caselle di testo allineate in colonne (stessa x) e righe (stessa y), almeno 3 x 3.
+// Restituisce intestazione, righe e intestazioni di riga (le etichette a sinistra della prima colonna).
+function clusters(values, tol) {
+  const out = [];
+  for (const v of [...values].sort((a, b) => a.k - b.k)) {
+    const c = out[out.length - 1];
+    if (c && v.k - c.k0 < tol) c.items.push(v); else out.push({ k0: v.k, items: [v] });
+  }
+  return out;
+}
+function gridOf(slide, title) {
+  const cells = textShapes(slide).filter((s) => s !== title && !isSlideNumber(s) && !isBack(s) && s.h < 30 && s.w < 55 && oneLine(s).length < 220);
+  if (cells.length < 9) return null;
+  const cols = clusters(cells.map((s) => ({ k: s.x, s })), 1.6).filter((c) => c.items.length >= 3);
+  const rows = clusters(cells.map((s) => ({ k: s.y, s })), 1.6).filter((c) => c.items.length >= 3);
+  if (cols.length < 3 || rows.length < 3) return null;
+  const colOf = (s) => cols.findIndex((c) => c.items.some((x) => x.s === s));
+  const rowOf = (s) => rows.findIndex((r) => r.items.some((x) => x.s === s));
+  const matrix = rows.map(() => cols.map(() => ''));
+  const ids = rows.map(() => cols.map(() => null));
+  let filled = 0;
+  for (const s of cells) {
+    const c = colOf(s); const r = rowOf(s);
+    if (c < 0 || r < 0 || matrix[r][c]) continue;
+    matrix[r][c] = oneLine(s); ids[r][c] = s.id; filled++;
+  }
+  if (filled < rows.length * cols.length * 0.6) return null;
+  // la tabella deve occupare una parte seria della slide, non essere un gruppo di etichette
+  const x0 = Math.min(...cols.map((c) => c.k0)); const x1 = Math.max(...cols.flatMap((c) => c.items.map((x) => x.s.x + x.s.w)));
+  if (x1 - x0 < 35) return null;
+  const rowHeaders = rows.map((r) => {
+    const y0 = Math.min(...r.items.map((x) => x.s.y)); const y1 = Math.max(...r.items.map((x) => x.s.y + x.s.h));
+    const left = textShapes(slide).filter((s) => s !== title && colOf(s) < 0 && s.x + s.w <= x0 + 1 && cy(s) >= y0 - 1 && cy(s) <= y1 + 1 && oneLine(s).length < 80).sort((a, b) => b.x - a.x)[0];
+    return left ? oneLine(left) : '';
+  });
+  return { header: matrix[0], rows: matrix.slice(1), rowHeaders, ids, cols: cols.length, filled };
+}
+
+// Organigramma: riquadri colorati con un ruolo, collegati da linee, con i nomi accanto (senza sfondo)
+function isOrgChart(slide, info, texts, cxns) {
+  const boxes = texts.filter((s) => s.fill && colorful(s.fill) && oneLine(s).length < 40 && s.w > 8 && !STEP_NUM.test(oneLine(s)));
+  const names = texts.filter((s) => !s.fill && (s.paragraphs || []).filter((p) => p.text.trim()).length >= 2 && (s.paragraphs || []).every((p) => p.text.trim().length < 40));
+  const keyword = /\b(team|organigramma|organizzazione|struttura (di|del) progetto|governance (di|del) progetto|comitat[oi]|steering|ruoli)\b/i.test(info.title);
+  return (keyword && boxes.length >= 3 && (cxns >= 2 || names.length >= 2)) || (boxes.length >= 4 && cxns >= 3 && names.length >= 2 && !info.flowTitle);
+}
+// Piano (Gantt disegnato): una riga di etichette di mesi/trimestri/anni
+function monthRow(texts) {
+  const months = texts.filter((s) => MONTH_LABEL.test(oneLine(s)));
+  const rows = clusters(months.map((s) => ({ k: s.y, s })), 3);
+  const best = rows.sort((a, b) => b.items.length - a.items.length)[0];
+  return best ? best.items.map((x) => oneLine(x.s)) : [];
+}
+
 // ---- Tipo di slide ---------------------------------------------------------------------------
 function kindOf(slide, info, i, total) {
   const texts = textShapes(slide).filter((s) => !isSlideNumber(s));
@@ -244,29 +343,47 @@ function kindOf(slide, info, i, total) {
   const cxns = slide.shapes.filter((s) => s.kind === 'cxn').length;
   const title = info.title || '';
   const bigPic = pics.some((p) => p.w * p.h > 2500);
+  const contacts = /(tel|fax)\s*[:.]|sede (legale|operativa)|www\.|@\w+\./i.test(words);
   if (/^legenda/i.test(title) || (/legenda/i.test(words) && info.legend.length >= 2)) return 'legenda';
-  if (/^(indice|agenda|sommario|index|contents)$/i.test(title) || (/index/i.test(slide.layout) && texts.some((s) => /^(indice|agenda|sommario)$/i.test(oneLine(s))))) return 'indice';
+  // indice: la parola "Indice" (titolo o scritta) e un elenco di voci
+  const indexWord = INDEX_WORD.test(title) || texts.some((s) => INDEX_WORD.test(oneLine(s)));
+  const listBlocks = info.blocks.filter((b) => (b.paragraphs || []).filter((p) => p.text.trim()).length >= 3).length;
+  if (indexWord && (listBlocks || texts.length >= 4 || /index/i.test(slide.layout))) return 'indice';
   if (info.flowTitle && cxns >= 4) return 'flusso';
   if (cxns >= 8 && texts.filter((s) => /^\d+\s*\./.test(oneLine(s))).length >= 3) return 'flusso';
   if (/process breakdown|mappa dei processi|bpb/i.test(title)) return 'mappa';
-  if (i >= total - 3 && (/(tel|fax)\s*[:.]|sede (legale|operativa)|www\.|@\w+\./i.test(words) || (!texts.length && pics.length))) return 'chiusura';
+  if ((i >= total - 3 || i >= total * 0.6) && contacts && texts.length <= 10) return 'chiusura';
+  if (i >= total - 3 && !texts.length && pics.length) return 'chiusura';
   if (i === total - 1 && i > 2 && texts.length <= 2 && words.length < 40) return 'chiusura';
+  // copertina: il layout lo dice, oppure la prima slide con una grande immagine e la data
+  if (i === 0 && (/copertina|title slide|diapositiva titolo|cover|titolo$/i.test(slide.layout) || (bigPic && MONTHS.test(words)) || (!texts.length && pics.length))) return 'copertina';
   if (i <= 1 && !texts.length && pics.length) return 'copertina';
   if (i <= 2 && texts.length <= 6 && MONTHS.test(words)) return 'titolo';
-  if ((/index|section|divider|sezione/i.test(slide.layout) || bigPic) && texts.length <= 4 && (words.length < 160 || texts.some((s) => maxSize(s) >= 28))) return 'divisore';
+  if (i <= 1 && texts.length <= 3 && words.length < 120 && texts.some((s) => maxSize(s) >= 28)) return 'titolo';
+  // divisore: layout di sezione, o una grande immagine con poco testo (ma non una slide con il titolo "normale")
+  if ((/section|divider|sezione/i.test(slide.layout) || (bigPic && !info.titleCommon)) && texts.length <= 4 && (words.length < 160 || texts.some((s) => maxSize(s) >= 28))) return 'divisore';
   // divisore senza immagine: una o due scritte grandi e poco altro
-  if (i > 1 && texts.length <= 2 && words.length < 90 && texts.some((s) => maxSize(s) >= 28) && !info.flowTitle) return 'divisore';
+  if (i > 1 && texts.length <= 2 && words.length < 90 && texts.some((s) => maxSize(s) >= 28) && !info.flowTitle && !info.titleCommon) return 'divisore';
   if (!texts.length && pics.length) return i <= 1 ? 'copertina' : 'immagine';
+  // piano (Gantt): una riga di mesi, o il titolo lo dice e c'e' un'immagine grande
+  if (info.months.length >= 4 || (/piano|masterplan|gantt|roadmap|timeline|cronoprogramma|calendario/i.test(title) && (info.months.length >= 2 || bigPic))) return 'piano';
+  if (isOrgChart(slide, info, texts, cxns)) return 'organigramma';
+  // numeri in evidenza: almeno due numeri grandi
+  if (texts.filter((s) => BIG_NUMBER.test(oneLine(s)) && maxSize(s) >= 30).length >= 2) return 'numeri';
   const table = slide.shapes.find((s) => s.kind === 'table');
-  const heads = info.blocks.filter((b) => b.role === 'intestazione').length;
-  if (heads >= 4) return 'scheda';
   if (table && table.w * table.h > 2500) return 'tabella';
-  if (cxns >= 6 || slide.shapes.filter((s) => /chevron|homePlate/i.test(s.geom || '')).length >= 4) return 'schema';
+  if (info.grid) return 'tabella';
+  if (bigPic && texts.length <= 3) return 'immagine';
+  const heads = info.blocks.filter((b) => b.role === 'intestazione').length;
+  if (cxns >= 6) return 'schema';
+  if (heads >= 4) return 'scheda';
+  if (slide.shapes.filter((s) => /chevron|homePlate/i.test(s.geom || '')).length >= 4) return 'schema';
   return 'testo';
 }
 
 // ---- Glossario ---------------------------------------------------------------------------------
-const STOP = new Set(['SI', 'NO', 'OK', 'END', 'START', 'IT', 'TO', 'BE', 'AS', 'IS', 'DI', 'IL', 'LA', 'UN', 'PER', 'NON', 'BY']);
+const STOP = new Set(['SI', 'NO', 'OK', 'END', 'START', 'IT', 'TO', 'BE', 'AS', 'IS', 'DI', 'IL', 'LA', 'UN', 'PER', 'NON', 'BY',
+  'GEN', 'FEB', 'MAR', 'APR', 'MAG', 'GIU', 'LUG', 'AGO', 'SET', 'OTT', 'NOV', 'DIC', 'JAN', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'DEC']);
 // L'espansione e' buona se le iniziali delle sue parole contengono, in ordine, le lettere della sigla
 // ("CDR - Centro di Responsabilita'", "DAC (Determina a contrarre)").
 function fitsAcronym(acr, words) {
@@ -287,6 +404,12 @@ function glossaryOf(slides) {
       const k = m[1];
       // una parola qualunque scritta in maiuscolo (APERTO, ROMA) non e' una sigla
       if (STOP.has(k) || /^\d/.test(k) || (!k.includes('/') && lower.has(k))) continue;
+      count.set(k, (count.get(k) || 0) + 1);
+    }
+    // sigle con minuscole dentro: CdS, PagoPA, AppIO, S4HANA
+    for (const m of t.matchAll(/\b([A-Z][a-z]{0,3}[A-Z][A-Za-z0-9]{0,4})\b/g)) {
+      const k = m[1];
+      if (k.length < 3 || !/[a-z]/.test(k) || lower.has(k.toUpperCase())) continue;
       count.set(k, (count.get(k) || 0) + 1);
     }
     for (const m of t.matchAll(/\b([A-Z]{2,6})\s*(?:[-–:=]|\()\s*([A-Za-zÀ-ú][^()\n.;:]{3,80})/g)) {
@@ -310,40 +433,93 @@ function analyze(pres) {
   const legendSlide = pres.slides.find((s) => { const t = findTitle(s); return t && /^legenda/i.test(oneLine(t)); });
   if (legendSlide) legend = legendOf(legendSlide);
 
+  // lo stile "normale" del titolo (posizione e dimensione piu' frequenti): una slide che ce l'ha e' una slide di
+  // contenuto, anche se ha una grande immagine e poco testo (non e' un divisore)
+  const titles = pres.slides.map(findTitle);
+  const keyOf = (t) => (t ? `${Math.round(t.y / 3)}|${Math.round(maxSize(t) || 0)}` : null);
+  const keyCount = new Map();
+  for (const t of titles) if (t) keyCount.set(keyOf(t), (keyCount.get(keyOf(t)) || 0) + 1);
+  const commonKey = [...keyCount.entries()].filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1]).map(([k]) => k)[0] || null;
+
   const slides = pres.slides.map((s, i) => {
-    const t = findTitle(s);
+    const t = titles[i];
     const title = t ? oneLine(t) : '';
     const blocks = blocksOf(s, t);
-    const info = { title, blocks, legend: s === legendSlide ? legend : [], flowTitle: parseFlowTitle(title) };
+    const texts = textShapes(s).filter((x) => !isSlideNumber(x));
+    const info = { title, blocks, legend: s === legendSlide ? legend : [], flowTitle: parseFlowTitle(title), titleCommon: !!t && keyOf(t) === commonKey, grid: gridOf(s, t), months: monthRow(texts) };
     const kind = kindOf(s, info, i, total);
-    const out = { n: s.n, kind, title, layout: s.layout, hidden: s.hidden, notes: s.notes, blocks };
+    const out = { n: s.n, kind, title, layout: s.layout, hidden: s.hidden, notes: s.notes, fonts: s.fonts || [], blocks };
     if (kind === 'flusso') { out.flow = flowOf(s, legend, t); out.flowInfo = info.flowTitle; }
     if (kind === 'legenda') out.legend = legendOf(s);
+    if (kind === 'tabella' && info.grid) out.table = { header: info.grid.header, rows: info.grid.rows, rowHeaders: info.grid.rowHeaders, ids: info.grid.ids };
+    if (kind === 'piano') out.months = info.months;
     if (kind === 'indice') {
-      out.entries = blocks.filter((b) => !['titolo', 'immagine', 'navigazione'].includes(b.role) && !/^(indice|agenda|sommario)$/i.test(b.text)).flatMap((b) => (b.paragraphs || [{ text: b.text }]).map((p) => p.text.trim()))
-        .filter((x) => x && x.length < 140).map((x) => x.replace(/^\d+[.)]\s*/, ''));
+      out.entries = blocks.filter((b) => !['titolo', 'immagine', 'navigazione'].includes(b.role) && !INDEX_WORD.test(b.text)).flatMap((b) => (b.paragraphs || [{ text: b.text }]).map((p) => p.text.trim()))
+        .filter((x) => x && x.length < 140 && !INDEX_WORD.test(x)).map((x) => x.replace(/^\d+[.)]\s*/, ''));
     }
     return out;
   });
 
-  // Sezioni: dai divisori; l'indice dice quali ci si aspetta
+  // Indice: ogni voce abbinata alla slide con il titolo piu' vicino (dopo l'indice, in ordine)
   const index = slides.find((s) => s.kind === 'indice' && (s.entries || []).length >= 2);
-  const sections = [];
-  let cur = { title: 'Apertura', from: 1, slides: [] };
-  for (const s of slides) {
-    if (s.kind === 'divisore') {
-      if (cur.slides.length) sections.push(cur);
-      const words = s.blocks.filter((b) => b.role !== 'immagine').map((b) => b.text.replace(/\s*\n\s*/g, ' ')).filter(Boolean);
-      // la voce dell'indice piu' simile al testo del divisore (parole in comune), preferendo quelle non ancora usate
-      const used = new Set(sections.map((x) => x.title).concat(cur.title));
-      const best = index ? index.entries.map((e) => ({ e, sc: similarity(e, words.join(' ')) - (used.has(e) ? 0.2 : 0) })).sort((a, b) => b.sc - a.sc)[0] : null;
-      const match = best && best.sc >= 0.5 ? best.e : null;
-      cur = { title: match || words[0] || `Sezione ${sections.length + 1}`, subtitle: words.filter((w) => w !== (match || words[0])).join(' · '), from: s.n, slides: [] };
+  const indexMatches = [];
+  if (index) {
+    let pos = index.n;
+    for (const e of index.entries) {
+      const cands = slides.filter((s) => s.n > pos && s.title).map((s) => ({ s, ...closeness(e, s.title) }));
+      const best = cands.sort((a, b) => b.score - a.score || a.s.n - b.s.n)[0];
+      if (best && best.score >= 0.6) { indexMatches.push({ entry: e, slide: best.s.n, title: best.s.title, score: best.score, typo: best.typo }); pos = best.s.n; }
+      else {
+        // forse e' prima (ordine diverso) o e' un refuso
+        const any = slides.filter((s) => s.n > index.n && s.title).map((s) => ({ s, ...closeness(e, s.title) })).sort((a, b) => b.score - a.score)[0];
+        indexMatches.push({ entry: e, slide: any && any.score >= 0.6 ? any.s.n : null, title: any && any.score >= 0.5 ? any.s.title : null, score: any ? any.score : 0, typo: !!(any && any.typo), outOfOrder: !!(any && any.score >= 0.6) });
+      }
     }
-    s.section = cur.title;
-    cur.slides.push(s.n);
   }
-  sections.push(cur);
+
+  // Sezioni: native di PowerPoint se ci sono; altrimenti i capitoli dell'indice (quando non ci sono divisori);
+  // altrimenti i divisori, abbinati alle voci dell'indice
+  const sections = [];
+  let sectionsSource = 'divisori';
+  const hasDividers = slides.some((s) => s.kind === 'divisore');
+  if ((pres.sections || []).some((x) => x.slides.length)) {
+    sectionsSource = 'native';
+    const owner = new Map();
+    for (const sec of pres.sections) for (const n of sec.slides) owner.set(n, sec.name || `Sezione ${sections.length + 1}`);
+    let cur = null;
+    for (const s of slides) {
+      const name = owner.get(s.n) || (cur ? cur.title : 'Apertura');
+      if (!cur || cur.title !== name) { cur = { title: name, from: s.n, slides: [] }; sections.push(cur); }
+      s.section = cur.title;
+      cur.slides.push(s.n);
+    }
+  } else if (index && !hasDividers && indexMatches.filter((m) => m.slide && !m.outOfOrder).length >= 2) {
+    sectionsSource = 'indice';
+    const starts = new Map(indexMatches.filter((m) => m.slide && !m.outOfOrder).map((m) => [m.slide, m.entry]));
+    let cur = { title: 'Apertura', from: 1, slides: [] };
+    for (const s of slides) {
+      if (starts.has(s.n)) { if (cur.slides.length) sections.push(cur); cur = { title: starts.get(s.n), from: s.n, slides: [] }; }
+      s.section = cur.title;
+      cur.slides.push(s.n);
+    }
+    sections.push(cur);
+  } else {
+    let cur = { title: 'Apertura', from: 1, slides: [] };
+    for (const s of slides) {
+      if (s.kind === 'divisore') {
+        if (cur.slides.length) sections.push(cur);
+        const words = s.blocks.filter((b) => b.role !== 'immagine').map((b) => b.text.replace(/\s*\n\s*/g, ' ')).filter(Boolean);
+        // la voce dell'indice piu' simile al testo del divisore (parole in comune), preferendo quelle non ancora usate
+        const used = new Set(sections.map((x) => x.title).concat(cur.title));
+        const best = index ? index.entries.map((e) => ({ e, sc: similarity(e, words.join(' ')) - (used.has(e) ? 0.2 : 0) })).sort((a, b) => b.sc - a.sc)[0] : null;
+        const match = best && best.sc >= 0.5 ? best.e : null;
+        cur = { title: match || words[0] || `Sezione ${sections.length + 1}`, subtitle: words.filter((w) => w !== (match || words[0])).join(' · '), from: s.n, slides: [] };
+      }
+      s.section = cur.title;
+      cur.slides.push(s.n);
+    }
+    sections.push(cur);
+  }
 
   // Processi: le parti (1/3, 2/3...) dello stesso codice e variante insieme
   const processes = new Map();
@@ -389,33 +565,69 @@ function analyze(pres) {
   }
 
   const glossary = glossaryOf(pres.slides);
-  const checks = checksOf(slides, sections, index, procList);
+  // caratteri usati: per ogni carattere, le slide; "di base" = del tema o usato in almeno meta' delle slide
+  const fontsUsed = {};
+  for (const s of slides) for (const f of s.fonts) (fontsUsed[f] = fontsUsed[f] || []).push(s.n);
+  const checks = checksOf(slides, sections, index, procList, { indexMatches, fontsUsed, themeFonts: pres.fonts || {} });
   const keyPoints = keyPointsOf(slides, procList, comparisons, sections);
   const counts = {};
   for (const s of slides) counts[s.kind] = (counts[s.kind] || 0) + 1;
   return {
     meta: pres.meta, size: { width: pres.width, height: pres.height, ratio: pres.ratio, widthCm: pres.widthCm, heightCm: pres.heightCm },
-    theme: pres.theme, fonts: pres.fonts, layouts: pres.layouts,
-    slides, sections, index: index ? { slide: index.n, entries: index.entries } : null, legend, processes: procList, comparisons,
+    theme: pres.theme, themeName: pres.themeName || '', fonts: pres.fonts, fontsUsed, layouts: pres.layouts, masters: pres.masters || [],
+    slides, sections, sectionsSource, nativeSections: (pres.sections || []).map((x) => x.name),
+    index: index ? { slide: index.n, entries: index.entries, matches: indexMatches } : null, legend, processes: procList, comparisons,
     glossary, checks, keyPoints, counts, score: scoreOf(checks, slides),
     reading: readingPath(slides, sections, procList, comparisons, legend, glossary),
   };
 }
 
 // ---- Controlli (completezza e coerenza) --------------------------------------------------------
-function checksOf(slides, sections, index, procs) {
+function checksOf(slides, sections, index, procs, extra = {}) {
   const out = [];
   const add = (level, slide, text) => out.push({ level, slide, text });
   if (!slides.some((s) => s.kind === 'titolo' || s.kind === 'copertina')) add('avviso', null, 'Manca una slide di titolo (cliente, titolo, data).');
   if (!index && slides.length > 8) add('avviso', null, 'Manca l\'indice: con più di 8 slide aiuta a orientarsi.');
   if (index) {
-    for (const e of index.entries) if (!sections.some((s) => s.title === e) && !slides.some((s) => norm(s.title) === norm(e))) add('avviso', index.slide, `Voce dell'indice senza slide: "${e}".`);
-    for (const s of sections.slice(1)) if (!index.entries.includes(s.title)) add('info', s.from, `Sezione non presente nell'indice: "${s.title}" (va bene per le sottosezioni).`);
+    for (const m of extra.indexMatches || []) {
+      const inSections = sections.some((s) => closeness(m.entry, s.title).score >= 0.85);
+      if (m.slide && !m.typo) continue;
+      if (m.typo && m.title) add('avviso', m.slide || index.slide, `Voce dell'indice "${m.entry}": il titolo più vicino è "${m.title}" (slide ${m.slide || '?'}), forse un refuso.`);
+      else if (!m.slide && !inSections) add('avviso', index.slide, `Voce dell'indice senza slide: "${m.entry}".`);
+    }
+    for (const s of sections.slice(1)) if (!index.entries.some((e) => closeness(e, s.title).score >= 0.85)) add('info', s.from, `Sezione non presente nell'indice: "${s.title}" (va bene per le sottosezioni).`);
   }
   for (const s of slides) {
     if (!s.title && !['copertina', 'chiusura', 'divisore', 'immagine', 'titolo', 'indice'].includes(s.kind)) add('avviso', s.n, 'Slide senza titolo.');
     if (s.hidden) add('info', s.n, 'Slide nascosta: non compare in presentazione.');
+    // testi segnaposto rimasti da compilare (xxxxxx, TBD, [inserire nome cliente], 0+)
+    const left = new Set();
+    for (const b of s.blocks) for (const p of b.paragraphs || [{ text: b.text }]) { const t = String(p.text || '').trim(); if (t && PLACEHOLDER.test(t)) left.add(t); }
+    for (const t of left) add('avviso', s.n, `Testo segnaposto da compilare: "${t}".`);
   }
+  // parti numerate nei titoli: "Catalogo (1/3)", "(2/3)", "(3/3)"
+  const parts = new Map();
+  for (const s of slides.filter((x) => x.kind !== 'flusso')) {
+    const m = PARTS.exec(s.title || '');
+    if (!m) continue;
+    const k = norm(m[1]);
+    if (!parts.has(k)) parts.set(k, { title: m[1].trim(), total: Number(m[3]), seen: [], first: s.n });
+    parts.get(k).seen.push(Number(m[2]));
+  }
+  for (const p of parts.values()) {
+    const missing = Array.from({ length: p.total }, (_, i) => i + 1).filter((n) => !p.seen.includes(n));
+    const dup = p.seen.filter((n, i) => p.seen.indexOf(n) !== i);
+    if (missing.length) add('errore', p.first, `"${p.title}": trovate ${p.seen.length} parti su ${p.total} (manca la ${missing.map((n) => `${n}/${p.total}`).join(', ')}).`);
+    if (dup.length) add('avviso', p.first, `"${p.title}": la parte ${[...new Set(dup)].map((n) => `${n}/${p.total}`).join(', ')} compare più volte.`);
+  }
+  // caratteri fuori tema: non del tema e usati in poche slide (quelli usati quasi ovunque sono la base di fatto)
+  const used = extra.fontsUsed || {};
+  const base = new Set([extra.themeFonts.major, extra.themeFonts.minor].filter(Boolean));
+  for (const [f, ns] of Object.entries(used)) if (ns.length >= Math.max(2, slides.length / 2)) base.add(f);
+  // le varianti (Poppins SemiBold) contano come il carattere di base
+  const isBase = (f) => base.has(f) || [...base].some((b) => f.startsWith(b + ' '));
+  const odd = Object.entries(used).filter(([f]) => !isBase(f) && !/wingdings|webdings|symbol|emoji|mdl2|icons/i.test(f)).sort((a, b) => b[1].length - a[1].length);
+  if (odd.length) add('info', null, `Caratteri fuori tema (${[...base].join(', ') || 'tema'}): ${odd.slice(0, 6).map(([f, ns]) => `${f} (slide ${[...new Set(ns)].slice(0, 6).join(', ')})`).join('; ')}${odd.length > 6 ? '; …' : ''}.`);
   if (slides.some((s) => s.kind === 'flusso') && !slides.some((s) => s.kind === 'legenda')) add('avviso', null, 'Ci sono flussi ma manca la legenda dei simboli e dei colori.');
   // parti numerate (1/3, 2/3, 3/3)
   for (const p of procs) {
@@ -465,6 +677,29 @@ function keyPointsOf(slides, procs, comparisons, sections) {
       for (const b of s.blocks) for (const p of b.paragraphs || []) if (p.bold && p.text.length > 25 && b.role !== 'titolo' && b.role !== 'intestazione' && n < 4) { add(s.n, p.text); n++; }
     }
     if (s.kind === 'flusso' && s.flow) for (const n of s.flow.nodes.filter((x) => x.type === 'nota')) add(s.n, n.text, 'nota');
+    if (s.kind === 'numeri') {
+      // ogni numero grande con l'etichetta sotto
+      const big = s.blocks.filter((b) => BIG_NUMBER.test(b.text.trim()));
+      const items = big.map((b) => {
+        const label = s.blocks.filter((o) => o !== b && !BIG_NUMBER.test(o.text.trim()) && o.y >= b.y + b.h - 1 && o.y < b.y + b.h + 12 && Math.abs(o.x + o.w / 2 - (b.x + b.w / 2)) < Math.max(b.w, o.w) / 2)
+          .sort((p, q) => p.y - q.y).slice(0, 2).map((o) => o.text.replace(/\s*\n\s*/g, ' ')).join(', ');
+        return `${b.text.trim()}${label ? ` ${label}` : ''}`;
+      });
+      if (items.length) add(s.n, `${s.title ? s.title + ': ' : 'Numeri: '}${items.join(' · ')}.`);
+    }
+    if (s.kind === 'piano') {
+      const phases = s.blocks.filter((b) => b.role !== 'titolo' && /^(fase|phase|sprint|wp|f\d|attivit|rilascio|milestone)/i.test(b.text.trim()) && b.text.length < 80).map((b) => b.text.replace(/\s*\n\s*/g, ' ').trim());
+      const m = s.months || [];
+      add(s.n, `${s.title || 'Piano'}: ${m.length ? `da ${m[0]} a ${m[m.length - 1]} (${m.length} periodi)` : 'calendario'}${phases.length ? `; ${[...new Set(phases)].slice(0, 6).join('; ')}` : ''}.`);
+    }
+    if (s.kind === 'organigramma') {
+      // solo i ruoli (i riquadri colorati), non i nomi delle persone
+      const roles = s.blocks.filter((b) => b.role === 'intestazione').map((b) => b.text.replace(/\s*\n\s*/g, ' ').trim());
+      if (roles.length) add(s.n, `${s.title || 'Team'}: ${[...new Set(roles)].slice(0, 8).join(' · ')}.`);
+    }
+    if (s.kind === 'tabella' && s.table) {
+      add(s.n, `${s.title || 'Tabella'}: ${s.table.header.filter(Boolean).length} colonne (${s.table.header.filter(Boolean).join(' · ')}), ${s.table.rows.length} righe.`);
+    }
   }
   for (const p of procs) {
     const sys = Object.entries(p.systems).map(([k, n]) => `${k} (${n})`).join(', ');
@@ -492,6 +727,12 @@ function readingPath(slides, sections, procs, comparisons, legend, glossary) {
     const cmp = comparisons.find((c) => c.code === p.code && p.variant === 'To-Be');
     steps.push({ title: `${p.code ? p.code + ' ' : ''}${p.name}${p.scenario ? ' (scenario evolutivo)' : ''}`, slides: p.slides, compare: cmp ? cmp.asIs : null, note: cmp ? 'Confronta con l\'As-Is' : null });
   }
+  const plan = slides.filter((s) => s.kind === 'piano').map((s) => s.n);
+  if (plan.length) steps.push({ title: 'Piano e milestone', slides: plan });
+  const team = slides.filter((s) => s.kind === 'organigramma').map((s) => s.n);
+  if (team.length) steps.push({ title: 'Team e ruoli', slides: team });
+  const nums = slides.filter((s) => s.kind === 'numeri' || s.kind === 'tabella').map((s) => s.n);
+  if (nums.length) steps.push({ title: 'Numeri e tabelle', slides: nums });
   const rest = slides.filter((s) => s.kind === 'scheda').map((s) => s.n);
   if (rest.length) steps.push({ title: 'Schede di dettaglio', slides: rest });
   return steps;
@@ -541,4 +782,4 @@ function compareToTemplate(analysis, tpl) {
   };
 }
 
-module.exports = { analyze, templateOf, compareToTemplate, parseFlowTitle, norm };
+module.exports = { analyze, templateOf, compareToTemplate, parseFlowTitle, norm, closeness, similarity };

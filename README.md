@@ -1,6 +1,6 @@
 # HSPI Team Manager
 
-Portale interno (beta) per il team HSPI: account con ruoli, progetti con le persone autorizzate, **Esplora file** con cartelle vere (personali e di progetto), **Verbale Studio** integrato, **GestioneCelle** per le mappe dei processi, **Cippi** per le presentazioni PowerPoint (lettura, revisione, modelli), programmi che si aprono dal portale con la loro guida, scambio file, log e pannello di controllo. Si installa anche sul telefono come app.
+Portale interno (beta) per il team HSPI: account con ruoli, progetti con le persone autorizzate, **Esplora file** con cartelle vere (personali e di progetto), **Verbale Studio** integrato, **GestioneCelle** per le mappe dei processi, **Cippi** per le presentazioni PowerPoint (lettura, revisione, modelli, riconoscimento dei modelli noti, confronto con il PDF esportato), programmi che si aprono dal portale con la loro guida, scambio file, log e pannello di controllo. Si installa anche sul telefono come app.
 
 > **Stato:** v0.5 — in locale sul PC che lo ospita. Da usare con dati di prova finché non sono decisi i punti in `docs/PROGETTI-E-DATI.md`.
 
@@ -53,6 +53,7 @@ Prove nel browser (solo sul PC di sviluppo, serve Playwright): `node test/browse
 | `docs/INTEGRAZIONE-APP.md` | Archivio unico, Verbale Studio nel portale, importazione dal vecchio programma, API di Esplora file |
 | `docs/GITHUB.md` | Prove automatiche, pull request automatiche e programmate, dove vederle (anche nel portale) |
 | `docs/CIPPI.md` | Cippi: presentazioni PowerPoint, lettura della struttura, modalità Revisione, modelli, esportazione |
+| `docs/MEMORIA/README.md` | Memoria dei file analizzati: schede e impronte dei template noti (kick-off, offerte, PDF esportati); Cippi li riconosce all'importazione |
 | `docs/APP.md` | App del portale (Verbale Studio, GestioneCelle): catalogo, versioni proprie, pacchetti scaricati da HSPI Client, come aggiungere un'app |
 | `docs/CLIENT.md` | Host e client: HSPI Client (installazione senza amministratore, aggiornamento dall'host, motore locale per l'AI), sito /benvenuto /guida /scarica |
 | `docs/BACKUP-E-AGGIORNAMENTI.md` | Versione unica, aggiornamento sicuro, backup automatici, ripristino |

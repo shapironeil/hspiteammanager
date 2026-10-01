@@ -1,0 +1,183 @@
+{
+  "template": "kickoff-hspi-atac-data-platform",
+  "formato": "pptx",
+  "app": "cippi",
+  "tipoDocumento": "kick-off di progetto (consulenza, con Quick Win KPI)",
+  "fornitore": "HSPI S.p.A. (brand ATAC nelle slide)",
+  "fileVisti": [
+    {
+      "nome": "ATAC_Kick_Off_Data_Platform_v1.0.pptx",
+      "slide": 16,
+      "modificato": "2026-07-01",
+      "analizzato": "2026-10-01"
+    },
+    {
+      "nome": "ATAC_Kick_Off_Data_Platform_v1.0.pdf",
+      "pagine": 16,
+      "nota": "esportazione PDF della stessa presentazione (vedi docs/MEMORIA/pdf/)",
+      "analizzato": "2026-10-01"
+    }
+  ],
+  "nomeFile": {
+    "schema": "<CLIENTE>_Kick_Off_<Progetto>_v<maggiore>.<minore>.pptx",
+    "regex": "^[A-Za-z0-9]+_Kick_?Off_[A-Za-z0-9_]+_v\\d+\\.\\d+\\.pptx$"
+  },
+  "slide": {
+    "cx": 12192000,
+    "cy": 6858000,
+    "formato": "Widescreen 16:9",
+    "numero": 16
+  },
+  "tema": {
+    "nome": "Tema di Office",
+    "colori": {
+      "dk1": "000000",
+      "lt1": "FFFFFF",
+      "dk2": "1F497D",
+      "lt2": "EEECE1",
+      "accent1": "4F81BD",
+      "accent2": "C0504D",
+      "accent3": "9BBB59",
+      "accent4": "8064A2",
+      "accent5": "4BACC6",
+      "accent6": "F79646",
+      "hlink": "0000FF",
+      "folHlink": "800080"
+    },
+    "caratteri": {
+      "maggiore": "Calibri",
+      "minore": "Calibri"
+    },
+    "caratteriNelleSlide": [
+      "Gill Sans MT",
+      "Poppins",
+      "Ubuntu"
+    ]
+  },
+  "master": [
+    {
+      "nome": "slideMaster1",
+      "tema": "Slide Master_White",
+      "slide": 0
+    },
+    {
+      "nome": "slideMaster2",
+      "tema": "Slide Master_Black",
+      "slide": 0
+    },
+    {
+      "nome": "slideMaster3",
+      "tema": "Tema di Office",
+      "slide": 16
+    }
+  ],
+  "layout": {
+    "usati": {
+      "copertina": [
+        1
+      ],
+      "Blank page w/o line": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ]
+    },
+    "pieDiPagina": "CONFIDENZIALE (CONFIDENTIAL)",
+    "testiFissi": [
+      "CONFIDENZIALE (CONFIDENTIAL)"
+    ]
+  },
+  "sezioniNative": [],
+  "tipi": [
+    "copertina",
+    "indice",
+    "testo",
+    "scheda",
+    "scheda",
+    "schema",
+    "testo",
+    "piano",
+    "organigramma",
+    "testo",
+    "testo",
+    "numeri",
+    "immagine",
+    "tabella",
+    "tabella",
+    "tabella"
+  ],
+  "sezioni": [
+    "Apertura",
+    "Introduzione e Contesto",
+    "Obiettivi e benefici dell’iniziativa",
+    "Approccio metodologico",
+    "Focus fase Implementazione",
+    "Supporto al monitoraggio della attività di Data Platform",
+    "Piano di progetto",
+    "Team di progetto",
+    "Punti di attenzione",
+    "Quick Win KPI"
+  ],
+  "sigle": [
+    "KPI",
+    "BITP",
+    "SMARE",
+    "BI",
+    "MVP",
+    "UAT",
+    "SAP",
+    "MATRICS",
+    "ATAC",
+    "CITIES",
+    "FDV",
+    "F3",
+    "ID",
+    "DADO",
+    "EXCEL"
+  ],
+  "metadati": {
+    "company": "",
+    "applicazione": "Microsoft Office PowerPoint",
+    "titolo": "PowerPoint Presentation",
+    "soggetto": ""
+  },
+  "cippi": {
+    "versioneAnalisi": "0.2.0 / ANALYZER 4",
+    "tipi": {
+      "1": "copertina",
+      "2": "indice",
+      "3": "testo",
+      "4": "scheda",
+      "5": "scheda",
+      "6": "schema",
+      "7": "testo",
+      "8": "piano",
+      "9": "organigramma",
+      "10": "testo",
+      "11": "testo",
+      "12": "numeri",
+      "13": "immagine",
+      "14": "tabella",
+      "15": "tabella",
+      "16": "tabella"
+    },
+    "sezioni": "indice",
+    "controlli": [
+      "avviso: Voce dell'indice \"Quick Win KPI\": il titolo più vicino è \"QUICK WIN KIP\" (slide 11), forse un refuso.",
+      "info: Caratteri fuori tema (Calibri, Poppins): Ubuntu (slide 6); Gill Sans MT (slide 8)."
+    ],
+    "punteggio": 96
+  }
+}

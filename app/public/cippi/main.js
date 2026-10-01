@@ -15,6 +15,7 @@ const enc = encodeURIComponent;
 const KIND = {
   copertina: 'Copertina', titolo: 'Titolo', indice: 'Indice', divisore: 'Divisore di sezione', testo: 'Testo', legenda: 'Legenda',
   flusso: 'Flusso', mappa: 'Mappa dei processi', scheda: 'Scheda', tabella: 'Tabella', schema: 'Schema', chiusura: 'Chiusura', immagine: 'Immagine',
+  piano: 'Piano', organigramma: 'Organigramma', numeri: 'Numeri',
 };
 const ROLE = { titolo: 'Titolo', sottotitolo: 'Sottotitolo', intestazione: 'Intestazione', paragrafo: 'Paragrafo', elenco: 'Elenco', tabella: 'Tabella', immagine: 'Immagine', nota: 'Nota', etichetta: 'Etichetta', schema: 'Schema', navigazione: 'Navigazione' };
 const POINT = { chiave: 'Punto chiave', nota: 'Nota', domanda: 'Domanda', 'da-fare': 'Da fare' };
@@ -224,6 +225,7 @@ async function viewDoc(id, startAt) {
   const actions = h('div', { class: 'row cp-actions' },
     doc.kind === 'documento' ? statusSel : h('span', { class: 'chip' }, 'Modello'),
     h('span', { class: 'chip' + (A.score >= 85 ? ' ok' : A.score >= 60 ? ' warn' : ' danger'), title: 'Completezza e coerenza secondo i controlli' }, `${A.score}%`),
+    doc.memoria && doc.memoria.riconosciuto ? h('span', { class: 'chip ok', title: `Modello noto della memoria (${doc.memoria.riconosciuto.score}/100): ${doc.memoria.riconosciuto.segnali.join(', ')}` }, icon('check'), ` ${doc.memoria.riconosciuto.template}`) : null,
     savedMark,
     h('a', { class: 'btn sm', href: `/api/cippi/docs/${id}/download`, title: 'Scarica il .pptx con le modifiche' }, icon('download'), 'Scarica'),
     doc.kind === 'documento' && doc.canEdit ? h('button', { class: 'btn sm', type: 'button', title: 'Salva il .pptx nella cartella del progetto e rianalizza', onclick: saveVersion }, icon('history'), 'Salva versione') : null,
@@ -316,10 +318,38 @@ async function viewDoc(id, startAt) {
       if (!f) return;
       try { await upload(`/api/cippi/docs/${id}/appunti?name=${enc(f.name)}`, f); toast('Appunti salvati nella cartella del documento.'); doc.appunti = (await get(`/api/cippi/docs/${id}`)).appunti; drawTools(); } catch (err) { toastError(err); }
     } });
+    // PDF: si legge e si confronta con la presentazione (e' l'esportazione dell'ultima versione?)
+    const pdfBtn = (a) => h('button', { class: 'btn xs', type: 'button', title: 'Legge il PDF e lo confronta, pagina per slide, con la presentazione', onclick: () => comparePdf(a).catch(toastError) }, 'Confronta');
+    const fileRow = (a) => h('li', {}, h('a', { href: a.url, target: '_blank', rel: 'noopener' }, icon('file'), a.name), a.pdf ? pdfBtn(a) : null);
     const appunti = h('div', {},
-      h('p', { class: 'small muted' }, 'Gli appunti di studio (PDF, Word, immagini) stanno accanto al documento, nella cartella del progetto.'),
-      h('ul', { class: 'cp-files' }, doc.appunti.map((a) => h('li', {}, h('a', { href: a.url, target: '_blank', rel: 'noopener' }, icon('file'), a.name)))),
+      h('p', { class: 'small muted' }, 'Gli appunti di studio (PDF, Word, immagini) stanno accanto al documento, nella cartella del progetto. Un PDF si confronta con la presentazione, pagina per slide.'),
+      h('ul', { class: 'cp-files' }, doc.appunti.map(fileRow)),
+      (doc.pdfCollegati || []).length ? h('div', { class: 'small muted' }, 'PDF con lo stesso nome nella cartella del progetto (l\'esportazione):') : null,
+      (doc.pdfCollegati || []).length ? h('ul', { class: 'cp-files' }, doc.pdfCollegati.map(fileRow)) : null,
       doc.canEdit ? h('button', { class: 'btn sm', type: 'button', onclick: () => notesInput.click() }, icon('upload'), 'Aggiungi appunti') : null, notesInput);
+    // memoria dei modelli: il template riconosciuto e l'impronta da conservare
+    const M = doc.memoria || { candidati: [], noti: 0 };
+    const memoria = h('div', { class: 'cp-memoria' },
+      M.riconosciuto ? h('div', {}, h('b', {}, `Modello noto: ${M.riconosciuto.template}`), h('div', { class: 'small muted' }, `${M.riconosciuto.score}/100 · ${M.riconosciuto.segnali.join(' · ')}`), M.riconosciuto.scheda ? h('div', { class: 'small muted' }, `Scheda: docs/MEMORIA/${M.riconosciuto.formato}/${M.riconosciuto.scheda}`) : null)
+        : h('p', { class: 'small muted' }, M.noti ? `Nessuno dei ${M.noti} modelli noti corrisponde a questa presentazione.` : 'La memoria dei modelli (docs/MEMORIA) è vuota.'),
+      M.candidati.filter((c) => !M.riconosciuto || c.template !== M.riconosciuto.template).length ? h('ul', { class: 'small' }, M.candidati.filter((c) => !M.riconosciuto || c.template !== M.riconosciuto.template).map((c) => h('li', {}, `${c.template}: ${c.score}/100 (${c.esito === 'simile' ? 'stessa famiglia grafica' : 'poco simile'})`))) : null,
+      h('div', { class: 'row', style: 'gap:6px;flex-wrap:wrap;margin-top:6px' },
+        h('a', { class: 'btn xs', href: `/api/cippi/docs/${id}/impronta`, title: 'Scarica l\'impronta: salvata in docs/MEMORIA/pptx/ fa riconoscere in futuro le presentazioni di questo tipo' }, icon('download'), `Scarica impronta (${M.nomeProposto || 'modello'})`)));
+    async function comparePdf(a) {
+      const r = await get(`/api/cippi/docs/${id}/appunti/pdf?${a.path && !a.path.startsWith(`${doc.folder}/Appunti/`) ? `path=${enc(a.path)}` : `name=${enc(a.name)}`}`);
+      const c = r.confronto;
+      const pageRow = (x) => h('tr', { class: x.slide ? (x.same ? 'ok' : 'warn') : 'danger' },
+        h('td', {}, String(x.page)), h('td', {}, x.titlePdf || h('i', { class: 'muted' }, '—')),
+        h('td', {}, x.slide ? h('button', { type: 'button', class: 'linklike', onclick: () => { m.close(); go(x.slide - 1); } }, `slide ${x.slide}`) : h('span', { class: 'chip danger' }, 'nessuna')),
+        h('td', {}, x.slide ? `${Math.round(x.score * 100)}%` : ''),
+        h('td', { class: 'small' }, x.slide && !x.same ? [x.soloPdf && x.soloPdf.length ? h('div', {}, h('b', {}, 'solo nel PDF: '), x.soloPdf.join(', ')) : null, x.soloSlide && x.soloSlide.length ? h('div', {}, h('b', {}, 'solo nella slide: '), x.soloSlide.join(', ')) : null] : (x.same ? 'uguale' : '')));
+      const m = modal(`PDF e presentazione: ${r.name}`, h('div', {},
+        h('p', { class: c.aligned ? 'ok' : 'warn' }, h('b', {}, c.verdict)),
+        h('p', { class: 'small muted' }, `${c.pages} pagine nel PDF, ${c.slides} slide nella presentazione${r.info.producer ? ` · PDF creato con ${r.info.producer}` : ''}.`),
+        c.slidesWithoutPage.length ? h('p', { class: 'small' }, h('b', {}, 'Slide senza pagina nel PDF: '), c.slidesWithoutPage.map((x) => `${x.slide}. ${x.title || KIND[x.kind] || x.kind}`).join(' · ')) : null,
+        h('table', { class: 'cp-tbl cp-pdf' }, h('thead', {}, h('tr', {}, h('th', {}, 'Pagina'), h('th', {}, 'Titolo nel PDF'), h('th', {}, 'Slide'), h('th', {}, 'Uguale'), h('th', {}, 'Differenze'))), h('tbody', {}, c.pairs.map(pageRow))),
+        h('details', { class: 'small' }, h('summary', {}, 'Testo del PDF, pagina per pagina'), r.pages.map((pg) => h('div', { class: 'cp-pdf-page' }, h('b', {}, `Pagina ${pg.n}`), h('pre', {}, pg.text))))), { wide: true });
+    }
     // modello
     const modelSel = h('select', { 'aria-label': 'Confronta con un modello', onchange: async () => { if (!modelSel.value) return; try { const r = await get(`/api/cippi/docs/${id}?modello=${modelSel.value}`); doc.confronto = r.confronto; drawTools(); } catch (err) { toastError(err); } } },
       h('option', { value: '' }, '— scegli un modello —'));
@@ -336,8 +366,9 @@ async function viewDoc(id, startAt) {
       A.reading.length ? sec('Percorso di lettura', false, h('p', { class: 'small muted' }, 'Come si studia: contesto, legenda e sigle, mappa, poi ogni processo passo per passo confrontando To-Be e As-Is.'), reading) : null,
       sec(`Controlli (${A.checks.length})`, false, checks),
       sec(`Glossario (${A.glossary.length})`, false, gloss),
-      sec(`Appunti (${doc.appunti.length})`, false, appunti),
-      sec('Confronta con un modello', false, modelSel, conf));
+      sec(`Appunti (${doc.appunti.length + (doc.pdfCollegati || []).length})`, false, appunti),
+      sec('Confronta con un modello', false, modelSel, conf),
+      sec('Memoria dei modelli', false, memoria));
     const on = struct.querySelector('.on');
     if (on) on.scrollIntoView({ block: 'nearest' });
   }
@@ -486,10 +517,15 @@ async function viewDoc(id, startAt) {
       addForm,
       h('ul', { class: 'cp-pts' }, here.length ? here.map(pointRow) : h('li', { class: 'muted small' }, R.scope === 'slide' ? 'Nessun punto su questa slide.' : 'Nessun punto.')),
     ];
+    // tabella disegnata con le forme: letta come tabella vera (intestazione, righe, intestazioni di riga)
+    const table = s.table ? h('div', { class: 'cp-tblwrap' }, h('table', { class: 'cp-tbl' },
+      h('thead', {}, h('tr', {}, s.table.rowHeaders.some(Boolean) ? h('th', {}) : null, s.table.header.map((c) => h('th', {}, c)))),
+      h('tbody', {}, s.table.rows.map((r, i) => h('tr', {}, s.table.rowHeaders.some(Boolean) ? h('th', {}, s.table.rowHeaders[i + 1] || '') : null, r.map((c) => h('td', {}, c))))))) : null;
     const structPart = [
       h('h3', { class: 'cp-h3' }, R.mode === 'modifica' ? 'Testi della slide (modifica)' : 'Struttura della slide'),
       R.mode === 'modifica' ? h('p', { class: 'small muted' }, 'Una riga per paragrafo; due spazi all\'inizio = un livello di elenco più in basso. Le modifiche si salvano da sole e finiscono nel .pptx.') : null,
       flow,
+      table,
       blocks.length && !(s.kind === 'flusso' && R.mode !== 'modifica') ? h('ol', { class: 'cp-blocks' }, blocks.map(blockRow)) : (s.kind === 'flusso' ? null : h('p', { class: 'muted small' }, 'Nessun blocco di testo.')),
       R.mode === 'modifica' && doc.canEdit ? h('label', { class: 'field' }, h('span', { class: 'field-label' }, 'Nota sulla slide (resta in Cippi)'),
         h('textarea', { rows: '2', maxlength: '2000', oninput: (e) => { x.note = e.target.value; save(); } }, x.note || '')) : (x.note ? h('div', { class: 'cp-note' }, x.note) : null),

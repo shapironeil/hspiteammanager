@@ -20,13 +20,18 @@ const { readPptx, mediaOf } = require('../cippi/pptx-read');
 const { analyze, templateOf, compareToTemplate, norm } = require('../cippi/analyze');
 const { build } = require('../cippi/pptx-write');
 const { baseDeck } = require('../cippi/pptx-new');
+const { fingerprintOf, loadKnown, matchOf, templateName } = require('../cippi/memoria');
+const { readPdf } = require('../cippi/pdf-read');
+const { confrontoPdf } = require('../cippi/appunti');
 const { route, HttpError } = require('../http');
 const projects = require('./projects');
 
 const DIR = path.join(config.DATA_DIR, 'cippi');
 const SRC = path.join(DIR, 'sorgenti');
 const CACHE = path.join(DIR, 'analisi');
-const ANALYZER = 3; // si alza quando cambia l'analisi: le analisi salvate si rifanno
+const ANALYZER = 4; // si alza quando cambia l'analisi: le analisi salvate si rifanno
+// memoria dei modelli: le impronte dei template noti (docs/MEMORIA/<formato>/<template>.impronta.json)
+const MEMORIA_DIRS = process.env.HSPI_MEMORIA_DIR ? [process.env.HSPI_MEMORIA_DIR] : [path.join(config.CODE_ROOT, 'docs', 'MEMORIA'), path.join(config.CODE_ROOT, 'docs', 'memoria')];
 const KINDS = ['chiave', 'nota', 'domanda', 'da-fare'];
 const STATUSES = ['bozza', 'in revisione', 'approvato'];
 
@@ -211,7 +216,23 @@ function celleLinks(p, analysis) {
 }
 function appunti(p, d) {
   return db.all('SELECT path, name, size, updated_at FROM fs_index WHERE space = ? AND parent = ? AND is_dir = 0 ORDER BY name', space(p), `${d.folder}/Appunti`)
-    .map((r) => ({ name: r.name, size: r.size, updatedAt: r.updated_at, url: `/api/explorer/${space(p)}/view?path=${encodeURIComponent(r.path)}`, space: space(p), path: r.path }));
+    .map((r) => ({ name: r.name, size: r.size, updatedAt: r.updated_at, url: `/api/explorer/${space(p)}/view?path=${encodeURIComponent(r.path)}`, space: space(p), path: r.path, pdf: /\.pdf$/i.test(r.name) }));
+}
+// PDF nella cartella del progetto con lo stesso nome della presentazione: di solito e' la sua esportazione
+function pdfCollegati(p, d) {
+  const base = norm(path.basename(d.source_name || '', path.extname(d.source_name || ''))) || norm(d.name);
+  return db.all("SELECT path, name, size, updated_at FROM fs_index WHERE space = ? AND is_dir = 0 AND lower(name) LIKE '%.pdf' AND path NOT LIKE '.%' ORDER BY updated_at DESC LIMIT 300", space(p))
+    .filter((r) => !/(^|\/)\.(cestino|storico)\//.test(r.path) && !r.path.startsWith(`${d.folder}/Appunti/`))
+    .filter((r) => { const b = norm(path.basename(r.name, path.extname(r.name))); return b === base || (base.length > 8 && (b.startsWith(base) || base.startsWith(b))); })
+    .map((r) => ({ name: r.name, size: r.size, updatedAt: r.updated_at, url: `/api/explorer/${space(p)}/view?path=${encodeURIComponent(r.path)}`, space: space(p), path: r.path, pdf: true }));
+}
+// Impronta del documento e confronto con i modelli noti della memoria
+function memoriaOf(doc, pres, analysis) {
+  const impronta = fingerprintOf(pres, analysis, doc.source_name);
+  const known = loadKnown(MEMORIA_DIRS);
+  const m = matchOf(impronta, known);
+  const pub = (x) => x && { ...x, scheda: x.scheda ? path.basename(x.scheda) : null };
+  return { riconosciuto: pub(m.riconosciuto), candidati: m.candidati.map(pub), noti: known.length, nomeProposto: templateName(impronta, doc.name), impronta };
 }
 route('GET', '/api/cippi/docs/:id', {}, (ctx) => {
   const { doc, project: p, canManage, canEdit } = openDoc(ctx.user, ctx.params.id);
@@ -224,12 +245,15 @@ route('GET', '/api/cippi/docs/:id', {}, (ctx) => {
   }
   const users = new Map(db.all('SELECT id, name FROM users').map((u) => [u.id, u.name]));
   const glossary = new Map(db.all('SELECT term, meaning FROM cippi_glossary WHERE project_id = ?', p.id).map((g) => [g.term, g.meaning]));
+  const { pres } = load(doc.source_sha);
   ctx.json(200, {
     ...brief(doc, ctx.user, { project: p.name }),
     canManage, canEdit,
     list: JSON.parse(doc.slides),
     template: doc.kind === 'modello' ? JSON.parse(doc.template) : null,
     analysis: { ...analysis, glossary: analysis.glossary.map((g) => ({ ...g, meaning: glossary.get(g.term) || g.meaning })) },
+    memoria: memoriaOf(doc, pres, analysis),
+    pdfCollegati: pdfCollegati(p, doc),
     points: db.all('SELECT * FROM cippi_points WHERE doc_id = ? ORDER BY slide, id', doc.id).map((x) => ({
       id: x.id, slide: x.slide, kind: x.kind, text: x.text, status: x.status, auto: !!x.auto, author: users.get(x.created_by) || '', createdAt: x.created_at,
     })),
@@ -237,6 +261,39 @@ route('GET', '/api/cippi/docs/:id', {}, (ctx) => {
     appunti: appunti(p, doc),
     confronto,
   });
+});
+
+// Modelli noti della memoria (docs/MEMORIA): per sapere cosa Cippi riconosce
+route('GET', '/api/cippi/memoria', {}, (ctx) => {
+  ctx.json(200, { cartelle: MEMORIA_DIRS, modelli: loadKnown(MEMORIA_DIRS).map((k) => ({ template: k.template, formato: k.formato, app: k.app, tipoDocumento: k.tipoDocumento, scheda: k.scheda ? path.basename(k.scheda) : null, fileVisti: (k.data.fileVisti || []).length })) });
+});
+// L'impronta del documento, da salvare in docs/MEMORIA/pptx/<nome>.impronta.json per riconoscerlo in futuro
+route('GET', '/api/cippi/docs/:id/impronta', {}, (ctx) => {
+  const { doc } = openDoc(ctx.user, ctx.params.id);
+  const { pres, analysis } = load(doc.source_sha);
+  const m = memoriaOf(doc, pres, analysis);
+  const out = { template: m.nomeProposto, formato: 'pptx', app: 'cippi', tipoDocumento: '', fornitore: '', fileVisti: [{ nome: doc.source_name, slide: analysis.slides.length, analizzato: db.now().slice(0, 10) }], ...m.impronta };
+  delete out.nomeFile;
+  const body = JSON.stringify(out, null, 2);
+  ctx.res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body), 'Cache-Control': 'no-store', 'Content-Disposition': `attachment; filename="${m.nomeProposto.replace(/[^\w.-]/g, '_')}.impronta.json"` });
+  ctx.res.end(body);
+});
+// Un PDF accanto al documento (appunti, o l'esportazione nella cartella del progetto): testo per pagina e confronto
+// con la presentazione nell'ordine attuale. ?name= file in Appunti/, oppure ?path= percorso nella cartella del progetto
+route('GET', '/api/cippi/docs/:id/appunti/pdf', {}, (ctx) => {
+  const { doc, project: p } = openDoc(ctx.user, ctx.params.id);
+  const name = String(ctx.query.get('name') || '');
+  const rel = name ? `${doc.folder}/Appunti/${safeName(name).replace(/ (\.\w+)$/, '$1')}` : String(ctx.query.get('path') || '');
+  if (!/\.pdf$/i.test(rel)) throw new HttpError(400, 'Serve un file PDF.');
+  const at = ex.resolve(rootOf(p), rel);
+  if (!fs.existsSync(at.full)) throw new HttpError(404, 'PDF non trovato nella cartella del progetto.');
+  const buf = fs.readFileSync(at.full);
+  if (buf.length > 60 * 1024 * 1024) throw new HttpError(413, 'PDF troppo grande (massimo 60 MB).');
+  let pdf;
+  try { pdf = readPdf(buf); } catch (err) { throw err instanceof HttpError ? err : new HttpError(err.status || 400, err.message); }
+  const { analysis } = load(doc.source_sha);
+  const slides = JSON.parse(doc.slides).map((x) => analysis.slides[x.src - 1]).filter(Boolean);
+  ctx.json(200, { name: path.basename(at.rel), path: at.rel, info: pdf.info, pages: pdf.pages.map((pg) => ({ n: pg.n, title: pg.title, lines: pg.lines.length, text: pg.text })), confronto: confrontoPdf(pdf, slides) });
 });
 
 // Forme di una slide di origine (per l'anteprima nel pannello di visione)

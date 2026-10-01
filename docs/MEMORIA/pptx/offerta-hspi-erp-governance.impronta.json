@@ -1,0 +1,183 @@
+{
+  "template": "offerta-hspi-erp-governance",
+  "formato": "pptx",
+  "app": "cippi",
+  "tipoDocumento": "offerta / presentazione di offering (ERP Governance)",
+  "fornitore": "HSPI S.p.A. (gruppo TXT)",
+  "fileVisti": [
+    {
+      "nome": "HSPI_ERP_Governance_Offering_v0.2.pptx",
+      "slide": 18,
+      "modificato": "2026-03-26",
+      "analizzato": "2026-10-01"
+    }
+  ],
+  "nomeFile": {
+    "schema": "HSPI_<Offering>_Offering_v<maggiore>.<minore>.pptx",
+    "regex": "^HSPI_[A-Za-z0-9_]+_Offering_v\\d+\\.\\d+\\.pptx$"
+  },
+  "slide": {
+    "cx": 12192000,
+    "cy": 6858000,
+    "formato": "Widescreen 16:9",
+    "numero": 18
+  },
+  "tema": {
+    "nome": "3_Slide Master_White",
+    "colori": {
+      "dk1": "000000",
+      "lt1": "FFFFFF",
+      "dk2": "44546A",
+      "lt2": "E7E6E6",
+      "accent1": "307FE2",
+      "accent2": "00CFB4",
+      "accent3": "56B093",
+      "accent4": "FFC000",
+      "accent5": "E2665C",
+      "accent6": "D95030",
+      "hlink": "002394",
+      "folHlink": "E400BE"
+    },
+    "caratteri": {
+      "maggiore": "Poppins",
+      "minore": "Poppins"
+    },
+    "caratteriNelleSlide": [
+      "Poppins",
+      "Poppins SemiBold",
+      "Roboto Bold",
+      "Sora",
+      "Work Sans ExtraLight"
+    ]
+  },
+  "master": [
+    {
+      "nome": "slideMaster1",
+      "tema": "3_Slide Master_White",
+      "slide": 18
+    },
+    {
+      "nome": "slideMaster2",
+      "tema": "Slide Master_White",
+      "slide": 0
+    }
+  ],
+  "layout": {
+    "usati": {
+      "1_1": [
+        1,
+        2,
+        14,
+        15
+      ],
+      "Black and white": [
+        3
+      ],
+      "Custom Layout": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "Blank page w/o line": [
+        16,
+        17,
+        18
+      ]
+    },
+    "pieDiPagina": "",
+    "testiFissi": []
+  },
+  "sezioniNative": [
+    "Intro",
+    "End",
+    "Back up"
+  ],
+  "tipi": [
+    "copertina",
+    "titolo",
+    "indice",
+    "scheda",
+    "testo",
+    "scheda",
+    "tabella",
+    "scheda",
+    "tabella",
+    "scheda",
+    "tabella",
+    "tabella",
+    "tabella",
+    "chiusura",
+    "chiusura",
+    "scheda",
+    "scheda",
+    "scheda"
+  ],
+  "sezioni": [
+    "Intro",
+    "End",
+    "Back up"
+  ],
+  "sigle": [
+    "ERP",
+    "HSPI",
+    "SAP",
+    "TXT",
+    "SAL",
+    "ICT",
+    "UAT",
+    "AFC",
+    "AMS",
+    "PMO",
+    "ECC",
+    "ITIL",
+    "COBIT",
+    "PROGRAM",
+    "DATA"
+  ],
+  "metadati": {
+    "company": "",
+    "applicazione": "Microsoft Office PowerPoint",
+    "titolo": "Offerta Tecnico-Economica",
+    "soggetto": "SAP S4 HANA"
+  },
+  "cippi": {
+    "versioneAnalisi": "0.2.0 / ANALYZER 4",
+    "tipi": {
+      "1": "copertina",
+      "2": "titolo",
+      "3": "indice",
+      "4": "scheda",
+      "5": "testo",
+      "6": "scheda",
+      "7": "tabella",
+      "8": "scheda",
+      "9": "tabella",
+      "10": "scheda",
+      "11": "tabella",
+      "12": "tabella",
+      "13": "tabella",
+      "14": "chiusura",
+      "15": "chiusura",
+      "16": "scheda",
+      "17": "scheda",
+      "18": "scheda"
+    },
+    "sezioni": "native",
+    "controlli": [
+      "info: Sezione non presente nell'indice: \"End\" (va bene per le sottosezioni).",
+      "info: Sezione non presente nell'indice: \"Back up\" (va bene per le sottosezioni).",
+      "avviso: Testo segnaposto da compilare: \"xxxxxx\".",
+      "avviso: Testo segnaposto da compilare: \"0+\".",
+      "avviso: Testo segnaposto da compilare: \"0K\".",
+      "info: Caratteri fuori tema (Poppins): Roboto Bold (slide 10, 11, 12, 13); Work Sans ExtraLight (slide 4); Sora (slide 17)."
+    ],
+    "punteggio": 90
+  }
+}

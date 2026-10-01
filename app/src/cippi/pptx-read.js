@@ -69,7 +69,8 @@ function styleColor(sp, ref, theme) {
 }
 
 // ---- Testo ------------------------------------------------------------------------------------
-function paragraphs(txBody, theme) {
+// fonts: insieme (facoltativo) in cui raccogliere i caratteri usati dai testi (per i controlli e l'impronta)
+function paragraphs(txBody, theme, fonts) {
   if (!txBody) return [];
   const out = [];
   for (const p of X.children(txBody, 'a:p')) {
@@ -85,6 +86,8 @@ function paragraphs(txBody, theme) {
           if (rPr.attrs.i === '1') italic = true;
           if (rPr.attrs.sz && !size) size = Number(rPr.attrs.sz) / 100;
           if (!col) col = color(X.child(rPr, 'a:solidFill'), theme);
+          const latin = X.child(rPr, 'a:latin');
+          if (fonts && latin && latin.attrs.typeface && !latin.attrs.typeface.startsWith('+')) fonts.add(latin.attrs.typeface);
         }
         s += t;
       } else if (r.name === 'a:br') s += '\n';
@@ -92,7 +95,7 @@ function paragraphs(txBody, theme) {
     s = s.replace(/[​ ]/g, (c) => (c === ' ' ? ' ' : '')).replace(/[ \t]+$/g, '');
     out.push({
       text: s, lvl: Number((pPr && pPr.attrs.lvl) || 0), bold, italic, size, color: col,
-      bullet: !!(pPr && (X.child(pPr, 'a:buChar') || X.child(pPr, 'a:buAutoNum'))), noBullet: !!(pPr && X.child(pPr, 'a:buNone')),
+      bullet: !!(pPr && (X.child(pPr, 'a:buChar') || X.child(pPr, 'a:buAutoNum'))), numbered: !!(pPr && X.child(pPr, 'a:buAutoNum')), noBullet: !!(pPr && X.child(pPr, 'a:buNone')),
       align: (pPr && pPr.attrs.algn) || null,
     });
   }
@@ -158,7 +161,7 @@ function shapesOf(tree, ctx, map = (r) => r, groupId = null, out = []) {
       if (s.line && !s.line.color && X.child(n, 'p:style')) s.line.color = styleColor(n, 'a:lnRef', ctx.theme);
     }
     if (kind === 'sp') {
-      s.paragraphs = paragraphs(X.child(n, 'p:txBody'), ctx.theme);
+      s.paragraphs = paragraphs(X.child(n, 'p:txBody'), ctx.theme, ctx.fonts);
       s.textbox = (X.child(nv, 'p:cNvSpPr') || { attrs: {} }).attrs.txBox === '1';
     }
     if (kind === 'cxn') {
@@ -179,7 +182,7 @@ function shapesOf(tree, ctx, map = (r) => r, groupId = null, out = []) {
       const tbl = X.find(n, 'a:tbl');
       if (tbl) {
         s.kind = 'table';
-        s.rows = X.children(tbl, 'a:tr').map((tr) => X.children(tr, 'a:tc').map((tc) => paragraphs(X.child(tc, 'a:txBody'), ctx.theme).map((p) => p.text).join('\n').trim()));
+        s.rows = X.children(tbl, 'a:tr').map((tr) => X.children(tr, 'a:tc').map((tc) => paragraphs(X.child(tc, 'a:txBody'), ctx.theme, ctx.fonts).map((p) => p.text).join('\n').trim()));
       } else {
         const gd = X.find(n, 'a:graphicData');
         const uri = (gd && gd.attrs.uri) || '';
@@ -212,23 +215,46 @@ function phIndex(shapes) {
   return (ph) => (ph.idx && byIdx[ph.idx]) || byType[ph.type] || (ph.type === 'ctrTitle' && byType.title) || (ph.type === 'title' && byType.ctrTitle) || null;
 }
 
+// Tema (colori e caratteri) di un master: ogni slide usa quello del SUO master, non il primo della presentazione
+// (una presentazione puo' avere piu' master, con temi diversi: i colori "accent1" cambiano da uno all'altro)
+const themeCache = new WeakMap();
+function themeOf(files, part) {
+  const t = part && xmlOf(files, part);
+  const major = t && X.find(X.find(t, 'a:majorFont'), 'a:latin');
+  const minor = t && X.find(X.find(t, 'a:minorFont'), 'a:latin');
+  return { name: (t && t.attrs.name) || '', colors: themeColors(t), fonts: { major: major ? major.attrs.typeface : null, minor: minor ? minor.attrs.typeface : null } };
+}
+function masterOf(files, part) {
+  const cache = themeCache.get(files) || new Map();
+  themeCache.set(files, cache);
+  if (cache.has(part)) return cache.get(part);
+  const rels = readRels(files, part);
+  const themeRel = Object.values(rels).find((r) => r.type === 'theme');
+  const theme = themeOf(files, themeRel && themeRel.target);
+  const doc = xmlOf(files, part);
+  const shapes = doc ? shapesOf(treeOf(doc), { theme: theme.colors, rels }) : [];
+  const cSld = doc && X.find(doc, 'p:cSld');
+  const out = { part, name: (cSld && cSld.attrs.name) || posix.basename(part, '.xml'), theme: theme.colors, themeName: theme.name, fonts: theme.fonts, find: phIndex(shapes), texts: staticTexts(shapes) };
+  cache.set(part, out);
+  return out;
+}
+// testi fissi di un layout o di un master (pie' di pagina, diciture): servono all'impronta del modello
+const PROMPT = /^(fare clic|click to|haga clic|cliquez|modifica gli stili|edit master|(secondo|terzo|quarto|quinto|second|third|fourth|fifth) (livello|level))/i;
+const staticTexts = (shapes) => [...new Set(shapes.flatMap((s) => (s.paragraphs || []).map((p) => p.text.trim())).filter((t) => t && !/^[\u2039<]?#[\u203a>]?$/.test(t) && !PROMPT.test(t) && !/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(t)))];
+
 const layoutCache = new WeakMap();
-function readLayout(files, part, theme) {
+function readLayout(files, part) {
   const cache = layoutCache.get(files) || new Map();
   layoutCache.set(files, cache);
   if (cache.has(part)) return cache.get(part);
   const doc = xmlOf(files, part);
   const rels = readRels(files, part);
   const masterRel = Object.values(rels).find((r) => r.type === 'slideMaster');
-  let masterFind = () => null;
-  if (masterRel) {
-    const mdoc = xmlOf(files, masterRel.target);
-    masterFind = phIndex(shapesOf(treeOf(mdoc), { theme, rels: readRels(files, masterRel.target) }));
-  }
-  const shapes = doc ? shapesOf(treeOf(doc), { theme, rels, inherit: masterFind }) : [];
+  const master = masterRel ? masterOf(files, masterRel.target) : { part: null, name: '', theme: {}, themeName: '', fonts: { major: null, minor: null }, find: () => null, texts: [] };
+  const shapes = doc ? shapesOf(treeOf(doc), { theme: master.theme, rels, inherit: master.find }) : [];
   const own = phIndex(shapes);
   const cSld = doc && X.find(doc, 'p:cSld');
-  const out = { name: (cSld && cSld.attrs.name) || posix.basename(part, '.xml'), find: (ph) => own(ph) || masterFind(ph), master: masterRel ? masterRel.target : null };
+  const out = { name: (cSld && cSld.attrs.name) || posix.basename(part, '.xml'), find: (ph) => own(ph) || master.find(ph), master, texts: [...new Set([...staticTexts(shapes), ...master.texts])] };
   cache.set(part, out);
   return out;
 }
@@ -242,16 +268,9 @@ function readPptx(buf) {
   const sz = X.find(pres, 'p:sldSz');
   const W = Number(sz ? sz.attrs.cx : 12192000);
   const H = Number(sz ? sz.attrs.cy : 6858000);
-  // tema del primo master
-  const firstMaster = Object.values(presRels).find((r) => r.type === 'slideMaster');
-  const themeRel = firstMaster && Object.values(readRels(files, firstMaster.target)).find((r) => r.type === 'theme');
-  const theme = themeColors(themeRel && xmlOf(files, themeRel.target));
-  const fonts = (() => {
-    const t = themeRel && xmlOf(files, themeRel.target);
-    const major = t && X.find(X.find(t, 'a:majorFont'), 'a:latin');
-    const minor = t && X.find(X.find(t, 'a:minorFont'), 'a:latin');
-    return { major: major ? major.attrs.typeface : null, minor: minor ? minor.attrs.typeface : null };
-  })();
+  const masterParts = X.children(X.child(pres, 'p:sldMasterIdLst'), 'p:sldMasterId').map((m) => presRels[m.attrs['r:id']]).filter(Boolean).map((r) => r.target);
+  const masters = masterParts.map((p) => masterOf(files, p));
+  const fallback = masters[0] || { theme: {}, fonts: { major: null, minor: null }, texts: [] };
   const pct = (s) => {
     if (s.x === undefined) return s;
     const o = { ...s, x: +(s.x / W * 100).toFixed(3), y: +(s.y / H * 100).toFixed(3), w: +(s.w / W * 100).toFixed(3), h: +(s.h / H * 100).toFixed(3) };
@@ -259,7 +278,9 @@ function readPptx(buf) {
   };
   const ids = X.children(X.child(pres, 'p:sldIdLst'), 'p:sldId');
   const slides = [];
-  ids.forEach((sid, i) => {
+  const byId = {}; // id della slide in presentation.xml -> numero
+  const useCount = new Map();
+  ids.forEach((sid) => {
     const rel = presRels[sid.attrs['r:id']];
     if (!rel) return;
     const part = rel.target;
@@ -267,25 +288,50 @@ function readPptx(buf) {
     if (!doc) return;
     const rels = readRels(files, part);
     const layoutRel = Object.values(rels).find((r) => r.type === 'slideLayout');
-    const layout = layoutRel ? readLayout(files, layoutRel.target, theme) : { name: '', find: () => null };
-    const shapes = shapesOf(treeOf(doc), { theme, rels, files, inherit: layout.find }).map(pct);
+    const layout = layoutRel ? readLayout(files, layoutRel.target) : { name: '', find: () => null, master: fallback, texts: [] };
+    const theme = (layout.master && layout.master.theme) || fallback.theme;
+    const fonts = new Set();
+    const shapes = shapesOf(treeOf(doc), { theme, rels, files, inherit: layout.find, fonts }).map(pct);
     const notesRel = Object.values(rels).find((r) => r.type === 'notesSlide');
     let notes = '';
     if (notesRel) {
       const nd = xmlOf(files, notesRel.target);
       const body = nd && shapesOf(treeOf(nd), { theme, rels: {} }).filter((s) => s.ph && s.ph.type === 'body');
       notes = (body || []).flatMap((s) => (s.paragraphs || []).map((p) => p.text)).join('\n').trim();
+      // PowerPoint lascia nelle note il solo numero della slide: non e' una nota
+      if (/^\d{1,4}$/.test(notes)) notes = '';
     }
     const show = doc.attrs.show !== '0';
-    slides.push({ n: slides.length + 1, part, layout: layout.name, layoutPart: layoutRel ? layoutRel.target : null, hidden: !show, shapes, notes });
+    const masterPart = layout.master && layout.master.part;
+    if (masterPart) useCount.set(masterPart, (useCount.get(masterPart) || 0) + 1);
+    byId[sid.attrs.id] = slides.length + 1;
+    slides.push({ n: slides.length + 1, part, layout: layout.name, layoutPart: layoutRel ? layoutRel.target : null, master: masterPart, hidden: !show, shapes, notes, fonts: [...fonts].sort() });
   });
+  // sezioni native di PowerPoint (p14:sectionLst): nome -> slide
+  const sections = [];
+  for (const sec of X.findAll(pres, 'p14:section')) {
+    const list = X.findAll(sec, 'p14:sldId').map((x) => byId[x.attrs.id]).filter(Boolean);
+    sections.push({ name: sec.attrs.name || '', slides: list });
+  }
   const core = xmlOf(files, 'docProps/core.xml');
-  const meta = core ? {
-    title: X.text(X.find(core, 'dc:title')).trim(), author: X.text(X.find(core, 'dc:creator')).trim(),
-    modifiedBy: X.text(X.find(core, 'cp:lastModifiedBy')).trim(), modified: X.text(X.find(core, 'dcterms:modified')).trim(),
-  } : {};
-  const layouts = [...new Set(Object.values(presRels).filter((r) => r.type === 'slideMaster').flatMap((m) => Object.values(readRels(files, m.target)).filter((r) => r.type === 'slideLayout').map((r) => readLayout(files, r.target, theme).name)))];
-  return { width: W, height: H, ratio: +(W / H).toFixed(4), widthCm: +(W / EMU_CM).toFixed(2), heightCm: +(H / EMU_CM).toFixed(2), theme, fonts, meta, layouts, slides };
+  const app = xmlOf(files, 'docProps/app.xml');
+  const T = (doc, name) => (doc ? X.text(X.find(doc, name)).trim() : '');
+  const meta = {
+    title: T(core, 'dc:title'), subject: T(core, 'dc:subject'), keywords: T(core, 'cp:keywords'), author: T(core, 'dc:creator'),
+    modifiedBy: T(core, 'cp:lastModifiedBy'), modified: T(core, 'dcterms:modified'), created: T(core, 'dcterms:created'),
+    company: T(app, 'Company'), application: T(app, 'Application'), format: T(app, 'PresentationFormat'),
+  };
+  // tema della presentazione: quello del master piu' usato
+  const mainMaster = masters.slice().sort((a, b) => (useCount.get(b.part) || 0) - (useCount.get(a.part) || 0))[0] || fallback;
+  const layouts = [...new Set(masterParts.flatMap((m) => Object.values(readRels(files, m)).filter((r) => r.type === 'slideLayout').map((r) => readLayout(files, r.target).name)))];
+  const layoutTexts = {};
+  for (const s of slides) if (s.layoutPart && !layoutTexts[s.layout]) layoutTexts[s.layout] = readLayout(files, s.layoutPart).texts;
+  return {
+    width: W, height: H, ratio: +(W / H).toFixed(4), widthCm: +(W / EMU_CM).toFixed(2), heightCm: +(H / EMU_CM).toFixed(2),
+    theme: mainMaster.theme, themeName: mainMaster.themeName || '', fonts: mainMaster.fonts,
+    masters: masters.map((m) => ({ name: m.name, theme: m.theme, themeName: m.themeName, fonts: m.fonts, slides: useCount.get(m.part) || 0 })),
+    meta, layouts, layoutTexts, sections, slides,
+  };
 }
 
 // Un file del pacchetto (per le immagini dell'anteprima)

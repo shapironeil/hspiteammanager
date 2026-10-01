@@ -1,22 +1,37 @@
 {
   "id": "cippi",
   "name": "Cippi",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "released": "2026-10-01",
-  "summary": "Presentazioni PowerPoint del team: le legge, propone i punti chiave e i controlli, le rifà da un modello.",
-  "description": "Importa un .pptx e ne ricostruisce la struttura: sezioni dall'indice, tipo di ogni slide, blocchi nell'ordine di lettura con la loro gerarchia, flussi a corsie (attori, step, decisioni Si/No, sistemi, rimandi), legenda dei colori, sigle. Modalità Revisione con pannello strumenti, visione e punti chiave; modifica dei testi e dell'ordine; modelli riutilizzabili; esportazione in .pptx con la stessa grafica.",
+  "summary": "Presentazioni PowerPoint del team: le legge (anche kick-off e offerte), riconosce i modelli noti, confronta il PDF esportato, propone i punti chiave e i controlli, le rifà da un modello.",
+  "description": "Importa un .pptx e ne ricostruisce la struttura: sezioni (native di PowerPoint, dall'indice o dai divisori), tipo di ogni slide (copertina, indice, testo, scheda, schema, piano Gantt, organigramma, numeri, tabella anche se disegnata con le forme, flusso, chiusura), blocchi nell'ordine di lettura con la loro gerarchia, flussi a corsie, legenda, sigle. Controlli: refusi tra indice e titoli, segnaposto da compilare, parti mancanti, caratteri fuori tema. Riconosce i modelli noti della memoria (docs/MEMORIA) e legge i PDF: il PDF esportato si confronta pagina per slide con la presentazione. Modalità Revisione, modifica, modelli, esportazione .pptx.",
   "web": "/cippi/",
   "color": "#5b4fd6",
   "icon": "icon.svg",
   "minPortal": "0.8.0",
   "engine": null,
   "novita": [
-    { "version": "0.1.0", "date": "2026-10-01", "items": [
-      "Lettura delle presentazioni: tipi di slide, sezioni, ordine dei blocchi, gerarchia, flussi a corsie, legenda, sigle.",
-      "Modalità Revisione: pannello strumenti, pannello visione, punti chiave; confronto To-Be / As-Is affiancato.",
-      "Modifica di testi e ordine, salvataggio di versioni nella cartella del progetto, esportazione .pptx.",
-      "Modelli: si salvano dalla presentazione migliore, si usano per crearne di nuove e per misurare la completezza.",
-      "Sinergie: archivio in Esplora file, processi collegati a GestioneCelle, glossario del progetto, appunti accanto al documento."
-    ] }
+    {
+      "version": "0.2.0",
+      "date": "2026-10-01",
+      "items": [
+        "Kick-off e offerte: copertina, indice numerato, capitoli dall'indice, sezioni native di PowerPoint, piano (Gantt disegnato), organigramma, numeri in evidenza, tabelle disegnate con le forme lette come tabelle.",
+        "Controlli nuovi: refuso tra una voce dell'indice e il titolo della slide, testi segnaposto da compilare (xxxxxx, 0+), parti mancanti (1/3 senza 3/3), caratteri fuori tema.",
+        "Memoria dei modelli: all'apertura Cippi riconosce i template noti (docs/MEMORIA) e offre l'impronta da salvare per i nuovi.",
+        "PDF: lettura del testo senza librerie e confronto pagina per slide con la presentazione (il PDF esportato è aggiornato?).",
+        "Lettura più fedele: tema del master usato da ogni slide, caratteri usati, note con il solo numero ignorate, titolo dalle forme chiamate \"Title\"."
+      ]
+    },
+    {
+      "version": "0.1.0",
+      "date": "2026-10-01",
+      "items": [
+        "Lettura delle presentazioni: tipi di slide, sezioni, ordine dei blocchi, gerarchia, flussi a corsie, legenda, sigle.",
+        "Modalità Revisione: pannello strumenti, pannello visione, punti chiave; confronto To-Be / As-Is affiancato.",
+        "Modifica di testi e ordine, salvataggio di versioni nella cartella del progetto, esportazione .pptx.",
+        "Modelli: si salvano dalla presentazione migliore, si usano per crearne di nuove e per misurare la completezza.",
+        "Sinergie: archivio in Esplora file, processi collegati a GestioneCelle, glossario del progetto, appunti accanto al documento."
+      ]
+    }
   ]
 }
