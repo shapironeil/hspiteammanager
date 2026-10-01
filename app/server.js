@@ -20,6 +20,7 @@ setAppHandler(require('./src/apps'));
 // Le rotte si registrano da sole al caricamento del file.
 require('./src/routes/auth');
 require('./src/routes/users');
+require('./src/routes/team');
 require('./src/routes/programs');
 require('./src/routes/files');
 require('./src/routes/projects');

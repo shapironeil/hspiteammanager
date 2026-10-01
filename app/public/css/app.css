@@ -425,3 +425,20 @@ details.detail pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* ---- Gradi e badge -------------------------------------------------------- */
+.chip.grade { gap: 6px; }
+.grade-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.list .icon-btn[disabled] { opacity: 0.3; pointer-events: none; }
+.list li > svg { width: 18px; height: 18px; flex: none; color: var(--muted); }
+.list li > select { width: auto; max-width: 200px; flex: none; }
+
+/* ---- Percorso ------------------------------------------------------------- */
+.league-path { display: flex; align-items: stretch; gap: 6px; overflow-x: auto; padding: 22px 16px; }
+.league { flex: 1 0 170px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 14px 8px; border-radius: var(--radius-sm); background: var(--well); border: 1px solid var(--border); }
+.emblem { width: 74px; height: 84px; filter: drop-shadow(0 6px 10px rgba(0,0,0,.35)); }
+.league-grade { font-weight: 600; font-size: 13px; }
+.league-input { text-align: center; background: transparent !important; border-color: transparent !important; padding: 4px 6px !important; font-size: 13px; }
+.league-input:hover, .league-input:focus { border-color: var(--border) !important; }
+.league .league-input:first-of-type { font-family: var(--serif); font-size: 16px; }
+.league-arrow { align-self: center; font-size: 28px; color: var(--faint); flex: none; }

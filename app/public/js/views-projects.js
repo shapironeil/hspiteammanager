@@ -1,6 +1,6 @@
 // Progetti: elenco, scheda con persone e collegamento alla cartella aziendale, file locali.
 import { get, post, patch, del } from './api.js';
-import { h, icon, modal, confirmDialog, form, field, toast, toastError, pageHead, avatarEl } from './ui.js';
+import { h, icon, modal, confirmDialog, form, field, toast, toastError, pageHead, avatarEl, fmtDate } from './ui.js';
 import { explorerPanel } from './explorer.js';
 import { app, refresh } from './app.js';
 
@@ -76,10 +76,45 @@ async function renderProject(el, data, p) {
       h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Persone'), h('span', { class: 'chip' }, String(p.members.length))),
         p.members.length ? h('ul', { class: 'list' }, p.members.map((u) => h('li', {}, avatarEl(u, 'sm'), h('div', { class: 'grow' }, h('div', { class: 'title' }, u.name), h('div', { class: 'meta' }, u.username)))))
           : h('div', { class: 'empty' }, 'Nessuna persona assegnata: per ora lo vede solo l\'Hacker.'))),
+    p.canEdit || p.guests.length ? guestsCard(p) : null,
     h('div', { style: 'margin-top:16px' }, files),
     h('p', { class: 'small muted mono', style: 'margin-top:10px' }, `progetti/${p.folder}`,
       ' · ', h('a', { href: `#/esplora?spazio=p${p.id}` }, 'apri in Esplora file')));
   await files.ready;
+}
+
+// ---- Ospiti a tempo ---------------------------------------------------------------
+// Persone esterne al progetto con accesso per qualche giorno (scade da solo, resta nello storico).
+function guestsCard(p) {
+  const days = (iso) => Math.max(0, Math.ceil((Date.parse(iso) - Date.now()) / 86400000));
+  const add = async () => {
+    const people = (await get('/api/recipients')).filter((u) => !p.members.some((m) => m.id === u.id));
+    const list = h('div', { class: 'member-list', style: 'max-height:260px' });
+    let chosen = null;
+    const draw = (q) => list.replaceChildren(...people.filter((u) => !q || u.name.toLowerCase().includes(q) || u.username.includes(q)).slice(0, 60)
+      .map((u) => h('label', { class: 'check' }, h('input', { type: 'radio', name: 'who', checked: chosen === u.id, onchange: () => { chosen = u.id; } }), avatarEl(u, 'sm'), u.name)));
+    const search = h('input', { type: 'search', placeholder: 'Cerca per nome…', oninput: () => draw(search.value.trim().toLowerCase()) });
+    draw('');
+    const m = modal('Aggiungi un ospite', form([
+      // niente <label> attorno: le scelte sono gia' etichette (annidarle rompe il clic)
+      h('div', { class: 'field' }, h('span', { class: 'field-label' }, 'Persona'), search, h('div', { style: 'margin-top:8px' }, list)),
+      field('Per quanti giorni', h('select', { name: 'days' }, [1, 2, 3, 5, 7, 14, 30, 60, 90].map((d) => h('option', { value: String(d), selected: d === 7 }, d === 1 ? '1 giorno' : `${d} giorni`))),
+        'Alla scadenza l\'accesso si chiude da solo. Resta traccia nello storico (Il mio team).'),
+      field('Motivo (facoltativo)', h('input', { type: 'text', name: 'note', maxlength: '200', placeholder: 'es. revisione del verbale del 28/09' })),
+      h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Aggiungi')),
+    ], async (v) => {
+      if (!chosen) throw new Error('Scegli una persona.');
+      await post(`/api/projects/${p.id}/guests`, { userId: chosen, days: Number(v.days), note: v.note });
+      m.close(); toast('Ospite aggiunto.'); refresh();
+    }), { wide: true });
+  };
+  return h('section', { class: 'card glass', style: 'margin-top:16px' },
+    h('div', { class: 'card-head' }, h('h2', {}, 'Ospiti a tempo'),
+      p.canEdit ? h('button', { class: 'btn sm', type: 'button', onclick: () => add().catch(toastError) }, icon('plus'), 'Aggiungi ospite') : null),
+    p.guests.length ? h('ul', { class: 'list' }, p.guests.map((g) => h('li', {}, avatarEl(g, 'sm'),
+      h('div', { class: 'grow' }, h('div', { class: 'title' }, g.name), h('div', { class: 'meta' }, `ancora ${days(g.expiresAt)} giorni · fino al ${fmtDate(g.expiresAt)}${g.addedBy ? ` · aggiunto da ${g.addedBy}` : ''}`)),
+      p.canEdit ? h('button', { class: 'btn sm', type: 'button', onclick: () => confirmDialog('Togliere l\'accesso?', `${g.name} non vedrà più il progetto.`, 'Togli', async () => { await del(`/api/projects/${p.id}/guests/${g.id}`).catch(toastError); refresh(); }) }, 'Togli') : null)))
+      : h('div', { class: 'empty' }, 'Nessun ospite. Puoi dare accesso a una persona per qualche giorno, senza farla entrare nel progetto.'));
 }
 
 // Tornando su "Progetti" dal menu si riparte dall'elenco.

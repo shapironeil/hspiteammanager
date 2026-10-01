@@ -149,6 +149,44 @@ const MIGRATIONS = [
   );
   CREATE INDEX idx_verbali_project ON verbali(project_id, date);
   `,
+  // 6 - gradi personalizzabili (gerarchia), Hacker nascosto con badge, persone eliminate, ospiti temporanei nei progetti
+  `
+  CREATE TABLE grades (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    color TEXT NOT NULL DEFAULT '#9a8f86',
+    level TEXT NOT NULL DEFAULT 'dipendente',
+    position INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  INSERT INTO grades(name, color, level, position, created_at) VALUES
+    ('Stage', '#8fb3c9', 'dipendente', 10, datetime('now')),
+    ('Dipendente', '#a89a8c', 'dipendente', 20, datetime('now')),
+    ('PM manager', '#7f9cf5', 'manager', 30, datetime('now')),
+    ('Manager', '#b388eb', 'manager', 40, datetime('now')),
+    ('Senior manager', '#e0a24f', 'manager', 50, datetime('now'));
+  ALTER TABLE users ADD COLUMN grade_id INTEGER REFERENCES grades(id);
+  ALTER TABLE users ADD COLUMN badge TEXT;
+  ALTER TABLE users ADD COLUMN deleted_at TEXT;
+  UPDATE users SET grade_id = (SELECT id FROM grades WHERE name = 'Manager') WHERE role = 'manager';
+  UPDATE users SET grade_id = (SELECT id FROM grades WHERE name = 'Dipendente') WHERE grade_id IS NULL;
+  UPDATE users SET badge = '#2dd4bf' WHERE role = 'hacker';
+  ALTER TABLE project_members ADD COLUMN expires_at TEXT;
+  ALTER TABLE project_members ADD COLUMN added_by INTEGER;
+  ALTER TABLE project_members ADD COLUMN added_at TEXT;
+  CREATE TABLE project_access_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    added_by INTEGER,
+    days INTEGER,
+    note TEXT,
+    starts_at TEXT NOT NULL,
+    expires_at TEXT,
+    ended_at TEXT
+  );
+  CREATE INDEX idx_access_user ON project_access_log(user_id);
+  `,
 ];
 
 function migrate() {

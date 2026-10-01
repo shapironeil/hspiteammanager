@@ -64,10 +64,10 @@ function userFromRequest(req) {
   const token = parseCookies(req)[config.COOKIE];
   if (!token) return null;
   const row = get(
-    `SELECT u.id, u.username, u.name, u.role, u.must_change, u.active, u.avatar, u.title, s.token_hash
+    `SELECT u.id, u.username, u.name, u.role, u.must_change, u.active, u.avatar, u.title, u.grade_id, u.badge, u.deleted_at, s.token_hash
      FROM sessions s JOIN users u ON u.id = s.user_id
      WHERE s.token_hash = ? AND s.expires_at > ?`, sha(token), now());
-  if (!row || !row.active) return null;
+  if (!row || !row.active || row.deleted_at) return null;
   return row;
 }
 

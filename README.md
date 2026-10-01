@@ -19,6 +19,8 @@ Per aggiornare all'ultima versione: doppio clic su **`aggiorna.bat`**. Controlla
 
 ## Cosa vede ogni ruolo
 
+I permessi dipendono dal **grado** (Stage, Dipendente, PM manager, Manager, Senior manager, modificabili): livello *Base* = colonna Dipendente, livello *Manager* = colonna Manager. Vedi `docs/RUOLI.md`.
+
 | Schermata | Dipendente | Manager | Hacker |
 |---|:-:|:-:|:-:|
 | Home, annunci | ✓ | ✓ + pubblica annunci | ✓ |
@@ -46,6 +48,7 @@ Prove nel browser (solo sul PC di sviluppo, serve Playwright): `node test/browse
 | `docs/PROGETTI-E-DATI.md` | Come sono trattati i file dei progetti, permessi, decisioni aperte |
 | `docs/INTEGRAZIONE-APP.md` | Archivio unico, Verbale Studio nel portale, importazione dal vecchio programma, API di Esplora file |
 | `docs/BACKUP-E-AGGIORNAMENTI.md` | Versione unica, aggiornamento sicuro, backup automatici, ripristino |
+| `docs/RUOLI.md` | Gradi del team, Hacker nascosto, account in blocco, ospiti a tempo nei progetti, statistiche |
 | `docs/TELEFONO.md` | Usare e installare il portale dal telefono con Tailscale (HTTPS) |
 | `docs/DIPENDENZE.md` | Albero delle dipendenze, struttura delle cartelle, regole per aggiungere cose |
 | `docs/ACCESSO-RETE.md` | Come far entrare i colleghi: stessa Wi-Fi, Tailscale, cosa evitare |

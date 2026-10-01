@@ -4,15 +4,17 @@ import { h, icon, form, field, toast, toastError, avatarEl, usernamePreview } fr
 import { viewHome, viewPrograms, viewFiles, viewProfile } from './views-main.js';
 import { viewProjects, resetProjects } from './views-projects.js';
 import { viewExplorer } from './explorer.js';
+import { viewPercorso } from './percorso.js';
 import { maybeShowTour, showTour } from './tour.js';
-import { viewAccounts, viewLogs, viewIssues, viewSystem } from './views-admin.js';
+import { viewAccounts, viewLogs, viewIssues, viewSystem, viewRoles, viewTeamStats } from './views-admin.js';
 
 const root = document.getElementById('app');
 const RANK = { dipendente: 0, manager: 1, hacker: 2 };
 export const app = { state: null, user: null, can: (role) => RANK[app.user.role] >= RANK[role] };
 
 // Testo sotto il nome: la qualifica se c'e', altrimenti il ruolo.
-export const roleText = (u) => (u.title && app.state.titles[u.title]) || app.state.roles[u.role] || u.role;
+// Testo sotto il nome: il grado (Stage, Dipendente, Manager, ...); se manca, la qualifica o il ruolo.
+export const roleText = (u) => (u.grade && u.grade.name) || (u.title && app.state.titles[u.title]) || app.state.roles[u.role] || u.role;
 
 // Voci del menu. "min" e' il ruolo minimo che vede la voce; "dynamic" = sfondo dinamico in quella schermata.
 // Per aggiungere una schermata: una voce qui + una funzione view in views-*.js.
@@ -25,7 +27,11 @@ const NAV = [
   { id: 'programmi', label: 'Programmi', icon: 'apps', min: 'dipendente', view: viewPrograms },
   { id: 'file', label: 'File inviati', icon: 'upload', min: 'dipendente', view: viewFiles },
   { id: 'team', label: (u) => (u.role === 'hacker' ? 'Account' : 'Team'), icon: 'users', min: 'manager', view: viewAccounts, group: 'Organizzazione' },
-  { id: 'log', label: 'Log attività', icon: 'log', min: 'hacker', view: viewLogs, group: 'Controllo' },
+  // Statistiche di chi sta sotto nella gerarchia: compare solo a chi ha qualcuno sotto di se'.
+  { id: 'mio-team', label: 'Il mio team', icon: 'chart', min: 'dipendente', view: viewTeamStats, show: (u) => u.teamCount > 0 },
+  { id: 'ruoli', label: 'Ruoli', icon: 'shield', min: 'hacker', view: viewRoles, group: 'Controllo' },
+  { id: 'percorso', label: 'Percorso', icon: 'trophy', min: 'hacker', view: viewPercorso },
+  { id: 'log', label: 'Log attività', icon: 'log', min: 'hacker', view: viewLogs },
   { id: 'problemi', label: 'Errori e bug', icon: 'bug', min: 'hacker', view: viewIssues },
   { id: 'sistema', label: 'Sistema', icon: 'system', min: 'hacker', view: viewSystem },
 ];
@@ -293,7 +299,7 @@ let shell = null;
 let content = null;
 
 function renderShell() {
-  const items = NAV.filter((n) => app.can(n.min));
+  const items = NAV.filter((n) => app.can(n.min) && (!n.show || n.show(app.user)));
   const pinned = store('hspi.menu') === 'fisso';
   const link = (n) => h('a', {
     class: 'nav-item', href: n.href || `#/${n.id}`, 'data-id': n.id, title: typeof n.label === 'function' ? n.label(app.user) : n.label,

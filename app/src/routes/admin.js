@@ -17,7 +17,7 @@ route('GET', '/api/dashboard', {}, (ctx) => {
   const u = ctx.user;
   const rank = config.roleRank(u.role);
   const out = {
-    projects: u.role === 'hacker' ? count('SELECT COUNT(*) AS n FROM projects') : count('SELECT COUNT(*) AS n FROM project_members WHERE user_id = ?', u.id),
+    projects: u.role === 'hacker' ? count('SELECT COUNT(*) AS n FROM projects') : count('SELECT COUNT(*) AS n FROM project_members WHERE user_id = ? AND (expires_at IS NULL OR expires_at > ?)', u.id, db.now()),
     programs: count('SELECT COUNT(*) AS n FROM programs WHERE folder IS NOT NULL OR file_id IS NOT NULL'),
     myFiles: count('SELECT COUNT(*) AS n FROM files WHERE owner_id = ?', u.id),
     received: count('SELECT COUNT(*) AS n FROM files WHERE owner_id != ? AND (to_user = ? OR to_all = 1)', u.id, u.id),

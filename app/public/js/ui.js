@@ -45,6 +45,12 @@ const ICONS = {
   play: 'M8 5v14l11-7z',
   back: 'M15 6l-6 6 6 6',
   refresh: 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7',
+  chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  trophy: 'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4',
+  shield: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',
+  up: 'M6 15l6-6 6 6',
+  down: 'M6 9l6 6 6-6',
+  clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',
   search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
   more: 'M5 12h.01M12 12h.01M19 12h.01',
   move: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM10 13h6M13 10l3 3-3 3',
@@ -114,9 +120,18 @@ export function field(label, input, info) {
 // Cerchio dell'utente: immagine avatar, oppure le iniziali se non ne ha una.
 export function avatarEl(user, size) {
   const cls = 'avatar' + (size ? ` ${size}` : '');
+  // badge: un anello colorato attorno all'avatar (deciso dall'Hacker)
+  const style = user.badge ? `box-shadow:0 0 0 2px var(--bg), 0 0 0 4px ${user.badge}` : null;
   return user.avatar
-    ? h('img', { class: cls, src: user.avatar, alt: '' })
-    : h('span', { class: cls }, initials(user.name));
+    ? h('img', { class: cls, src: user.avatar, alt: '', style })
+    : h('span', { class: cls, style }, initials(user.name));
+}
+
+// Etichetta del grado con il suo colore.
+export function gradeChip(grade) {
+  if (!grade) return null;
+  return h('span', { class: 'chip grade', style: `border-color:${grade.color}80;background:${grade.color}26;color:inherit` },
+    h('i', { class: 'grade-dot', style: `background:${grade.color}` }), grade.name);
 }
 
 // Stessa regola del server: nome.cognome senza accenti, spazi o simboli.

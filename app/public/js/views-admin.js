@@ -1,17 +1,17 @@
 // Schermate riservate: Team/Account (manager e hacker), Log, Errori e bug, Sistema (hacker).
-import { get, post, patch } from './api.js';
-import { h, icon, modal, form, field, toast, toastError, fmtBytes, fmtDate, pageHead, meter, avatarEl, usernamePreview } from './ui.js';
+import { get, post, patch, del } from './api.js';
+import { h, icon, modal, confirmDialog, form, field, toast, toastError, fmtBytes, fmtDate, pageHead, meter, avatarEl, usernamePreview, gradeChip } from './ui.js';
 import { app, refresh, boot } from './app.js';
 
 const roleChip = (role) => h('span', { class: `chip ${role}` }, app.state.roles[role] || role);
-const roleSelect = (value) => h('select', { name: 'role' },
-  Object.entries(app.state.roles).map(([k, label]) => h('option', { value: k, selected: k === value }, label)));
-
+const gradeSelect = (value) => h('select', { name: 'gradeId' },
+  [...app.state.grades].reverse().map((g) => h('option', { value: String(g.id), selected: g.id === value }, g.name)));
+const INFO_GRADE = 'Il grado nella gerarchia del team (Stage, Dipendente, PM manager, Manager, Senior manager…). Decide i permessi e chi vede le statistiche di chi. I gradi si gestiscono in Ruoli.';
+const INFO_HACKER = 'Vede e gestisce tutto. È nascosto: gli altri vedono solo il grado.';
 const titleSelect = (value) => h('select', { name: 'title' },
   h('option', { value: '' }, 'Nessuna'),
   Object.entries(app.state.titles).map(([k, label]) => h('option', { value: k, selected: k === value }, label)));
 
-const INFO_ROLE = 'Decide cosa può fare nel portale. Dipendente: programmi, file e profilo. Manager: anche team, annunci e pubblicazione programmi. Hacker: tutto, compresi account, log ed errori.';
 const INFO_TITLE = 'Descrive il lavoro della persona e sblocca gli avatar riservati a quella qualifica. Non cambia i permessi.';
 
 // ---- Team / Account --------------------------------------------------------
@@ -26,23 +26,50 @@ function accountCreator() {
     field('Nome', first, 'Nome di battesimo della persona. Esempio: Mario'),
     field('Cognome', last, 'Cognome della persona. Con il nome forma il nome utente.'),
     h('div', { class: 'username-preview' }, 'Nome utente: ', preview, h('br'), 'Se esiste già, viene aggiunto un numero alla fine.'),
-    field('Ruolo', roleSelect('dipendente'), INFO_ROLE),
+    field('Grado', gradeSelect((app.state.grades.find((g) => g.name === 'Dipendente') || {}).id), INFO_GRADE),
     field('Qualifica', titleSelect(''), INFO_TITLE),
     field('Password provvisoria', h('input', { type: 'text', name: 'password', autocomplete: 'off' }), 'Almeno 8 caratteri. La comunichi tu alla persona: al primo accesso dovrà sceglierne una nuova.'),
     h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Crea account')),
-  ], async (v) => { const r = await post('/api/users', v); m.close(); toast(`Account creato: ${r.username}`); refresh(); }));
+  ], async (v) => { const r = await post('/api/users', { ...v, gradeId: Number(v.gradeId) }); m.close(); toast(`Account creato: ${r.username}`); refresh(); }));
+}
+
+// Più persone insieme: una per riga, "Nome Cognome; Grado".
+function bulkCreator() {
+  const names = app.state.grades.map((g) => g.name).join(', ');
+  const m = modal('Aggiungi il team', form([
+    field('Persone (una per riga)', h('textarea', { name: 'text', class: 'tall', placeholder: 'Mario Rossi; Manager\nGiulia Bianchi; Dipendente\nLuca Verdi; Stage' }),
+      `Scrivi nome e cognome, poi un punto e virgola e il grado. Senza grado diventa Dipendente. Gradi disponibili: ${names}.`),
+    h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Crea gli account')),
+  ], async (v) => {
+    const r = await post('/api/users/bulk', v);
+    m.close();
+    const rows = r.created.map((u) => `${u.name}\t${u.username}\t${u.password}\t${u.grade}`).join('\n');
+    modal('Account creati', h('div', {},
+      h('p', { class: 'muted', style: 'margin-bottom:10px' }, `${r.created.length} account creati. Comunica a ciascuno nome utente e password provvisoria: al primo accesso la cambieranno. Questa finestra non si potrà riaprire.`),
+      r.created.length ? h('pre', { class: 'ex-text' }, 'Nome\tNome utente\tPassword provvisoria\tGrado\n' + rows) : null,
+      r.created.length ? h('button', { class: 'btn', type: 'button', onclick: () => navigator.clipboard.writeText(rows).then(() => toast('Copiato.')) }, icon('copy'), 'Copia elenco') : null,
+      r.errors.length ? h('div', { class: 'form-error', style: 'margin-top:10px' }, r.errors.join(' · ')) : null), { wide: true });
+    refresh();
+  }), { wide: true });
 }
 
 function accountEditor(u) {
   const m = modal(`Account · ${u.username}`, h('div', {},
     form([
       field('Nome e cognome', h('input', { type: 'text', name: 'name', maxlength: '80', value: u.name }), 'Come compare nel portale. Il nome utente non cambia.'),
-      field('Ruolo', roleSelect(u.role), INFO_ROLE),
+      field('Grado', gradeSelect(u.grade && u.grade.id), INFO_GRADE),
       field('Qualifica', titleSelect(u.title), INFO_TITLE),
+      h('label', { class: 'check' }, h('input', { type: 'checkbox', name: 'hacker', checked: !!u.isHacker }), 'Hacker (nascosto)'),
+      h('label', { class: 'field' }, h('span', { class: 'field-label' }, 'Badge (anello attorno all\'avatar)'),
+        h('div', { class: 'row' }, h('input', { type: 'color', name: 'badge', value: u.badge || '#2dd4bf' }),
+          h('label', { class: 'check', style: 'margin:0' }, h('input', { type: 'checkbox', name: 'noBadge', checked: !u.badge }), 'Nessun badge'))),
       h('label', { class: 'check' }, h('input', { type: 'checkbox', name: 'active', checked: u.active }), 'Account attivo (può accedere al portale)'),
-      h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Salva')),
+      h('div', { class: 'modal-actions' },
+        u.id !== app.user.id ? h('button', { class: 'btn danger left', type: 'button', onclick: () => deletePerson(u, m) }, icon('trash'), 'Elimina persona') : null,
+        h('button', { class: 'btn primary', type: 'submit' }, 'Salva')),
     ], async (v) => {
-      await patch(`/api/users/${u.id}`, v); m.close(); toast('Account aggiornato.');
+      const body = { name: v.name, gradeId: Number(v.gradeId), title: v.title, hacker: v.hacker, active: v.active, badge: v.noBadge ? null : v.badge };
+      await patch(`/api/users/${u.id}`, body); m.close(); toast('Account aggiornato.');
       if (u.id === app.user.id) await boot(); else refresh();
     }),
     h('h3', { style: 'margin:18px 0 12px' }, 'Reimposta password'),
@@ -50,6 +77,12 @@ function accountEditor(u) {
       field('Nuova password provvisoria', h('input', { type: 'text', name: 'password', autocomplete: 'off' }), 'Almeno 8 caratteri. La persona dovrà cambiarla al prossimo accesso.'),
       h('div', { class: 'modal-actions' }, h('button', { class: 'btn', type: 'submit' }, 'Reimposta')),
     ], async (v) => { await post(`/api/users/${u.id}/reset-password`, v); m.close(); toast('Password reimpostata.'); refresh(); })));
+}
+
+function deletePerson(u, m) {
+  confirmDialog(`Eliminare ${u.name}?`, `${u.name} non potrà più entrare e sparirà da elenchi e progetti. I suoi file non vengono cancellati: la cartella personale resta sul disco (rinominata) e i file inviati restano visibili all'Hacker.`, 'Elimina persona', async () => {
+    try { await del(`/api/users/${u.id}`); m.close(); toast(`${u.name} eliminato.`); refresh(); } catch (err) { toastError(err); }
+  });
 }
 
 export async function viewAccounts(el) {
@@ -60,7 +93,7 @@ export async function viewAccounts(el) {
   };
   const rows = users.map((u) => h('tr', {},
     h('td', {}, h('div', { class: 'person' }, avatarEl(u, 'sm'), h('div', {}, u.name, h('div', { class: 'small muted' }, u.username)))),
-    h('td', {}, h('div', { class: 'row', style: 'gap:6px' }, roleChip(u.role), u.title ? h('span', { class: 'chip' }, app.state.titles[u.title]) : null)),
+    h('td', {}, h('div', { class: 'row', style: 'gap:6px' }, gradeChip(u.grade) || roleChip(u.role), u.isHacker ? h('span', { class: 'chip hacker', title: 'Hacker (lo vedi solo tu)' }, 'H') : null, u.title ? h('span', { class: 'chip' }, app.state.titles[u.title]) : null)),
     h('td', {}, u.pending ? h('span', { class: 'chip warn' }, 'In attesa di approvazione')
       : !u.active ? h('span', { class: 'chip danger' }, 'Disabilitato')
         : u.mustChange ? h('span', { class: 'chip warn' }, 'Password provvisoria') : h('span', { class: 'chip ok' }, 'Attivo')),
@@ -72,13 +105,14 @@ export async function viewAccounts(el) {
   const waiting = users.filter((u) => u.pending).length;
   el.replaceChildren(
     pageHead(admin ? 'Account' : 'Team',
-      admin ? 'Approva le registrazioni, assegna ruoli e qualifiche, disabilita chi non deve più entrare.' : 'Le persone abilitate al portale e il loro ultimo accesso.',
-      admin ? h('button', { class: 'btn primary', type: 'button', onclick: accountCreator }, icon('plus'), 'Nuovo account') : null),
+      admin ? 'Approva le registrazioni, assegna gradi e qualifiche, disabilita o elimina chi non deve più entrare.' : 'Le persone abilitate al portale e il loro ultimo accesso.',
+      admin ? h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onclick: bulkCreator }, icon('users'), 'Aggiungi il team'),
+        h('button', { class: 'btn primary', type: 'button', onclick: accountCreator }, icon('plus'), 'Nuovo account')) : null),
     h('section', { class: 'card glass' },
       waiting ? h('div', { class: 'card-head' }, h('h2', {}, 'Persone'), h('span', { class: 'chip warn' }, `${waiting} in attesa di approvazione`)) : null,
       h('div', { class: 'table-wrap' },
         h('table', {},
-          h('thead', {}, h('tr', {}, h('th', {}, 'Persona'), h('th', {}, 'Ruolo e qualifica'), h('th', {}, 'Stato'), h('th', {}, 'Ultimo accesso'), admin ? h('th', {}) : null)),
+          h('thead', {}, h('tr', {}, h('th', {}, 'Persona'), h('th', {}, 'Grado e qualifica'), h('th', {}, 'Stato'), h('th', {}, 'Ultimo accesso'), admin ? h('th', {}) : null)),
           h('tbody', {}, rows)))));
 }
 
@@ -224,4 +258,84 @@ function backupCard() {
   };
   load().catch((err) => box.replaceChildren(h('h2', {}, 'Backup'), h('p', { class: 'muted' }, err.message)));
   return box;
+}
+
+// ---- Ruoli (solo Hacker) ------------------------------------------------------
+// Gerarchia dei gradi: crea, rinomina, colore, livello di permessi, ordine, elimina; sposta le persone tra i gradi.
+export async function viewRoles(el) {
+  const d = await get('/api/grades');
+  const ordered = [...d.grades].sort((a, b) => b.position - a.position); // in alto il grado piu' alto
+  const save = async (fn, msg) => { try { await fn(); if (msg) toast(msg); await boot(); } catch (err) { toastError(err); } };
+  const move = (g, dir) => {
+    const ids = [...d.grades].sort((a, b) => a.position - b.position).map((x) => x.id);
+    const i = ids.indexOf(g.id);
+    const j = i + dir;
+    if (j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    save(() => post('/api/grades/order', { ids }), 'Ordine aggiornato.');
+  };
+  const editGrade = (g) => {
+    const m = modal(g ? `Grado · ${g.name}` : 'Nuovo grado', form([
+      field('Nome', h('input', { type: 'text', name: 'name', maxlength: '40', value: g ? g.name : '' }), 'Come compare accanto al nome delle persone. Esempio: Senior manager.'),
+      field('Colore', h('input', { type: 'color', name: 'color', value: g ? g.color : '#a89a8c' }), 'Il colore dell\'etichetta del grado.'),
+      field('Permessi', h('select', { name: 'level' }, Object.entries(d.levels).map(([k, label]) => h('option', { value: k, selected: g ? g.level === k : k === 'dipendente' }, label))),
+        'Base: progetti di cui è membro, file, verbali. Manager: in più crea progetti, sceglie le persone, aggiunge ospiti, pubblica annunci.'),
+      h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Salva')),
+    ], async (v) => {
+      if (g) await patch(`/api/grades/${g.id}`, v); else await post('/api/grades', v);
+      m.close(); toast('Grado salvato.'); await boot();
+    }));
+  };
+  const removeGrade = (g) => {
+    const others = d.grades.filter((x) => x.id !== g.id);
+    const target = h('select', {}, others.map((x) => h('option', { value: String(x.id) }, x.name)));
+    const m = modal(`Eliminare il grado ${g.name}?`, h('div', {},
+      g.people ? field(`Le ${g.people} persone con questo grado passano a`, target) : h('p', { class: 'muted' }, 'Nessuna persona ha questo grado.'),
+      h('div', { class: 'modal-actions', style: 'margin-top:16px' },
+        h('button', { class: 'btn', type: 'button', onclick: () => m.close() }, 'Annulla'),
+        h('button', { class: 'btn danger', type: 'button', onclick: async () => { m.close(); await save(() => del(`/api/grades/${g.id}?spostaIn=${target.value}`), 'Grado eliminato.'); } }, 'Elimina grado'))));
+  };
+  const personGrade = (u) => h('select', { 'aria-label': `Grado di ${u.name}`, onchange: (e) => save(() => patch(`/api/users/${u.id}`, { gradeId: Number(e.target.value) }), `${u.name}: grado aggiornato.`) },
+    ordered.map((g) => h('option', { value: String(g.id), selected: g.id === u.gradeId }, g.name)));
+
+  el.replaceChildren(
+    pageHead('Ruoli', 'La gerarchia del team. In alto il grado più alto: chi sta sopra vede le statistiche di chi sta sotto. L\'Hacker è sopra a tutti ed è nascosto.',
+      h('button', { class: 'btn primary', type: 'button', onclick: () => editGrade(null) }, icon('plus'), 'Nuovo grado')),
+    h('div', { class: 'two-col' },
+      h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Gradi')),
+        h('ul', { class: 'list' }, ordered.map((g, i) => h('li', {},
+          h('div', { class: 'grow' }, gradeChip(g), h('div', { class: 'meta', style: 'margin-top:4px' }, `${d.levels[g.level]} · ${g.people} persone`)),
+          h('button', { class: 'icon-btn', type: 'button', title: 'Sposta su', 'aria-label': `Sposta su ${g.name}`, disabled: i === 0, onclick: () => move(g, 1) }, icon('up')),
+          h('button', { class: 'icon-btn', type: 'button', title: 'Sposta giù', 'aria-label': `Sposta giù ${g.name}`, disabled: i === ordered.length - 1, onclick: () => move(g, -1) }, icon('down')),
+          h('button', { class: 'icon-btn', type: 'button', title: 'Modifica', 'aria-label': `Modifica ${g.name}`, onclick: () => editGrade(g) }, icon('edit')),
+          h('button', { class: 'icon-btn', type: 'button', title: 'Elimina', 'aria-label': `Elimina ${g.name}`, onclick: () => removeGrade(g) }, icon('trash')))))),
+      h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Persone'), h('span', { class: 'chip' }, String(d.people.length))),
+        h('ul', { class: 'list' }, d.people.map((u) => h('li', {}, avatarEl(u, 'sm'),
+          h('div', { class: 'grow' }, h('div', { class: 'title' }, u.name, u.isHacker ? h('span', { class: 'chip hacker', style: 'margin-left:6px' }, 'H') : null),
+            h('div', { class: 'meta' }, u.pending ? 'in attesa di approvazione' : u.active ? u.username : 'disabilitato')),
+          personGrade(u)))))));
+}
+
+// ---- Il mio team: statistiche di chi sta sotto nella gerarchia -------------------------
+export async function viewTeamStats(el) {
+  const d = await get('/api/team/stats');
+  const days = (iso) => Math.max(0, Math.ceil((Date.parse(iso) - Date.now()) / 86400000));
+  el.replaceChildren(
+    pageHead('Il mio team', 'Le persone sotto di te nella gerarchia: attività degli ultimi 30 giorni e accessi temporanei ai progetti.'),
+    h('section', { class: 'card glass' },
+      d.people.length ? h('div', { class: 'table-wrap' }, h('table', {},
+        h('thead', {}, h('tr', {}, h('th', {}, 'Persona'), h('th', {}, 'Grado'), h('th', { class: 'num' }, 'Accessi'), h('th', { class: 'num' }, 'File'), h('th', { class: 'num' }, 'Verbali'), h('th', {}, 'Ospite ora in'), h('th', {}, 'Ultimo accesso'))),
+        h('tbody', {}, d.people.map((u) => h('tr', {},
+          h('td', {}, h('div', { class: 'person' }, avatarEl(u, 'sm'), h('div', {}, u.name, h('div', { class: 'small muted' }, u.username)))),
+          h('td', {}, gradeChip(u.grade)),
+          h('td', { class: 'num' }, String(u.logins30)),
+          h('td', { class: 'num' }, String(u.files30)),
+          h('td', { class: 'num' }, String(u.verbali30)),
+          h('td', {}, u.guestNow.length ? u.guestNow.map((g) => h('div', { class: 'small' }, `${g.project} · ancora ${days(g.expiresAt)} gg`)) : h('span', { class: 'muted small' }, '—')),
+          h('td', { class: 'nowrap' }, fmtDate(u.lastLogin))))))) : h('div', { class: 'empty' }, 'Nessuna persona sotto di te nella gerarchia.')),
+    h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Storico accessi temporanei')),
+      d.accessLog.length ? h('ul', { class: 'list' }, d.accessLog.map((a) => h('li', {}, icon('clock'),
+        h('div', { class: 'grow' }, h('div', { class: 'title' }, `${a.person} → ${a.project}`),
+          h('div', { class: 'meta' }, `${a.days} giorni dal ${fmtDate(a.startsAt)}${a.addedBy ? ` · aggiunto da ${a.addedBy}` : ''}${a.note ? ` · ${a.note}` : ''}${a.endedAt ? ' · terminato' : Date.parse(a.expiresAt) < Date.now() ? ' · scaduto' : ' · in corso'}`)))))
+        : h('div', { class: 'empty' }, 'Nessun accesso temporaneo registrato.')));
 }
