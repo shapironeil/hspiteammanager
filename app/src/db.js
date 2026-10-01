@@ -115,6 +115,40 @@ const MIGRATIONS = [
   `
   ALTER TABLE programs ADD COLUMN url TEXT;
   `,
+  // 5 - Esplora file (indice delle cartelle vere) e Verbale Studio integrato
+  `
+  CREATE TABLE fs_index (
+    space TEXT NOT NULL,
+    path TEXT NOT NULL,
+    parent TEXT NOT NULL,
+    name TEXT NOT NULL,
+    is_dir INTEGER NOT NULL DEFAULT 0,
+    size INTEGER NOT NULL DEFAULT 0,
+    mtime TEXT,
+    updated_by INTEGER,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (space, path)
+  );
+  CREATE INDEX idx_fs_parent ON fs_index(space, parent);
+  CREATE INDEX idx_fs_name ON fs_index(name);
+  CREATE INDEX idx_fs_updated ON fs_index(updated_at);
+  CREATE TABLE verbali (
+    id TEXT PRIMARY KEY,
+    project_id INTEGER NOT NULL,
+    folder TEXT NOT NULL,
+    date TEXT NOT NULL,
+    title TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'bozza',
+    template_id TEXT,
+    cue_count INTEGER NOT NULL DEFAULT 0,
+    reviewed_count INTEGER NOT NULL DEFAULT 0,
+    pin_count INTEGER NOT NULL DEFAULT 0,
+    item_count INTEGER NOT NULL DEFAULT 0,
+    updated_by INTEGER,
+    updated_at TEXT NOT NULL
+  );
+  CREATE INDEX idx_verbali_project ON verbali(project_id, date);
+  `,
 ];
 
 function migrate() {

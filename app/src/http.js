@@ -16,6 +16,7 @@ const MIME = {
   '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
   '.webp': 'image/webp', '.avif': 'image/avif', '.jfif': 'image/jpeg', '.bmp': 'image/bmp', '.gif': 'image/gif', '.ico': 'image/x-icon', '.woff2': 'font/woff2',
+  '.webmanifest': 'application/manifest+json; charset=utf-8', '.mp3': 'audio/mpeg',
 };
 
 const SECURITY_HEADERS = {
@@ -23,7 +24,7 @@ const SECURITY_HEADERS = {
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'same-origin',
   'Content-Security-Policy':
-    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
+    "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'",
 };
 
 // Gestori extra per le web app ospitate (registrati da server.js per evitare dipendenze circolari).
@@ -97,7 +98,7 @@ function serveStatic(req, res, pathname) {
     const file = media.resolve(m[1], m[2]);
     return file ? serveFile(res, path.dirname(file), path.basename(file), 'private, max-age=3600') : false;
   }
-  if (rel === '/') rel = '/index.html';
+  if (rel.endsWith('/')) rel += 'index.html';
   return serveFile(res, config.PUBLIC_DIR, rel.slice(1));
 }
 

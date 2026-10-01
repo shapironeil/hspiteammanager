@@ -23,6 +23,7 @@ require('./src/routes/users');
 require('./src/routes/programs');
 require('./src/routes/files');
 require('./src/routes/projects');
+const explorer = require('./src/routes/explorer');
 const { accessUrls } = require('./src/routes/admin');
 
 const server = http.createServer(handle);
@@ -48,6 +49,9 @@ process.on('unhandledRejection', (err) => {
 
 security.cleanupSessions();
 setInterval(security.cleanupSessions, 3600000).unref();
+// Indice dei file per la ricerca: si aggiorna poco dopo l'avvio e poi ogni ora, senza bloccare il portale.
+setTimeout(explorer.reindexAll, 2000).unref();
+setInterval(explorer.reindexAll, 3600000).unref();
 
 server.listen(config.PORT, config.HOST, () => {
   console.log('\n  HSPI Team Manager v' + config.VERSION + ' - portale avviato\n');
