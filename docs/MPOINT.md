@@ -1,8 +1,10 @@
-# Cippi — presentazioni del team
+# MPoint (prima MPoint) — presentazioni del team
 
-Cippi è l'app del portale per le presentazioni PowerPoint, come i documenti di chiusura progetto con i flussi To-Be. Si apre dal menu del portale, da **App e programmi** oppure all'indirizzo `/cippi/`. Si può installare come app del browser o scaricare sul PC con HSPI Client (vedi `docs/APP.md`).
+> **Nomi interni.** Dal 1° ottobre 2026 l'app si chiama MPoint. Restano con il nome vecchio, perché non si vedono: la cartella del motore `app/src/cippi/`, le rotte `/api/cippi/…`, le tabelle `cippi_docs`, `cippi_points`, `cippi_glossary`, `cippi_items`, le prove `app/test/cippi.test.js` e `app/test/browser/cippi.ui.js`. La pagina è `/mpoint/`; `/mpoint/` rimanda lì.
 
-Cippi fa quattro cose:
+MPoint è l'app del portale per le presentazioni PowerPoint, come i documenti di chiusura progetto con i flussi To-Be. Si apre da **App e programmi** (non sta nel menu laterale: vive nel suo ambiente) oppure all'indirizzo `/mpoint/`; il bottone in alto a sinistra richiama il menu del portale. Si può installare come app del browser o scaricare sul PC con HSPI Client (vedi `docs/APP.md`).
+
+MPoint fa quattro cose:
 
 1. **Legge** una presentazione e ne ricostruisce la struttura.
 2. **Aiuta a rivederla**: punti chiave, domande, controlli, confronto To-Be / As-Is.
@@ -19,9 +21,9 @@ Il metodo viene da come il team studia questi documenti: dagli appunti di studio
 4. **Poi ogni processo, passo per passo**: chi fa cosa, cosa si decide, con quale sistema, dove rimanda, cosa dicono le note.
 5. **Infine il confronto To-Be / As-Is** dello stesso processo, che nel Back Up ha lo stesso codice.
 
-Questo è il **Percorso di lettura** che Cippi propone nel pannello strumenti.
+Questo è il **Percorso di lettura** che MPoint propone nel pannello strumenti.
 
-Per ogni slide Cippi riconosce:
+Per ogni slide MPoint riconosce:
 
 | Cosa | Come |
 |---|---|
@@ -109,9 +111,9 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
 - *Generale*: testo; **forma** (per esempio il rettangolo che diventa rombo: l'attività diventa una decisione); **stato** rispetto all'As-Is (nuovo, modificato, invariato: il colore segue la legenda della presentazione); protagonista. Forma, colore e testo cambiano anche nel `.pptx`.
 - *Tecnologia*: i sistemi disegnati accanto allo step (si possono rinominare) e le altre tecnologie o transazioni.
 - *Collegamenti*: da dove arriva e dove va, con le etichette Si/No e le scritte sulle frecce; si passa da uno step all'altro.
-- *Descrizione*: descrizione, input, output, responsabile, tempi, criticità, note. Restano in Cippi e valgono anche per le versioni successive.
+- *Descrizione*: descrizione, input, output, responsabile, tempi, criticità, note. Restano in MPoint e valgono anche per le versioni successive.
 - *Processo*: codice, parti, protagonisti, sistemi, novità rispetto all'As-Is, e obiettivo e descrizione del processo.
-- *Contesto*: lo sfondo generale del documento (cliente, progetto, obiettivi, perimetro). Se manca si scrive qui; Cippi ne propone uno dalle prime slide.
+- *Contesto*: lo sfondo generale del documento (cliente, progetto, obiettivi, perimetro). Se manca si scrive qui; MPoint ne propone uno dalle prime slide.
 
 ## Creare, importare, salvare
 
@@ -121,7 +123,7 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
 - **Trova e sostituisci** (barra del documento): cerca in tutte le slide, testi e tabelle comprese; con *anche piè di pagina e layout* cambia pure le scritte fisse del modello ("Kick-off Progetto X" → "SAL 1 Progetto X"). Nelle slide diventa una modifica dei testi come quelle fatte a mano; nel layout è una regola applicata all'esportazione (e azzerata da "Salva versione", che la porta nel file).
 - **Tabelle in Modifica**: le celle si correggono una per una (tabelle vere e tabelle disegnate con le forme); **Aggiungi riga** clona una riga esistente con il suo stile. La riga nuova si vede nel file esportato e dopo "Salva versione".
 - **Scarica**: il `.pptx` con le modifiche. Master, layout, tema, immagini e forme restano quelli originali; le immagini non più usate vengono tolte e i contatori aggiornati.
-- **Salva versione**: scrive il `.pptx` nella cartella del progetto. La versione precedente resta tra le versioni del file in Esplora file. Il risultato diventa la nuova base del documento e Cippi lo rianalizza.
+- **Salva versione**: scrive il `.pptx` nella cartella del progetto. La versione precedente resta tra le versioni del file in Esplora file. Il risultato diventa la nuova base del documento e MPoint lo rianalizza.
 - **Salva come modello**: conserva la "ricetta" della presentazione: le parti nell'ordine in cui si presentano, i blocchi di ogni slide e dove stanno, le sezioni, la legenda, colori e caratteri.
   - Un modello lo vedono le persone del progetto.
   - Chi l'ha creato (o un Manager del progetto) può **condividerlo con tutti**.
@@ -132,7 +134,7 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
 |---|---|
 | File di partenza di ogni versione | `data/cippi/sorgenti/<impronta>.pptx`: non si perde anche se lo si sposta in Esplora file. Entra nei backup. |
 | Analisi (rifatta da sola se cambia il modo di leggere) | `data/cippi/analisi/` |
-| Copia, versioni salvate, appunti | cartella del progetto, `Cippi/<nome documento>/` (`Appunti/` per PDF, Word, immagini). I modelli in `Cippi/Modelli/`. |
+| Copia, versioni salvate, appunti | cartella del progetto, `MPoint/<nome documento>/` (`Appunti/` per PDF, Word, immagini). I modelli in `MPoint/Modelli/`. |
 | Documenti, punti, glossario, contesto, caratteristiche | database: `cippi_docs` (con `background`), `cippi_points`, `cippi_glossary`, `cippi_items` (migrazioni 9 e 10) |
 | Documenti, punti, glossario | database: `cippi_docs`, `cippi_points`, `cippi_glossary` (migrazione 9); le regole di sostituzione nei layout in `cippi_docs.edits` (migrazione 10) |
 | Modelli noti (memoria dei file analizzati) | `docs/MEMORIA/<formato>/<template>.impronta.json`, letti dal repository accanto alla cartella `app` |
@@ -148,12 +150,12 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
   - i caratteri sono quelli del PC.
 - In Modifica si cambiano i testi delle forme, le celle delle tabelle e l'ordine delle slide. Il testo modificato prende lo stile del paragrafo che sostituisce, ma i grassetti dentro una frase vanno rifatti in PowerPoint. Le forme dei flussi si cambiano in PowerPoint.
 - Il masterplan si legge solo se è un'immagine SVG con i testi (come lo esportano PowerPoint ed Excel); un PNG resta un'immagine.
-- Gli appunti (PDF, Word) si archiviano e si aprono, ma Cippi non li legge.
+- Gli appunti (PDF, Word) si archiviano e si aprono, ma MPoint non li legge.
 
 ## Proposte per le prossime versioni
 
 - **Motore locale** (HSPI Client): anteprime identiche a PowerPoint generate sul PC dell'utente, e lettura degli appunti PDF.
-- **Da Cippi a GestioneCelle**: creare la mappa macro/processi/micro dai flussi e dalla mappa dei processi della presentazione.
+- **Da MPoint a GestioneCelle**: creare la mappa macro/processi/micro dai flussi e dalla mappa dei processi della presentazione.
 - **Verbale Studio**: i punti chiave di una presentazione come punti di partenza del verbale della riunione in cui la si presenta.
 
 ## API
@@ -200,7 +202,7 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
 | `app/src/cippi/pptx-edit.js` | celle e righe delle tabelle, trova e sostituisci, pulizia del pacchetto |
 | `app/src/cippi/pptx-new.js` | presentazione base e presentazioni di prova |
 | `app/src/routes/cippi.js` | API |
-| `app/public/cippi/` | interfaccia |
+| `app/public/mpoint/` | interfaccia |
 
 **Prove:**
 

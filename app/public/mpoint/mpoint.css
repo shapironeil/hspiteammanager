@@ -1,28 +1,28 @@
-/* Cippi: libreria e modalita' Revisione. Stile "PowerPoint futuristico": pannelli di vetro, accento arancio-rosso
+/* MPoint: libreria e modalita' Revisione. Stile "PowerPoint futuristico": pannelli di vetro, accento arancio-rosso
    di PowerPoint, elementi compatti (piu' professionale). Usa i componenti del portale (app.css) ridimensionati. */
-.cippi-body {
+.mpoint-body {
   --accent: #d35230; --accent-soft: #f08a5d; --accent-ink: #fff; --link: #ff9b72;
   --pp: #c43e1c; --pp-2: #ed6c47; --pp-glow: rgba(237, 108, 71, 0.35);
   --cp-glass: linear-gradient(160deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
   --cp-edge: rgba(255, 255, 255, 0.13);
   font-size: 13px;
 }
-:root[data-theme="light"] .cippi-body, :root[data-theme="light"] body.cippi-body {
+:root[data-theme="light"] .mpoint-body, :root[data-theme="light"] body.mpoint-body {
   --link: #b8401d; --cp-glass: linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.6)); --cp-edge: rgba(60, 30, 20, 0.12);
 }
-.cippi-body .backdrop .orb-a { background: radial-gradient(circle, rgba(237, 108, 71, 0.55), transparent 70%); }
-.cippi-body .backdrop .orb-b { background: radial-gradient(circle, rgba(196, 62, 28, 0.35), transparent 70%); }
+.mpoint-body .backdrop .orb-a { background: radial-gradient(circle, rgba(237, 108, 71, 0.55), transparent 70%); }
+.mpoint-body .backdrop .orb-b { background: radial-gradient(circle, rgba(196, 62, 28, 0.35), transparent 70%); }
 /* elementi piu' piccoli */
-.cippi-body .btn { padding: 6px 12px; font-size: 12.5px; border-radius: 9px; }
-.cippi-body .btn.sm { padding: 4px 9px; font-size: 12px; border-radius: 8px; }
-.cippi-body .btn svg { width: 13px; height: 13px; }
-.cippi-body .btn.primary { background: linear-gradient(180deg, var(--pp-2), var(--pp)); color: #fff; box-shadow: 0 4px 14px var(--pp-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
-.cippi-body .icon-btn { width: 28px; height: 28px; border-radius: 8px; }
-.cippi-body .icon-btn svg { width: 15px; height: 15px; }
-.cippi-body .icon-btn.sm { width: 24px; height: 24px; }
-.cippi-body .chip { font-size: 11px; padding: 0 7px; }
-.cippi-body .modal { font-size: 13px; }
-.cippi-body h2 { font-size: 15px; }
+.mpoint-body .btn { padding: 6px 12px; font-size: 12.5px; border-radius: 9px; }
+.mpoint-body .btn.sm { padding: 4px 9px; font-size: 12px; border-radius: 8px; }
+.mpoint-body .btn svg { width: 13px; height: 13px; }
+.mpoint-body .btn.primary { background: linear-gradient(180deg, var(--pp-2), var(--pp)); color: #fff; box-shadow: 0 4px 14px var(--pp-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+.mpoint-body .icon-btn { width: 28px; height: 28px; border-radius: 8px; }
+.mpoint-body .icon-btn svg { width: 15px; height: 15px; }
+.mpoint-body .icon-btn.sm { width: 24px; height: 24px; }
+.mpoint-body .chip { font-size: 11px; padding: 0 7px; }
+.mpoint-body .modal { font-size: 13px; }
+.mpoint-body h2 { font-size: 15px; }
 
 
 /* ---- barra in alto e libreria ---- */

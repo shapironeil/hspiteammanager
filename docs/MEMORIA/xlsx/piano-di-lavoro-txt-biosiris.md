@@ -14,7 +14,7 @@
 
 A cosa serve: mostrare al cliente e al team chi fa cosa e quando; è il "masterplan" che poi finisce anche nelle presentazioni (slide Masterplan del kick-off). È un file **disegnato, non calcolato**: non ci sono date, durate o formule che generino le barre. Le barre sono il colore di sfondo delle celle, messo a mano. Le uniche formule (54) copiano il codice e il nome del work package dalla riga sopra.
 
-Sinergia con Cippi: la slide 12 (Masterplan) del template `../pptx/kickoff-txt-biosiris.md` è la versione grafica di questo piano, con le stesse componenti e le fasi raggruppate in tre macro-fasi, anni 2026-2028.
+Sinergia con MPoint: la slide 12 (Masterplan) del template `../pptx/kickoff-txt-biosiris.md` è la versione grafica di questo piano, con le stesse componenti e le fasi raggruppate in tre macro-fasi, anni 2026-2028.
 
 **Provenienza**: agente `cool-noether`, sessione `session_016fgi7494LKk88z4etQe9Lu`, ramo `claude/cool-noether-kv3o8c`, commit `0fe8189` (prima versione in `docs/MODELLI-FILE/excel-piano-di-lavoro-gantt.md` + `modelli.json`) e `8314b5a` (spostata in `docs/MEMORIA/xlsx/` con il nome attuale e l'impronta), analisi del 01/10/2026. Scheda originale in `../_archivio/2026-10-01/cool-noether/MEMORIA/xlsx/`. Unificata il 01/10/2026 sul ramo `claude/integrazione-2026-10-01`.
 
@@ -140,7 +140,7 @@ Da realizzare (funzioni proposte dall'analisi, nell'ordine d'uso quando arriva u
 6. *Applica fasi standard* a un work package; *sposta / allunga / accorcia* barre e work package per mesi; *estendi o riduci l'orizzonte* temporale.
 7. *Esporta piano* con lo stesso aspetto (intestazione a tre righe, famiglie di colore, bordi, larghezze, zoom), oppure *salva nel file originale* conservando tutto ciò che non si tocca.
 8. *Confronta* con la versione precedente del piano (cosa è cambiato: barre, nomi, owner).
-9. *Esporta il Gantt verso Cippi* (slide Masterplan del kick-off).
+9. *Esporta il Gantt verso MPoint* (slide Masterplan del kick-off).
 
 ## 7. Stato dell'app su questo template
 

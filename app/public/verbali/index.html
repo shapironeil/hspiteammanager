@@ -22,7 +22,6 @@
         <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l1.9 6.1 6.1-2.2-3.7 5.3 5.2 3.8-6.4.2L14 22l-2-6.1L10 22l-1.1-6.3-6.4-.2 5.2-3.8L4 6.4l6.1 2.2z"/></svg>
         <span>Verbale Studio</span>
       </div>
-      <a class="btn btn-ghost btn-sm portal-back" href="/#/home" title="Torna al portale HSPI Team Manager">← Portale</a>
       <button class="icon-btn" id="sbClose" title="Chiudi menu (Ctrl+B)" aria-label="Chiudi menu">
         <svg viewBox="0 0 20 20"><path d="M12.5 5 7.5 10l5 5"/></svg>
       </button>
@@ -91,6 +90,7 @@
       <b>Stai usando l'app dall'interno dello zip:</b> quello che salvi andrebbe perso. Chiudi la finestra nera, fai tasto destro sullo zip → <i>Estrai tutto</i> e avvia <i>VerbaleStudio.exe</i> dalla cartella estratta.
     </div>
     <header class="topbar">
+      <span id="portalMenu" class="portal-menu" title="Menu del portale"></span>
       <button class="icon-btn" id="sbOpen" title="Menu (Ctrl+B)" aria-label="Apri menu">
         <svg viewBox="0 0 20 20"><path d="M3.5 5.5h13M3.5 10h13M3.5 14.5h13"/></svg>
       </button>
@@ -460,5 +460,6 @@
 <script src="templates.js"></script>
 <script src="analysis.js"></script>
 <script src="app.js"></script>
+<script type="module" src="menu-portale.js"></script>
 </body>
 </html>

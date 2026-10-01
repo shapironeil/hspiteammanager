@@ -3,6 +3,7 @@
 import { get } from '/js/api.js';
 import { h, toastError } from '/js/ui.js';
 import { viewCelle } from '/js/celle.js';
+import { portalMenu } from '/js/menu-app.js';
 
 const root = document.getElementById('app');
 // GestioneCelle ha il suo stile chiaro "Excel glass" (bianco e verde), indipendente dal tema del portale
@@ -27,11 +28,12 @@ async function start() {
   const view = h('div', { id: 'view' });
   root.replaceChildren(h('div', { class: 'main app-window' },
     h('header', { class: 'topbar' },
+      // in alto a sinistra: il menu del portale (per tornarci o cambiare schermata)
+      portalMenu(state, { appName: 'GestioneCelle', appIcon: '/catalogo/gestione-celle/icon.svg' }),
       h('a', { href: '#/celle', class: 'app-brand', onclick: () => setTimeout(show) },
         h('img', { src: '/catalogo/gestione-celle/icon.svg', alt: '' }), h('strong', {}, 'GestioneCelle'),
         me ? h('span', { class: 'chip' }, `v${me.version}`) : null),
       h('div', { class: 'spacer' }),
-      h('a', { class: 'btn sm', href: '/#/home', title: `Torna al portale ${state.portalName}` }, '← Portale'),
       h('span', { class: 'small muted only-desktop' }, state.user.name)),
     view));
   async function show() {

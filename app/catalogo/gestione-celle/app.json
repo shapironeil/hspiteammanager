@@ -1,7 +1,7 @@
 {
   "id": "gestione-celle",
   "name": "GestioneCelle",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "released": "2026-10-01",
   "summary": "Mappe dei processi (macro, processi, micro) con codici automatici, scadenze, note e il file Excel di sempre.",
   "description": "Albero e tabella delle voci con codici 1, 1.2, 1.2.3 che si aggiornano da soli, controlli dei duplicati come nel file BPB, responsabili e scadenze, eliminazione con conferme e richieste, import ed export Excel con le stesse formule.",
@@ -11,6 +11,13 @@
   "minPortal": "0.7.0",
   "engine": null,
   "novita": [
+    {
+      "version": "0.9.1",
+      "date": "2026-10-01",
+      "items": [
+        "L'app non sta più nel menu laterale del portale: si apre da App e programmi nel suo ambiente; il bottone in alto a sinistra richiama il menu del portale."
+      ]
+    },
     {
       "version": "0.9.0",
       "date": "2026-10-01",

@@ -26,7 +26,7 @@ I due modelli SAL ricevuti il 1° ottobre 2026 appartengono allo stesso contesto
 | Fattura: importo, ritenuta 0,5%, credito, IVA 22%, totale | cap. 9 | — |
 
 Conseguenza per le app: conviene un **unico oggetto "SAL"** (periodo, lotto, servizi, attività, avanzamenti, importi, deliverable,
-partecipanti) da cui Verbale Studio genera il `.docx` e Cippi la presentazione, e che si potrebbe esportare anche in Excel.
+partecipanti) da cui Verbale Studio genera il `.docx` e MPoint la presentazione, e che si potrebbe esportare anche in Excel.
 I punti chiave di un checkpoint di Verbale Studio (template di riepilogo "Stato avanzamento lavori (SAL)": sintesi, milestone,
 avanzamento, prossime attività, rischi, richieste, decisioni) sono la fonte naturale del capitolo 7 del verbale e delle slide di avanzamento.
 

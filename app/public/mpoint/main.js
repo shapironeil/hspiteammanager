@@ -1,4 +1,4 @@
-// Cippi: presentazioni del team. Libreria (documenti e modelli) e modalita' Revisione:
+// MPoint: presentazioni del team. Libreria (documenti e modelli) e modalita' Revisione:
 //   pannello STRUMENTI  (modalita', cosa mostrare, struttura per sezioni, percorso di lettura, controlli, glossario,
 //                        appunti, confronto con un modello)
 //   pannello VISIONE    (la slide disegnata, ordine di lettura e gerarchia dei blocchi, stato degli step, confronto
@@ -8,7 +8,8 @@
 // Creazione da zero, da un modello, importazione da PC o dalla cartella del progetto; esportazione in .pptx.
 import { get, post, patch, del, upload, api } from '/js/api.js';
 import { h, icon, modal, confirmDialog, form, field, toast, toastError, fmtDate } from '/js/ui.js';
-import { renderSlide } from '/cippi/render.js';
+import { renderSlide } from '/mpoint/render.js';
+import { portalMenu } from '/js/menu-app.js';
 
 const root = document.getElementById('app');
 const enc = encodeURIComponent;
@@ -22,7 +23,7 @@ const ROLE = { titolo: 'Titolo', sottotitolo: 'Sottotitolo', intestazione: 'Inte
 const POINT = { chiave: 'Punto chiave', nota: 'Nota', domanda: 'Domanda', 'da-fare': 'Da fare' };
 const STATUS = ['bozza', 'in revisione', 'approvato'];
 let state = null; // /api/state
-let me = null; // scheda Cippi nel catalogo
+let me = null; // scheda MPoint nel catalogo
 
 // ---- Tema (lo stesso del portale) ---------------------------------------------------------------
 let saved = 'dark';
@@ -38,13 +39,16 @@ function themeBtn() {
 }
 const store = (k, v) => { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); } catch { /* niente */ } return null; };
 
+// Il bottone in alto a sinistra richiama il menu del portale (per tornarci o cambiare schermata): uno solo per pagina
+let menuBtn = null;
+const menuButton = () => { if (!menuBtn) menuBtn = portalMenu(state, { appName: 'MPoint', appIcon: '/catalogo/mpoint/icon.svg' }); return menuBtn; };
 function topbar(...middle) {
   return h('header', { class: 'cp-top' },
+    menuButton(),
     h('a', { href: '#/', class: 'app-brand', title: 'Tutti i documenti' },
-      h('img', { src: '/catalogo/cippi/icon.svg', alt: '' }), h('strong', {}, 'Cippi'), me ? h('span', { class: 'chip' }, `v${me.version}`) : null),
+      h('img', { src: '/catalogo/mpoint/icon.svg', alt: '' }), h('strong', {}, 'MPoint'), me ? h('span', { class: 'chip' }, `v${me.version}`) : null),
     ...middle,
     h('div', { class: 'spacer' }),
-    h('a', { class: 'btn sm', href: '/#/home', title: `Torna al portale ${state.portalName}` }, '← Portale'),
     themeBtn());
 }
 
@@ -68,7 +72,7 @@ async function viewLibrary() {
     loadFiles();
     const bar = h('div', { class: 'small muted' });
     const m = modal('Importa una presentazione', form([
-      field('Progetto', proj, 'Il documento lo vedono le persone del progetto. Il file viene copiato nella cartella del progetto, in Cippi/.'),
+      field('Progetto', proj, 'Il documento lo vedono le persone del progetto. Il file viene copiato nella cartella del progetto, in MPoint/.'),
       field('File PowerPoint (.pptx)', file),
       field('Dalla cartella del progetto', fromProject),
       field('Nome (facoltativo)', h('input', { type: 'text', name: 'nome', maxlength: '120', placeholder: 'il nome del file' })),
@@ -136,7 +140,7 @@ async function viewLibrary() {
         x.kind === 'modello' ? h('span', { class: 'chip' }, `${x.parts} parti`) : h('span', { class: 'chip' + (x.status === 'approvato' ? ' ok' : x.status === 'in revisione' ? ' warn' : '') }, x.status),
         h('span', { class: 'chip' }, `${x.slides} slide`),
         x.counts.flusso ? h('span', { class: 'chip' }, `${x.counts.flusso} flussi`) : null,
-        x.score !== null ? h('span', { class: 'chip' + (x.score >= 85 ? ' ok' : x.score >= 60 ? ' warn' : ' danger'), title: 'Completezza e coerenza (controlli di Cippi)' }, `${x.score}%`) : null,
+        x.score !== null ? h('span', { class: 'chip' + (x.score >= 85 ? ' ok' : x.score >= 60 ? ' warn' : ' danger'), title: 'Completezza e coerenza (controlli di MPoint)' }, `${x.score}%`) : null,
         x.points ? h('span', { class: 'chip warn', title: 'Domande e cose da fare aperte' }, `${x.points} aperti`) : null,
         x.shared ? h('span', { class: 'chip ok' }, 'condiviso') : null),
       h('div', { class: 'small muted' }, `v${x.version} · aggiornato ${fmtDate(x.updatedAt)}`),
@@ -160,7 +164,7 @@ async function viewLibrary() {
   root.replaceChildren(h('div', { class: 'main app-window cp-lib' },
     topbar(),
     h('div', { class: 'page-head' },
-      h('div', {}, h('h1', {}, 'Cippi'), h('p', { class: 'muted' }, 'Le presentazioni del team: Cippi le legge (sezioni, blocchi in ordine, gerarchia, flussi, legenda, sigle), propone i punti chiave e i controlli, e le rifà da un modello.')),
+      h('div', {}, h('h1', {}, 'MPoint'), h('p', { class: 'muted' }, 'Le presentazioni del team: MPoint le legge (sezioni, blocchi in ordine, gerarchia, flussi, legenda, sigle), propone i punti chiave e i controlli, e le rifà da un modello.')),
       h('div', { class: 'row', style: 'flex-wrap:wrap' },
         h('button', { class: 'btn primary', type: 'button', onclick: importDialog }, icon('upload'), 'Importa PowerPoint'),
         h('button', { class: 'btn', type: 'button', onclick: newBlank }, icon('plus'), 'Crea da zero'),
@@ -233,7 +237,7 @@ async function viewDoc(id, startAt) {
     doc.canEdit ? h('button', { class: 'btn sm', type: 'button', title: 'Cerca un testo in tutte le slide (anche nelle tabelle e nel piè di pagina) e sostituiscilo', onclick: findReplace }, 'Trova e sostituisci') : null,
     doc.kind === 'documento' ? h('button', { class: 'btn sm', type: 'button', onclick: saveAsModel }, icon('copy'), 'Salva come modello') : null,
     doc.kind === 'modello' && doc.canManage ? h('label', { class: 'check small' }, h('input', { type: 'checkbox', checked: doc.shared, onchange: async (e) => { try { await patch(`/api/cippi/docs/${id}`, { shared: e.target.checked }); toast(e.target.checked ? 'Modello condiviso con tutto il team.' : 'Modello visibile solo nel progetto.'); } catch (err) { toastError(err); } } }), ' Condiviso con tutti') : null,
-    doc.canManage ? h('button', { class: 'icon-btn', type: 'button', title: 'Elimina', 'aria-label': 'Elimina', onclick: () => confirmDialog(`Eliminare "${doc.name}"?`, 'Il documento sparisce da Cippi. I file nella cartella del progetto restano.', 'Elimina', async () => { await del(`/api/cippi/docs/${id}`); location.hash = '#/'; }) }, icon('trash')) : null);
+    doc.canManage ? h('button', { class: 'icon-btn', type: 'button', title: 'Elimina', 'aria-label': 'Elimina', onclick: () => confirmDialog(`Eliminare "${doc.name}"?`, 'Il documento sparisce da MPoint. I file nella cartella del progetto restano.', 'Elimina', async () => { await del(`/api/cippi/docs/${id}`); location.hash = '#/'; }) }, icon('trash')) : null);
 
   async function saveVersion(e) {
     const b = e.currentTarget;
@@ -478,7 +482,7 @@ async function viewDoc(id, startAt) {
       h('div', { class: 'grow' },
         h('div', { class: 'cp-pt-meta' }, h('span', { class: 'chip' + (p.kind === 'domanda' || p.kind === 'da-fare' ? ' warn' : '') }, POINT[p.kind] || p.kind),
           R.scope === 'tutti' && p.slide ? h('button', { type: 'button', class: 'linklike small', onclick: () => { const i = posOfSrc(p.slide); if (i >= 0) go(i); } }, `slide ${posOfSrc(p.slide) + 1 || '–'}`) : null,
-          h('span', { class: 'small muted' }, p.auto ? 'proposto da Cippi' : p.author)),
+          h('span', { class: 'small muted' }, p.auto ? 'proposto da MPoint' : p.author)),
         h('div', { class: 'cp-pt-text' }, p.text)),
       doc.canEdit ? h('button', { class: 'icon-btn', type: 'button', title: 'Elimina', 'aria-label': 'Elimina', onclick: async () => { try { await del(`/api/cippi/points/${p.id}`); doc.points = doc.points.filter((y) => y !== p); redraw(); } catch (err) { toastError(err); } } }, icon('close')) : null);
     box.replaceChildren(
@@ -494,7 +498,7 @@ async function viewDoc(id, startAt) {
   const toLines = (txt) => txt.split('\n').map((l) => { const m = /^(\s*)(.*)$/.exec(l); return { text: m[2], lvl: Math.floor(m[1].replace(/\t/g, '  ').length / 2) }; });
   const fromParas = (ps) => (ps || []).map((p) => `${'  '.repeat(p.lvl || 0)}${p.text}`).join('\n');
   const legendFill = (meaning) => ((A.legend || []).find((l) => l.meaning === meaning) || {}).fill || { nuovo: '92D050', modificato: 'FFFF00' }[meaning];
-  // stato di uno step: quello scelto in Cippi (colore cambiato) oppure quello letto dalla legenda
+  // stato di uno step: quello scelto in MPoint (colore cambiato) oppure quello letto dalla legenda
   function statusOf(n) {
     const x = R.list[R.cur];
     const f = x.fill && x.fill[n.id];
@@ -635,18 +639,18 @@ async function viewDoc(id, startAt) {
         })) : h('p', { class: 'muted small' }, 'Nessun blocco di testo.'));
     }
     if (R.mode === 'modifica' && doc.canEdit) {
-      parts.push(h('label', { class: 'field' }, h('span', { class: 'field-label' }, 'Nota sulla slide (resta in Cippi)'),
+      parts.push(h('label', { class: 'field' }, h('span', { class: 'field-label' }, 'Nota sulla slide (resta in MPoint)'),
         h('textarea', { rows: '2', maxlength: '2000', oninput: (e) => { x.note = e.target.value; save(); } }, x.note || '')));
     } else if (x.note) parts.push(h('div', { class: 'cp-note' }, x.note));
     // contesto generale del documento
     parts.push(h('button', { type: 'button', class: 'cp-context', onclick: () => openSheet({ kind: 'contesto' }, 'contesto') },
       h('b', {}, 'Contesto del documento'),
-      h('span', { class: 'small muted' }, doc.background ? `${doc.background.slice(0, 140)}${doc.background.length > 140 ? '…' : ''}` : 'Non ancora scritto: aggiungilo (Cippi propone un testo dalle prime slide).')));
+      h('span', { class: 'small muted' }, doc.background ? `${doc.background.slice(0, 140)}${doc.background.length > 140 ? '…' : ''}` : 'Non ancora scritto: aggiungilo (MPoint propone un testo dalle prime slide).')));
     desc.replaceChildren(...parts);
   }
 
   // ---- FINESTRA DELLE CARATTERISTICHE (stile impostazioni, scura) ------------------------------
-  // ref: { kind: 'nodo'|'attore'|'processo'|'blocco'|'contesto', ... }. Le caratteristiche si salvano in Cippi
+  // ref: { kind: 'nodo'|'attore'|'processo'|'blocco'|'contesto', ... }. Le caratteristiche si salvano in MPoint
   // (chiave stabile tra le versioni); forma, colore e testi finiscono anche nel .pptx.
   const FIELD_LABEL = { descrizione: 'Descrizione', tecnologia: 'Tecnologia e transazioni', input: 'Input', output: 'Output', responsabile: 'Responsabile', tempi: 'Tempi', criticita: 'Criticità', obiettivo: 'Obiettivo', note: 'Note' };
   function keyOf(ref) {
@@ -701,7 +705,7 @@ async function viewDoc(id, startAt) {
       if (cur === 'contesto') {
         const ta = h('textarea', { rows: '12', disabled: ro, placeholder: 'Il contesto del documento: cliente, progetto, obiettivi, perimetro, chi è coinvolto…' }, doc.background || '');
         return [h('p', { class: 'cs-help' }, 'Lo sfondo generale di tutto il documento: vale per ogni slide e ogni processo. Si scrive una volta e si vede da ovunque.'),
-          !doc.background && doc.backgroundSuggestion && !ro ? h('div', { class: 'cs-suggest' }, h('b', {}, 'Proposta di Cippi (dalle prime slide)'), h('p', {}, doc.backgroundSuggestion.slice(0, 600) + (doc.backgroundSuggestion.length > 600 ? '…' : '')),
+          !doc.background && doc.backgroundSuggestion && !ro ? h('div', { class: 'cs-suggest' }, h('b', {}, 'Proposta di MPoint (dalle prime slide)'), h('p', {}, doc.backgroundSuggestion.slice(0, 600) + (doc.backgroundSuggestion.length > 600 ? '…' : '')),
             h('button', { type: 'button', class: 'cs-btn', onclick: () => { ta.value = doc.backgroundSuggestion; } }, 'Usa il testo proposto')) : null,
           fieldEl('Contesto', ta),
           h('div', { class: 'cs-actions' }, ro ? null : h('button', { type: 'button', class: 'cs-btn primary', onclick: async () => {
@@ -710,7 +714,7 @@ async function viewDoc(id, startAt) {
       }
       if (cur === 'descrizione') {
         const fields = ref.kind === 'processo' ? ['obiettivo', 'descrizione', 'responsabile', 'tempi', 'criticita', 'note'] : ref.kind === 'attore' ? ['descrizione', 'responsabile', 'note'] : ref.kind === 'blocco' ? ['descrizione', 'note'] : ['descrizione', 'input', 'output', 'responsabile', 'tempi', 'criticita', 'note'];
-        return [h('p', { class: 'cs-help' }, 'Le caratteristiche restano in Cippi e valgono anche per le versioni successive del documento.'), ...metaForm(keyOf(ref), fields)];
+        return [h('p', { class: 'cs-help' }, 'Le caratteristiche restano in MPoint e valgono anche per le versioni successive del documento.'), ...metaForm(keyOf(ref), fields)];
       }
       if (ref.kind === 'nodo' && cur === 'generale') {
         const st = statusOf(n) || 'invariato';
@@ -822,11 +826,11 @@ window.addEventListener('hashchange', () => {
 async function start() {
   const [st, cat] = await Promise.all([get('/api/state'), get('/api/catalogo').catch(() => ({ apps: [] }))]);
   state = st;
-  me = (cat.apps || []).find((a) => a.id === 'cippi') || null;
+  me = (cat.apps || []).find((a) => a.id === 'mpoint') || null;
   if (!state.user || state.user.mustChange) {
     root.replaceChildren(h('div', { class: 'auth' }, h('div', { class: 'card glass', style: 'max-width:420px;margin:12vh auto;text-align:center' },
-      h('img', { src: '/catalogo/cippi/icon.svg', alt: '', style: 'width:64px;height:64px' }),
-      h('h1', { style: 'margin:12px 0 6px' }, 'Cippi'),
+      h('img', { src: '/catalogo/mpoint/icon.svg', alt: '', style: 'width:64px;height:64px' }),
+      h('h1', { style: 'margin:12px 0 6px' }, 'MPoint'),
       h('p', { class: 'muted' }, 'Accedi al portale con il tuo account, poi riapri questa finestra.'),
       h('a', { class: 'btn primary', href: '/' }, 'Accedi al portale'))));
     return;

@@ -637,3 +637,7 @@ body.is-hacker.is-host .only-hacker.only-host { display: block; }
   .tpl-layout, .grid2 { grid-template-columns: 1fr; }
   .menu { right: -6px; max-width: 90vw; }
 }
+
+/* bottone del menu del portale, in alto a sinistra */
+.portal-menu { display: inline-flex; margin-right: 2px; flex: none; }
+.portal-menu:empty { display: none; }

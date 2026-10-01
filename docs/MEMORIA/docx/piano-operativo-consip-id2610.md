@@ -106,7 +106,7 @@ Funzioni esistenti nel portale (nessuna funzione strutturata per Word esiste ogg
 
 - **Esplora file**: archiviare il modello e le versioni compilate nella cartella del progetto (versioni, cestino, ricerca).
 - Verbale Studio, pulsante **Transcript** (o **Cartella di lavoro**): legge il `.docx` come testo piatto (`docxToText`); serve solo per cercare parole, non per compilare.
-- Il glossario del progetto di Cippi (**Glossario**) e di Verbale Studio possono già ospitare le sigle dei servizi (SVI, MI, CF…) e del kit (AQ, CE, ODA, PdF, PO, SAC…).
+- Il glossario del progetto di MPoint (**Glossario**) e di Verbale Studio possono già ospitare le sigle dei servizi (SVI, MI, CF…) e del kit (AQ, CE, ODA, PdF, PO, SAC…).
 
 Da realizzare (motore Word di Verbale Studio), nell'ordine d'uso quando arriva un file così:
 

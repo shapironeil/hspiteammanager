@@ -80,7 +80,7 @@ Funzioni esistenti nel portale:
 - **Esplora file**: le appendici stanno nella cartella del progetto (ricerca, anteprima, versioni).
 - Verbale Studio, **Transcript** / **Cartella di lavoro**: lettura come testo piatto, utile solo per cercare una parola.
 - La conoscenza del kit è già in `kit-aq-id2610.conoscenza.json`: oggi la si consulta a mano o con un programma.
-- **Glossario** del progetto in Cippi (e glossario della PA preimpostato) per le sigle del kit.
+- **Glossario** del progetto in MPoint (e glossario della PA preimpostato) per le sigle del kit.
 
 Da realizzare, nell'ordine d'uso quando arrivano file così:
 
@@ -108,4 +108,4 @@ Oggi: solo testo piatto (`docxToText`). Manca: lettura delle schede come dati (g
 ## 10. Fonti
 
 - `cool-noether`, sessione `session_016fgi7494LKk88z4etQe9Lu`, commit `74c4dad`: `docs/MEMORIA/docx/appendici-aq-consip-id2610.md` (sezioni 1-7 originali), `.impronta.json` (pesi, regex, stili per appendice, campi delle schede), `kit-aq-id2610.conoscenza.json` (conteggi e contenuti della conoscenza), `docs/MEMORIA/fascicolo-aq-id2610.md` (ora `../fascicoli/fascicolo-aq-id2610.md`), riga nel README.
-- `docs/INTEGRAZIONE-APP.md`, `app/src/verbali/docx.js`, `docs/CIPPI.md`: funzioni reali disponibili oggi.
+- `docs/INTEGRAZIONE-APP.md`, `app/src/verbali/docx.js`, `docs/MPOINT.md`: funzioni reali disponibili oggi.

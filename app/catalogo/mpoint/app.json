@@ -1,16 +1,24 @@
 {
-  "id": "cippi",
-  "name": "Cippi",
-  "version": "0.2.0",
+  "id": "mpoint",
+  "name": "MPoint",
+  "version": "0.3.0",
   "released": "2026-10-01",
   "summary": "Presentazioni PowerPoint del team: le legge, propone i punti chiave e i controlli, le rifà da un modello.",
   "description": "Importa un .pptx e ne ricostruisce la struttura: sezioni dall'indice, tipo di ogni slide, blocchi nell'ordine di lettura con la loro gerarchia, flussi a corsie (attori, step, decisioni Si/No, sistemi, rimandi), legenda dei colori, sigle. Modalità Revisione con pannello strumenti, visione e punti chiave; modifica dei testi e dell'ordine; modelli riutilizzabili; esportazione in .pptx con la stessa grafica. Legge le sezioni di PowerPoint, le schede con le pillole colorate, le tabelle (anche disegnate con le forme, con il controllo dei totali) e il masterplan a Gantt incollato come immagine; riconosce i modelli noti; trova e sostituisce in tutto il documento, piè di pagina compreso; modifica celle e righe delle tabelle.",
-  "web": "/cippi/",
+  "web": "/mpoint/",
   "color": "#5b4fd6",
   "icon": "icon.svg",
   "minPortal": "0.8.0",
   "engine": null,
   "novita": [
+    {
+      "version": "0.3.0",
+      "date": "2026-10-01",
+      "items": [
+        "Cippi si chiama ora MPoint: pagina /mpoint/ (i vecchi collegamenti /cippi/ portano qui).",
+        "L'app non sta più nel menu laterale del portale: si apre da App e programmi nel suo ambiente; il bottone in alto a sinistra richiama il menu del portale per tornarci o cambiare schermata."
+      ]
+    },
     {
       "version": "0.2.0",
       "date": "2026-10-01",

@@ -1,5 +1,5 @@
 {
-  "version": "0.10.1",
+  "version": "0.11.0",
   "channel": "beta",
   "released": "2026-10-01",
   "note": "Unica fonte della versione: la leggono il portale (host), gli script di aggiornamento e il programma client. Si cambia solo qui."

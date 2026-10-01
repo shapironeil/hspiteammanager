@@ -34,10 +34,13 @@ const VTT = 'WEBVTT\n\n00:00:01.000 --> 00:00:04.000\n<v Anna Rossi>Abbiamo comp
       await page.fill('input[name=password]', 'definitiva-456');
       await page.click('button[type=submit]');
       await page.waitForSelector('.shell');
-      ok(await page.locator('a.nav-item[href="/verbali/"]').count() === 1, 'voce Verbale Studio nel menu');
+      ok(await page.locator('a.nav-item[href="/verbali/"]').count() === 0, 'Verbale Studio non sta nel menu laterale: si apre da App e programmi');
       await page.goto(portal.base + '/verbali/');
       await page.waitForFunction(() => document.querySelector('#projectSelect option'));
       ok((await page.locator('#projectSelect option').allTextContents()).join() === 'ATAC', 'vede il progetto ATAC del portale');
+      // il bottone in alto a sinistra richiama il menu del portale (compare solo a chi ha fatto l'accesso)
+      await page.waitForSelector('.portal-menu .am-btn', { timeout: 15000 });
+      ok(true, 'bottone del menu del portale in alto a sinistra in Verbale Studio');
       if (mobile) await page.click('#sbOpen').catch(() => {});
       await page.click('#newCheckpointBtn');
       await page.fill('#dlgBody [name=title]', `Checkpoint ${label}`);

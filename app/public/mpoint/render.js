@@ -1,4 +1,4 @@
-// Cippi: disegno di una slide nel browser a partire dalle forme lette dal .pptx (posizioni in % della slide).
+// MPoint: disegno di una slide nel browser a partire dalle forme lette dal .pptx (posizioni in % della slide).
 // Non e' PowerPoint: e' un'anteprima fedele nella disposizione, nei colori e nei testi, per rivedere senza aprire
 // il file. Le forme diventano SVG (geometria) + testo HTML; i connettori sono linee con la freccia.
 const SVG = 'http://www.w3.org/2000/svg';

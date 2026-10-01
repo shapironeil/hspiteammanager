@@ -8,6 +8,7 @@ import { viewPercorso } from './percorso.js';
 import { viewCelle } from './celle.js';
 import { maybeShowTour, showTour } from './tour.js';
 import { viewAccounts, viewLogs, viewIssues, viewSystem, viewRoles, viewTeamStats } from './views-admin.js';
+import { NAV_PORTALE, APP_ROUTES, PROFILE as PROFILE_META } from './nav.js';
 
 const root = document.getElementById('app');
 const RANK = { dipendente: 0, manager: 1, hacker: 2 };
@@ -17,29 +18,16 @@ export const app = { state: null, user: null, can: (role) => RANK[app.user.role]
 // Testo sotto il nome: il grado (Stage, Dipendente, Manager, ...); se manca, la qualifica o il ruolo.
 export const roleText = (u) => (u.grade && u.grade.name) || (u.title && app.state.titles[u.title]) || app.state.roles[u.role] || u.role;
 
-// Voci del menu. "min" e' il ruolo minimo che vede la voce; "dynamic" = sfondo dinamico in quella schermata.
-// Per aggiungere una schermata: una voce qui + una funzione view in views-*.js.
-const NAV = [
-  { id: 'home', label: 'Home', icon: 'home', min: 'dipendente', view: viewHome, dynamic: true },
-  { id: 'progetti', label: 'Progetti', icon: 'briefcase', min: 'dipendente', view: viewProjects, reset: resetProjects },
-  { id: 'esplora', label: 'Esplora file', icon: 'folder', min: 'dipendente', view: viewExplorer },
-  { id: 'celle', label: 'GestioneCelle', icon: 'tree', min: 'dipendente', view: viewCelle },
-  // Verbale Studio e' un'app a se' (pagina /verbali/), con gli stessi account e gli stessi progetti.
-  { id: 'verbali', label: 'Verbale Studio', icon: 'note', min: 'dipendente', href: '/verbali/' },
-  // Cippi: presentazioni PowerPoint (lettura, revisione, modelli). App a se' (pagina /cippi/).
-  { id: 'cippi', label: 'Cippi', icon: 'image', min: 'dipendente', href: '/cippi/' },
-  { id: 'programmi', label: 'App e programmi', icon: 'apps', min: 'dipendente', view: viewPrograms },
-  { id: 'file', label: 'File inviati', icon: 'upload', min: 'dipendente', view: viewFiles },
-  { id: 'team', label: (u) => (u.role === 'hacker' ? 'Account' : 'Team'), icon: 'users', min: 'manager', view: viewAccounts, group: 'Organizzazione' },
-  // Statistiche di chi sta sotto nella gerarchia: compare solo a chi ha qualcuno sotto di se'.
-  { id: 'mio-team', label: 'Il mio team', icon: 'chart', min: 'dipendente', view: viewTeamStats, show: (u) => u.teamCount > 0 },
-  { id: 'ruoli', label: 'Ruoli', icon: 'shield', min: 'hacker', view: viewRoles, group: 'Controllo' },
-  { id: 'percorso', label: 'Percorso', icon: 'trophy', min: 'hacker', view: viewPercorso },
-  { id: 'log', label: 'Log attività', icon: 'log', min: 'hacker', view: viewLogs },
-  { id: 'problemi', label: 'Errori e bug', icon: 'bug', min: 'hacker', view: viewIssues },
-  { id: 'sistema', label: 'Sistema', icon: 'system', min: 'hacker', view: viewSystem },
-];
-const PROFILE = { id: 'profilo', label: 'Profilo', icon: 'user', min: 'dipendente', view: viewProfile };
+// Voci del menu: stanno in nav.js (condivise con il menu richiamabile dalle app). Qui si abbinano alle funzioni
+// che disegnano le schermate. Per aggiungere una schermata: una voce in nav.js + una funzione view in views-*.js.
+// Le app (GestioneCelle, Verbale Studio, MPoint) hanno le loro rotte ma non compaiono nel menu laterale:
+// si aprono da "App e programmi" nel loro ambiente.
+const VIEWS = {
+  home: viewHome, progetti: viewProjects, esplora: viewExplorer, celle: viewCelle, programmi: viewPrograms, file: viewFiles,
+  team: viewAccounts, 'mio-team': viewTeamStats, ruoli: viewRoles, percorso: viewPercorso, log: viewLogs, problemi: viewIssues, sistema: viewSystem,
+};
+const NAV = [...NAV_PORTALE, ...APP_ROUTES].map((n) => ({ ...n, ...(VIEWS[n.id] ? { view: VIEWS[n.id] } : {}), ...(n.id === 'progetti' ? { reset: resetProjects } : {}) }));
+const PROFILE = { ...PROFILE_META, view: viewProfile };
 
 function store(key, value) {
   try {
@@ -303,7 +291,8 @@ let shell = null;
 let content = null;
 
 function renderShell() {
-  const items = NAV.filter((n) => app.can(n.min) && (!n.show || n.show(app.user)));
+  // le app non stanno nel menu laterale (app: true): si aprono da "App e programmi"
+  const items = NAV.filter((n) => !n.app && app.can(n.min) && (!n.show || n.show(app.user)));
   const pinned = store('hspi.menu') === 'fisso';
   const link = (n) => h('a', {
     class: 'nav-item', href: n.href || `#/${n.id}`, 'data-id': n.id, title: typeof n.label === 'function' ? n.label(app.user) : n.label,

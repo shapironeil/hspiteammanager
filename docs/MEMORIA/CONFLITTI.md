@@ -28,7 +28,7 @@ Nell'unificazione i nomi sono rimasti `sal-presentazione` e `sal-verbale` (sono 
 
 ### 4. Metodo di riconoscimento delle presentazioni (.pptx)
 
-- **admiring-hopper** (`README.md` e `app/src/cippi/impronta.js`, commit `fff10ab`): un file corrisponde se coincidono tema (colori e caratteri), layout principale e piè di pagina; contano anche sezioni native, nomi di forme non di serie e azienda. È il metodo **realizzato** in Cippi 0.2.0.
+- **admiring-hopper** (`README.md` e `app/src/cippi/impronta.js`, commit `fff10ab`): un file corrisponde se coincidono tema (colori e caratteri), layout principale e piè di pagina; contano anche sezioni native, nomi di forme non di serie e azienda. È il metodo **realizzato** in MPoint 0.2.0.
 - **awesome-cray** (`docs/memoria/README.md` e scheda `sal-presentazione`): confrontare caratteri **usati nelle slide**, colori del brand, **immagini per dimensione**, nomi dei layout e **layout con testo fisso** ("R-CAP.AC"), titoli di capitolo.
 
 Per il template SAL il metodo realizzato è debole: il tema è quello standard di Office 2023 (accent1 `156082`), il layout principale è "Titolo e contenuto" e non c'è piè di pagina, quindi molte presentazioni italiane con tema standard possono "somigliare" al SAL e il SAL vero può non essere riconosciuto. L'impronta `pptx/sal-presentazione.impronta.json` contiene i dati di entrambi i metodi. Da decidere: estendere il confronto di `impronta.js` (immagini per dimensione, testi fissi dei layout, caratteri usati) e con quali pesi. È una modifica al codice: non fatta nell'unificazione.
@@ -47,6 +47,6 @@ Per il template SAL il metodo realizzato è debole: il tema è quello standard d
 
 Il fascicolo SAL resta un file a sé (`fascicoli/fascicolo-sal.md`) e il fascicolo AQ lo cita "per ipotesi" (voce 1). Se il proprietario conferma che il SAL è dello stesso contratto, i due file si possono unire.
 
-### 8. Stato di Cippi nelle schede SAL
+### 8. Stato di MPoint nelle schede SAL
 
-Le schede di awesome-cray sono state scritte con Cippi 0.1.0 (ore 14:06); Cippi 0.2.0 (admiring-hopper, ore 14:36) ha aggiunto tabelle, trova e sostituisci anche nei layout, sezioni native e modelli noti. La lista "mancanti" del SAL è riportata com'era, con la nota che va rimisurata: non è una contraddizione, ma una misura vecchia di mezz'ora.
+Le schede di awesome-cray sono state scritte con MPoint 0.1.0 (ore 14:06); MPoint 0.2.0 (admiring-hopper, ore 14:36) ha aggiunto tabelle, trova e sostituisci anche nei layout, sezioni native e modelli noti. La lista "mancanti" del SAL è riportata com'era, con la nota che va rimisurata: non è una contraddizione, ma una misura vecchia di mezz'ora.

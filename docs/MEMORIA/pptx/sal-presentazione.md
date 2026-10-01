@@ -7,10 +7,10 @@
 | Nome del template | `sal-presentazione` (nome dato dall'analisi originale; fuori dalla convenzione `<tipo>-<fornitore>-<progetto>`: vedi `../CONFLITTI.md`, voce 3) |
 | Formato | `.pptx` (PowerPoint, 16:9 "Widescreen") |
 | Tipo di documento | scheletro di presentazione per gli incontri di **stato avanzamento lavori (SAL)** |
-| App di riferimento | **Cippi** |
+| App di riferimento | **MPoint** |
 | Fornitore / progetto | un RTI (raggruppamento di imprese, non nominato nel file) per conto di un'Amministrazione regionale; progetto **R-CAP.AC**, finanziato dal PN "Capacità per la Coesione 2021-2027" (Priorità 1 – Azione 1.1.4). Fa coppia con il verbale `../docx/sal-verbale.md` (fascicolo SAL) |
 | File visti | `2026.02.23_Template_Presentazione_Sal_V1.00.pptx`: 183 KB, 5 slide, 13 parole; creato il 05/05/2025, ultima modifica 08/04/2026. Nessun contenuto reale: è lo scheletro |
-| Analizzato | 01/10/2026 con Cippi 0.1.0 (portale 0.8.1) |
+| Analizzato | 01/10/2026 con MPoint 0.1.0 (portale 0.8.1) |
 
 Cinque slide quasi vuote ("Titolo", "Agenda", "Testo"): il valore sta nei **master e layout** con il brand (loghi, stemma, colori, carattere) e nella struttura attesa: copertina → agenda numerata → slide di contenuto → slide con immagine.
 
@@ -33,7 +33,7 @@ Impronta leggibile da un programma: `sal-presentazione.impronta.json` (creata ne
 
 Formato: 12192000 × 6858000 EMU (33,87 × 19,05 cm).
 
-Attenzione: il confronto di Cippi (`impronta.js`) guarda colori e caratteri del tema, layout principale, piè di pagina, sezioni native, nomi di forme e azienda. Per questo template il tema è quello standard di Office e non c'è piè di pagina: i segnali forti (immagini per dimensione, layout con testo fisso, carattere usato nelle slide) oggi non vengono confrontati. Vedi `../CONFLITTI.md`, voce 4.
+Attenzione: il confronto di MPoint (`impronta.js`) guarda colori e caratteri del tema, layout principale, piè di pagina, sezioni native, nomi di forme e azienda. Per questo template il tema è quello standard di Office e non c'è piè di pagina: i segnali forti (immagini per dimensione, layout con testo fisso, carattere usato nelle slide) oggi non vengono confrontati. Vedi `../CONFLITTI.md`, voce 4.
 
 ## 3. Mappa degli oggetti
 
@@ -71,16 +71,16 @@ Segnaposto del file: "Titolo", "Agenda", "Titolo 1 / Titolo 2", "Testo"; i segna
 ## 5. Regole di modifica, aggiunta ed eliminazione
 
 - **Aggiungere una slide di contenuto**: duplicare la slide 3 ("Titolo e contenuto"); per una slide con immagine duplicare la 4 o la 5.
-- **Agenda**: aggiungere una voce all'elenco numerato (la numerazione è automatica) e, nelle agende ripetute, spostare il rettangolo-indicatore sulla voce corrente. Agenda e titolo della slide 2 non sono segnaposto: Cippi li trova con la regola "testo più grande in alto".
+- **Agenda**: aggiungere una voce all'elenco numerato (la numerazione è automatica) e, nelle agende ripetute, spostare il rettangolo-indicatore sulla voce corrente. Agenda e titolo della slide 2 non sono segnaposto: MPoint li trova con la regola "testo più grande in alto".
 - **Data della copertina**: è testo fisso in un segnaposto `dt` con idx orfano; va cambiata a mano (o con Trova e sostituisci: da verificare, vedi sezione 8).
 - **Layout**: una funzione di pulizia dei 18 layout non usati deve conservare i layout 1, 13, 14, 16.
-- `ppt/changesInfos/` è presente: l'esportazione di Cippi lo toglie già.
+- `ppt/changesInfos/` è presente: l'esportazione di MPoint lo toglie già.
 - L'immagine di sfondo invisibile (alpha 0) va ignorata nell'anteprima.
-- Master, layout, tema e immagini restano quelli originali nel file esportato da Cippi.
+- Master, layout, tema e immagini restano quelli originali nel file esportato da MPoint.
 
 ## 6. Funzioni consigliate dell'app
 
-Funzioni di Cippi esistenti (nomi come in `docs/CIPPI.md`; l'analisi originale le chiamava `importa`, `analisi`, `salva-come-modello`, `modifica-testi`, `duplica-slide`, `esporta`):
+Funzioni di MPoint esistenti (nomi come in `docs/MPOINT.md`; l'analisi originale le chiamava `importa`, `analisi`, `salva-come-modello`, `modifica-testi`, `duplica-slide`, `esporta`):
 
 - **Importa PowerPoint** → modalità **Revisione**: tipi di slide (copertina, indice, testo, immagine), struttura, **Controlli**.
 - **Salva come modello** per la ricetta (parti nell'ordine, blocchi, sezioni, colori e caratteri); poi **Nuovo da modello** per il SAL successivo.
@@ -94,7 +94,7 @@ Da realizzare (dalla proposta del 1° ottobre 2026 dell'analisi originale; nomi 
 - slide nuove da un layout del file (`slide-da-layout`);
 - agenda con numerazione e indicatore della sezione automatici (`agenda-automatica`);
 - immagini dentro i segnaposto immagine (`immagine-nel-segnaposto`);
-- tabelle (`tabelle`): il file non ne ha; Cippi 0.2.0 legge e modifica le tabelle esistenti ma non ne crea di nuove;
+- tabelle (`tabelle`): il file non ne ha; MPoint 0.2.0 legge e modifica le tabelle esistenti ma non ne crea di nuove;
 - generazione del SAL da dati (`genera-sal-da-dati`): lo stesso oggetto "SAL" del verbale Word (vedi `../fascicoli/fascicolo-sal.md`);
 - aggiornamento della data in copertina (`data-copertina`);
 - pulizia dei layout non usati (`pulizia-layout`) conservando 1, 13, 14, 16;
@@ -102,21 +102,21 @@ Da realizzare (dalla proposta del 1° ottobre 2026 dell'analisi originale; nomi 
 
 ## 7. Stato dell'app su questo template
 
-Misurato con **Cippi 0.1.0** (portale 0.8.1), senza punteggio riportato:
+Misurato con **MPoint 0.1.0** (portale 0.8.1), senza punteggio riportato:
 
-- Cippi trova agenda e titolo della slide 2 con la regola "testo più grande in alto" (non sono segnaposto).
+- MPoint trova agenda e titolo della slide 2 con la regola "testo più grande in alto" (non sono segnaposto).
 - L'esportazione toglie già `ppt/changesInfos/`.
 - L'immagine di sfondo invisibile (alpha 0) compare nell'anteprima e va ignorata.
 - Mancano le funzioni elencate in "Da realizzare" nella sezione 6.
 
-Dopo l'analisi, lo stesso giorno, è uscito **Cippi 0.2.0** (ramo `claude/admiring-hopper-dc5bp0`): sezioni native, tabelle vere e disegnate con celle e **Aggiungi riga**, **Trova e sostituisci** anche nei layout, pannello **Documento** con i modelli noti. Su questo file non è stato rimisurato: la lista "mancanti" va riverificata (in particolare `tabelle` e `data-copertina`).
+Dopo l'analisi, lo stesso giorno, è uscito **MPoint 0.2.0** (ramo `claude/admiring-hopper-dc5bp0`): sezioni native, tabelle vere e disegnate con celle e **Aggiungi riga**, **Trova e sostituisci** anche nei layout, pannello **Documento** con i modelli noti. Su questo file non è stato rimisurato: la lista "mancanti" va riverificata (in particolare `tabelle` e `data-copertina`).
 
 Riconoscimento con l'impronta: non misurato; con il confronto attuale il template è debole (vedi sezione 2).
 
 ## 8. Dubbi aperti
 
 - Quale dei due caratteri del tema è il "maggiore": la scheda originale dice solo "Aptos / Aptos Display"; nell'impronta è scritto l'ordine standard di Office 2023 (titoli Aptos Display, corpo Aptos), da verificare sul file.
-- Il tema è quello standard di Office 2023: con il confronto attuale di Cippi qualunque presentazione italiana con tema standard e layout "Titolo e contenuto" può somigliare a questo template. Serve pesare immagini, layout con testo fisso e carattere usato (`../CONFLITTI.md`, voce 4).
+- Il tema è quello standard di Office 2023: con il confronto attuale di MPoint qualunque presentazione italiana con tema standard e layout "Titolo e contenuto" può somigliare a questo template. Serve pesare immagini, layout con testo fisso e carattere usato (`../CONFLITTI.md`, voce 4).
 - **Trova e sostituisci** cambia anche il testo fisso della data nel segnaposto `dt` orfano? Da provare.
 - Questo SAL appartiene allo stesso Accordo Quadro Consip ID 2610 degli altri documenti in memoria? L'analisi originale non lo dice; il fascicolo AQ lo dà per scontato (`../CONFLITTI.md`, voce 1).
 - La proposta del 1° ottobre 2026 citata dall'analisi originale non è nel repository.
@@ -124,15 +124,15 @@ Riconoscimento con l'impronta: non misurato; con il confronto attuale il templat
 
 ## 9. Da classificare
 
-- Regole generali della memoria scritte dall'analisi originale (`docs/memoria/README.md`): niente dati aziendali nelle schede (struttura e convenzioni, mai i contenuti dei documenti compilati; i nomi delle persone trovati nei file non vengono riportati; i nomi di programma o di ente servono solo a riconoscere il modello); i file originali non stanno nel repository; ogni scheda ha la stessa forma (sintesi, impronta, struttura, stili, convenzioni, quirk, funzioni dell'app da usare, cose mancanti); `modelli.json` ripete le impronte in forma leggibile da un programma per il riconoscimento automatico dentro Cippi e Verbale Studio. Ora valgono le regole di `../README.md`.
+- Regole generali della memoria scritte dall'analisi originale (`docs/memoria/README.md`): niente dati aziendali nelle schede (struttura e convenzioni, mai i contenuti dei documenti compilati; i nomi delle persone trovati nei file non vengono riportati; i nomi di programma o di ente servono solo a riconoscere il modello); i file originali non stanno nel repository; ogni scheda ha la stessa forma (sintesi, impronta, struttura, stili, convenzioni, quirk, funzioni dell'app da usare, cose mancanti); `modelli.json` ripete le impronte in forma leggibile da un programma per il riconoscimento automatico dentro MPoint e Verbale Studio. Ora valgono le regole di `../README.md`.
 - Come riconoscere un file nuovo (dall'analisi originale): 1) guardare il nome del file; 2) confrontare l'impronta: caratteri, colori, immagini (dimensioni), nomi dei layout, titoli di capitolo; 3) se corrisponde applicare le funzioni della scheda, se corrisponde in parte segnalare le differenze invece di tirare a indovinare.
 - Voce di `modelli.json`: `"fascicolo": "sal"`; `"scheda": "docs/memoria/modelli/sal-presentazione.md"` (percorso vecchio, conservato nell'impronta sotto `provenienza`).
 - Nota del file `modelli.json`: "Impronte dei modelli di file conosciuti. Nessun dato aziendale: solo struttura, stili e segni di riconoscimento."
 
 ## 10. Fonti
 
-- `awesome-cray`, sessione `session_01WbrSz86BeYisrNNoJc7Eh5`, commit `51e11c0`, `docs/memoria/modelli/sal-presentazione.md`: sintesi, impronta, struttura delle slide, master, convenzioni, quirk, funzioni di Cippi da usare, cosa manca.
+- `awesome-cray`, sessione `session_01WbrSz86BeYisrNNoJc7Eh5`, commit `51e11c0`, `docs/memoria/modelli/sal-presentazione.md`: sintesi, impronta, struttura delle slide, master, convenzioni, quirk, funzioni di MPoint da usare, cosa manca.
 - `awesome-cray`, commit `51e11c0`, `docs/memoria/modelli.json` (voce `sal-presentazione`): regex del nome del file, formato, master/layout, layout con testo, carattere, colori, immagini con dimensioni, slide tipiche, elenchi `funzioni` e `mancanti`.
 - `awesome-cray`, commit `51e11c0`, `docs/memoria/README.md` e `docs/memoria/fascicolo-sal.md`: regole della memoria, convenzione del nome del file, contesto comune (progetto, programma, RTI, identità visiva).
-- `docs/CIPPI.md` e `docs/REPORT/2026-10-01-cippi-kickoff.md` (admiring-hopper, `fff10ab`): nomi reali delle funzioni e novità di Cippi 0.2.0; `app/src/cippi/impronta.js`: cosa confronta il riconoscimento.
-- Versioni al momento dell'analisi (Cippi 0.1.0, portale 0.8.1): dal commit `8b07add`, base del ramo `claude/awesome-cray-8lgn1k`.
+- `docs/MPOINT.md` e `docs/REPORT/2026-10-01-cippi-kickoff.md` (admiring-hopper, `fff10ab`): nomi reali delle funzioni e novità di MPoint 0.2.0; `app/src/cippi/impronta.js`: cosa confronta il riconoscimento.
+- Versioni al momento dell'analisi (MPoint 0.1.0, portale 0.8.1): dal commit `8b07add`, base del ramo `claude/awesome-cray-8lgn1k`.

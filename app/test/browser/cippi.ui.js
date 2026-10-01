@@ -1,5 +1,5 @@
 'use strict';
-// Prova nel browser di Cippi (desktop e telefono): importazione, modalita' Revisione con i tre pannelli, ordine di
+// Prova nel browser di MPoint (prima Cippi) (desktop e telefono): importazione, modalita' Revisione con i tre pannelli, ordine di
 // lettura, confronto To-Be/As-Is, punti chiave, modifica di un testo, salvataggio della versione, modello e nuovo
 // documento da modello, crea da zero.
 const path = require('node:path');
@@ -32,11 +32,22 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await page.fill('input[name=password]', 'password-sicura-1');
     await page.click('button[type=submit]');
     await page.waitForSelector('.shell');
-    ok(await page.locator('.nav-item[data-id="cippi"]').count() === 1, 'Cippi nel menu del portale');
+    ok(await page.locator('.nav-item[data-id="mpoint"]').count() === 0 && await page.locator('.nav-item[data-id="celle"]').count() === 0, 'le app non stanno nel menu laterale del portale');
+    await page.goto(portal.base + '/#/programmi');
+    // la schermata carica il catalogo in modo asincrono: si aspetta che compaia la scheda dell'app
+    await page.waitForFunction(() => /MPoint/.test(document.querySelector('#view')?.textContent || ''));
+    ok(/MPoint/.test(await page.textContent('#view')), 'MPoint si apre da App e programmi');
 
     // importazione
     await page.goto(portal.base + '/cippi/');
     await page.waitForSelector('button:has-text("Importa PowerPoint")');
+    ok(/\/mpoint\//.test(page.url()), 'il vecchio indirizzo /cippi/ porta a /mpoint/');
+    // il bottone in alto a sinistra richiama il menu del portale
+    await page.click('.cp-top .am-btn');
+    await page.waitForSelector('.am-drawer.open a[href="/#/home"]');
+    ok(await page.locator('.am-drawer.open .am-item[data-id="programmi"]').count() === 1, 'menu del portale richiamato dall\'app, con App e programmi');
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('.am-drawer:not(.open)');
     await page.click('button:has-text("Importa PowerPoint")');
     await page.setInputFiles('.modal input[type=file]', file);
     await page.click('.modal button:has-text("Importa e analizza")');
@@ -50,7 +61,7 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await page.waitForSelector('.cp-view .cp-block .cp-badge');
     ok(await page.locator('.cp-view .cp-block').count() >= 3, 'blocchi numerati nell\'ordine di lettura');
     ok(await page.locator('.cp-blocks .cp-blk').count() >= 3, 'struttura della slide con i livelli');
-    await page.screenshot({ path: path.join(OUT, 'cippi-revisione.png') });
+    await page.screenshot({ path: path.join(OUT, 'mpoint-revisione.png') });
 
     // flusso: stati, dettaglio, confronto con l'As-Is
     await page.click('.cp-struct-item:has-text("Processi To Be")');
@@ -72,14 +83,14 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await page.click('.cs-btn:has-text("Usa il testo proposto")');
     await page.click('.cs-btn.primary:has-text("Salva")');
     await page.waitForSelector('.toast:has-text("Contesto salvato")');
-    await page.screenshot({ path: path.join(OUT, 'cippi-caratteristiche.png') });
+    await page.screenshot({ path: path.join(OUT, 'mpoint-caratteristiche.png') });
     await page.keyboard.press('Escape');
     await page.waitForSelector('text=Modifiche salvate');
     ok(await page.locator('.cp-step:has-text("4. Revisione del budget") .cp-shape-ico:has-text("◇")').count() === 1, 'finestra delle caratteristiche: forma cambiata (rettangolo → rombo), descrizione e contesto salvati');
     await page.click('button:has-text("Confronta con l\'As-Is")');
     await page.waitForSelector('.cp-stage.two .cp-frame:nth-child(2) .cp-slide');
     ok(/Approvazione del responsabile/.test(await page.textContent('.cp-diff')), 'confronto To-Be / As-Is affiancato con le differenze');
-    await page.screenshot({ path: path.join(OUT, 'cippi-confronto.png'), fullPage: true });
+    await page.screenshot({ path: path.join(OUT, 'mpoint-confronto.png'), fullPage: true });
 
     // punti chiave: una domanda
     await page.fill('.cp-add input[name=text]', 'Chi approva sopra soglia?');
@@ -96,7 +107,7 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await page.waitForSelector('.cp-view .cp-p:has-text("Obiettivi rivisti")');
     await page.waitForSelector('text=Modifiche salvate');
     ok(true, 'testo modificato: anteprima aggiornata e salvataggio automatico');
-    await page.screenshot({ path: path.join(OUT, 'cippi-modifica.png') });
+    await page.screenshot({ path: path.join(OUT, 'mpoint-modifica.png') });
     await page.click('button:has-text("Salva versione")');
     await page.waitForSelector('.cp-docname:has-text("v2")');
     ok(await page.locator('.cp-struct-item:has-text("Obiettivi rivisti")').count() === 1, 'versione 2 salvata e rianalizzata');
@@ -106,7 +117,7 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await page.fill('.modal input[name=name]', 'Chiusura progetto');
     await page.click('.modal button:has-text("Salva modello")');
     await page.waitForSelector('.cp-actions .chip:has-text("Modello")');
-    await page.goto(portal.base + '/cippi/#/');
+    await page.goto(portal.base + '/mpoint/#/');
     await page.reload();
     await page.waitForSelector('button:has-text("Nuovo da modello")');
     await page.click('button:has-text("Nuovo da modello")');
@@ -118,22 +129,22 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     ok(true, 'documento nuovo creato dal modello');
 
     // crea da zero
-    await page.goto(portal.base + '/cippi/#/');
+    await page.goto(portal.base + '/mpoint/#/');
     await page.reload();
     await page.click('button:has-text("Crea da zero")');
     await page.fill('.modal input[name=name]', 'Da zero');
     await page.click('.modal button:has-text("Crea")');
     await page.waitForSelector('.cp-docname:has-text("Da zero")');
     ok(await page.locator('.cp-struct-item').count() === 7, 'presentazione base con la struttura tipica');
-    await page.goto(portal.base + '/cippi/#/');
+    await page.goto(portal.base + '/mpoint/#/');
     await page.reload();
     await page.waitForSelector('.cp-card .cp-thumb .cp-slide');
-    await page.screenshot({ path: path.join(OUT, 'cippi-libreria.png') });
+    await page.screenshot({ path: path.join(OUT, 'mpoint-libreria.png') });
 
     // kick-off: sezioni native, scheda Documento con il modello noto, trova e sostituisci, celle della tabella in Modifica
     const kfile = path.join(tmp, 'Kick-off prova.pptx');
     fs.writeFileSync(kfile, kickoff());
-    await page.goto(portal.base + '/cippi/#/');
+    await page.goto(portal.base + '/mpoint/#/');
     await page.reload();
     await page.waitForSelector('button:has-text("Importa PowerPoint")');
     await page.click('button:has-text("Importa PowerPoint")');
@@ -168,7 +179,7 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await page.click('.modal button:has-text("Sostituisci")');
     await page.waitForSelector('.cp-stage .cp-p:has-text("SAL 1 Progetto Prova")');
     ok(true, 'kick-off: trova e sostituisci in tutte le slide');
-    await page.screenshot({ path: path.join(OUT, 'cippi-kickoff.png') });
+    await page.screenshot({ path: path.join(OUT, 'mpoint-kickoff.png') });
 
     // telefono: un pannello alla volta
     const m = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
@@ -178,14 +189,14 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FALLITO: ' + msg); conso
     await m.fill('input[name=password]', 'password-sicura-1');
     await m.click('button[type=submit]');
     await m.waitForSelector('.shell');
-    await m.goto(portal.base + '/cippi/#/doc/1?s=6');
+    await m.goto(portal.base + '/mpoint/#/doc/1?s=6');
     await m.waitForSelector('.cp-view .cp-slide');
     ok(!(await m.locator('.cp-tools').isVisible()), 'telefono: si vede solo il pannello di visione');
     await m.click('.cp-tabs button:has-text("Descrizione")');
     ok(await m.locator('.cp-points').isVisible(), 'telefono: si passa alla descrizione della slide');
     const overflow = await m.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     ok(overflow <= 1, 'telefono: niente scorrimento orizzontale');
-    await m.screenshot({ path: path.join(OUT, 'cippi-telefono.png') });
+    await m.screenshot({ path: path.join(OUT, 'mpoint-telefono.png') });
     ok(errors.length === 0, 'nessun errore JavaScript ' + errors.join(' | '));
     console.log('\nTutto ok.');
   } catch (err) { console.error(err.message); console.error(errors.join('\n')); process.exitCode = 1; } finally {

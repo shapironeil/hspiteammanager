@@ -1,7 +1,7 @@
 {
   "id": "verbale-studio",
   "name": "Verbale Studio",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "released": "2026-10-01",
   "summary": "Verbali delle riunioni dai transcript di Teams, con video, punti chiave ed email di riepilogo.",
   "description": "Revisione del transcript in sincrono con la registrazione, punti chiave per ruolo, email di riepilogo, storico dei checkpoint per progetto. Con HSPI Client l'AI locale (Ollama) gira sul tuo PC.",
@@ -18,9 +18,20 @@
     "does": "AI locale con Ollama: installazione, modelli, riscrittura, addestramento, chat"
   },
   "novita": [
-    { "version": "1.0.0", "date": "2026-10-01", "items": [
-      "Diventa un'app del catalogo: si apre nella sua finestra e si scarica sul PC con HSPI Client.",
-      "Il motore dell'AI locale arriva con l'app e si aggiorna da solo."
-    ] }
+    {
+      "version": "1.0.1",
+      "date": "2026-10-01",
+      "items": [
+        "L'app non sta più nel menu laterale del portale: si apre da App e programmi; il bottone in alto a sinistra richiama il menu del portale (al posto del collegamento \"← Portale\")."
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2026-10-01",
+      "items": [
+        "Diventa un'app del catalogo: si apre nella sua finestra e si scarica sul PC con HSPI Client.",
+        "Il motore dell'AI locale arriva con l'app e si aggiorna da solo."
+      ]
+    }
   ]
 }

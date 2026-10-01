@@ -7,16 +7,16 @@
 | Nome del template | `kickoff-txt-biosiris` |
 | Formato | `.pptx` (PowerPoint, 16:9 "Widescreen") |
 | Tipo di documento | presentazione di **avvio (kick-off) di un progetto** per una pubblica amministrazione |
-| App di riferimento | **Cippi** |
+| App di riferimento | **MPoint** |
 | Fornitore / progetto | raggruppamento guidato da TXT e-solutions S.p.A. con HSPI, Deda Next, Webgenesys e RPC Net (loghi a piè di pagina); progetto BIOSIRIS, Regione Siciliana, Dipartimento Sviluppo Rurale, nell'ambito dell'accordo quadro Consip "AQ SAC 3 - Lotto 1" (ID 2610) |
 | File visti | `BIOSIRIS_Kick-off_v0.9.1.pptx`: 13 slide, 836 KB, ultima modifica 30/09/2026, revisione 68, 1976 parole, 221 paragrafi; azienda nei metadati "TXT e-solutions S.p.A."; nel file un'autrice (Chiara Ibba) e due co-autori di Webgenesys (Massimiliano Perri e Sarah Poma). I nomi sono dati personali: vedi `../CONFLITTI.md`, voce 2 |
-| Analizzato | 01/10/2026 con Cippi 0.1.0 (portale 0.8.1); misure ripetute lo stesso giorno con Cippi 0.2.0 |
+| Analizzato | 01/10/2026 con MPoint 0.1.0 (portale 0.8.1); misure ripetute lo stesso giorno con MPoint 0.2.0 |
 
 A cosa serve: raccontare al cliente, nella prima riunione, contesto e finanziamento, obiettivi, ambiti di intervento (una scheda per ambito), piano di massima (masterplan a Gantt) e sintesi economica del contratto.
 
 Nessun dato del file è copiato qui oltre a struttura e stile: il file resta fuori dal repository.
 
-**Provenienza**: agente `admiring-hopper`, sessione `session_01GqNo1MzxngbR1RQrFUDijL`, ramo `claude/admiring-hopper-dc5bp0`, commit `e5ab667` (scheda e impronta, prima versione) e `fff10ab` (misure con Cippi 0.2.0), analisi del 01/10/2026. Scheda originale in `../_archivio/2026-10-01/admiring-hopper/MEMORIA/pptx/`. Unificata il 01/10/2026 sul ramo `claude/integrazione-2026-10-01`.
+**Provenienza**: agente `admiring-hopper`, sessione `session_01GqNo1MzxngbR1RQrFUDijL`, ramo `claude/admiring-hopper-dc5bp0`, commit `e5ab667` (scheda e impronta, prima versione) e `fff10ab` (misure con MPoint 0.2.0), analisi del 01/10/2026. Scheda originale in `../_archivio/2026-10-01/admiring-hopper/MEMORIA/pptx/`. Unificata il 01/10/2026 sul ramo `claude/integrazione-2026-10-01`.
 
 ## 2. Impronta di riconoscimento
 
@@ -33,7 +33,7 @@ Con 1+2 il file è una presentazione di questa famiglia (kick-off, SAL, chiusura
 
 Nome del file: schema `<PROGETTO>_Kick-off_v<maggiore>.<minore>.<patch>.pptx`, regex `^[A-Za-z0-9]+_Kick-off_v\d+\.\d+(\.\d+)?\.pptx$`.
 
-Cosa confronta davvero Cippi (`impronta.js`): colori del tema (`tema.colori`), caratteri del tema (`tema.caratteri`), layout principale (il più usato in `layout.usati`), piè di pagina (`layout.pieDiPaginaRegex`), sezioni native (`sezioniNative`), nomi delle pillole presi da `partiNellOrdine[].segnali`, azienda (`metadati.company`). Risultato sul file visto: "Somiglia a: kick-off di progetto (78%)".
+Cosa confronta davvero MPoint (`impronta.js`): colori del tema (`tema.colori`), caratteri del tema (`tema.caratteri`), layout principale (il più usato in `layout.usati`), piè di pagina (`layout.pieDiPaginaRegex`), sezioni native (`sezioniNative`), nomi delle pillole presi da `partiNellOrdine[].segnali`, azienda (`metadati.company`). Risultato sul file visto: "Somiglia a: kick-off di progetto (78%)".
 
 ## 3. Mappa degli oggetti
 
@@ -126,17 +126,17 @@ Segnaposto: il file non ne ha di espliciti. Con **Nuovo da modello** e *Testi co
 ## 5. Regole di modifica, aggiunta ed eliminazione
 
 - **Aggiungere un ambito**: duplicare una slide "scheda ambito" (8–11) dentro la sezione nativa "Ambito"; aggiungere la sotto-voce "Ambito - NOME" nell'indice (slide 2) e il riquadro nella griglia 2×2 della slide 7 (a mano: la griglia non si adatta da sola). Il titolo va scritto "Ambito - NOME AMBITO" in maiuscolo, altrimenti l'abbinamento con l'indice si perde.
-- **Aggiungere una riga alla tabella disegnata** (8–11): clonare la pillola `roundRect` `#225546` con i suoi tre testi ("Text 90") e spostarla in basso; le intestazioni ("Text 85") restano. In Cippi le celle si correggono una per una in Modifica.
-- **Tabella del contratto** (13): ogni riga rispetta VALORE ECONOMICO = PREZZO UNITARIO × QUANTITÀ; il TOTALE deve restare la somma delle righe (Cippi lo controlla: "Totale verificato"). Con **Aggiungi riga** Cippi clona una riga esistente con il suo stile e la riga del totale resta unita (`gridSpan=6`).
+- **Aggiungere una riga alla tabella disegnata** (8–11): clonare la pillola `roundRect` `#225546` con i suoi tre testi ("Text 90") e spostarla in basso; le intestazioni ("Text 85") restano. In MPoint le celle si correggono una per una in Modifica.
+- **Tabella del contratto** (13): ogni riga rispetta VALORE ECONOMICO = PREZZO UNITARIO × QUANTITÀ; il TOTALE deve restare la somma delle righe (MPoint lo controlla: "Totale verificato"). Con **Aggiungi riga** MPoint clona una riga esistente con il suo stile e la riga del totale resta unita (`gridSpan=6`).
 - **Piè di pagina e scritte fisse del layout**: si cambiano con **Trova e sostituisci** e *anche piè di pagina e layout* ("Kick-off Progetto X" → "SAL 1 Progetto X"); nel layout è una regola applicata all'esportazione, portata nel file da "Salva versione".
 - **Riordino, duplicazione, eliminazione di slide**: dal pannello Struttura in Modifica; all'esportazione le immagini non più usate vengono tolte e i contatori (`Slides`, `Notes`, `TitlesOfParts`) aggiornati.
 - **Masterplan**: il Gantt si legge solo se è un'immagine SVG con i testi (come lo esportano PowerPoint ed Excel); un PNG resta un'immagine. Quando cambia il piano di lavoro Excel, l'immagine va rifatta.
-- **Caratteri**: evitare caratteri fuori tema e di prova (Cippi li segnala); il testo lungo nelle intestazioni delle slide 5 e 7 sfora i riquadri.
+- **Caratteri**: evitare caratteri fuori tema e di prova (MPoint li segnala); il testo lungo nelle intestazioni delle slide 5 e 7 sfora i riquadri.
 - Master, layout, tema, immagini e forme restano quelli originali nel file esportato.
 
 ## 6. Funzioni consigliate dell'app
 
-Funzioni di Cippi esistenti (nomi come in `docs/CIPPI.md`):
+Funzioni di MPoint esistenti (nomi come in `docs/MPOINT.md`):
 
 1. **Importa PowerPoint** nel progetto del cliente → modalità **Revisione** (Percorso di lettura, Controlli, Glossario, pannello **Documento** con "Somiglia a: kick-off di progetto").
 2. **Salva come modello** "Kick-off <raggruppamento>": le parti ripetibili sono la *scheda ambito* (8–11); la scheda 7 (griglia 2×2) va tenuta allineata a mano al numero di ambiti. Chi l'ha creato o un Manager del progetto può **condividerlo con tutti**.
@@ -149,16 +149,16 @@ Funzioni di Cippi esistenti (nomi come in `docs/CIPPI.md`):
 Da realizzare (uso possibile indicato nell'analisi, non ancora nell'app):
 
 - esportazione della tabella del contratto verso Excel / GestioneCelle;
-- collegamento tra il masterplan letto dal Gantt e il piano di lavoro Excel dello stesso progetto (confronto, "esporta il Gantt verso Cippi" proposto anche nella scheda del PdL);
+- collegamento tra il masterplan letto dal Gantt e il piano di lavoro Excel dello stesso progetto (confronto, "esporta il Gantt verso MPoint" proposto anche nella scheda del PdL);
 - libreria di icone SVG riusabile nelle slide nuove;
 - sostituzione del logo del cliente per funzione;
 - elenco delle piattaforme abilitanti del progetto estratto dalle tabelle disegnate.
 
 ## 7. Stato dell'app su questo template
 
-**Con Cippi 0.1.0 (prima dell'analisi, ANALYZER 3):** 13 slide lette in 0,1 s (tema, caratteri, 12 layout, forme, immagini PNG e SVG, tabella come testi, note); tipi sbagliati in 5 casi (slide 1 "testo" invece di copertina, 5 "schema", 6 e 11 "testo" invece di scheda, 12 "testo" invece di masterplan; giusti: indice, tabella, schede 7–10); una sola sezione ("Apertura": non leggeva le sezioni native); indice con 11 voci ma 5 falsi avvisi "voce senza slide" (sotto-voci e titoli "Ambito - X") più "manca una slide di titolo" (falso): 6 falsi avvisi; piè di pagina e data contati come blocchi; pillole come "paragrafo" e non "intestazione"; tabella disegnata come forme sciolte; tabella vera senza celle unite né stile; glossario con 16 sigle, 5 spiegate (PSR, PSP, TIC, DSS, OMS), "FINALITÀ" letta come "FINALIT", BIOSIRIS non spiegato (8 lettere), PagoPA e AppIO non visti; anteprima fedele (colori, posizioni, SVG, Gantt) ma senza loghi e numero slide del layout, tabella senza stile né celle unite, intestazioni che sforano per il carattere sostituito, quadrati `custGeom` disegnati come rettangoli; esportazione dopo riordino/duplicazione/eliminazione che si riapre ma lascia 3 immagini orfane (`image11.png`, `image12.svg`, `image17.svg`) e non aggiorna `Notes`/`TitlesOfParts` in `app.xml`. Punteggio **77%**, abbassato dai falsi avvisi.
+**Con MPoint 0.1.0 (prima dell'analisi, ANALYZER 3):** 13 slide lette in 0,1 s (tema, caratteri, 12 layout, forme, immagini PNG e SVG, tabella come testi, note); tipi sbagliati in 5 casi (slide 1 "testo" invece di copertina, 5 "schema", 6 e 11 "testo" invece di scheda, 12 "testo" invece di masterplan; giusti: indice, tabella, schede 7–10); una sola sezione ("Apertura": non leggeva le sezioni native); indice con 11 voci ma 5 falsi avvisi "voce senza slide" (sotto-voci e titoli "Ambito - X") più "manca una slide di titolo" (falso): 6 falsi avvisi; piè di pagina e data contati come blocchi; pillole come "paragrafo" e non "intestazione"; tabella disegnata come forme sciolte; tabella vera senza celle unite né stile; glossario con 16 sigle, 5 spiegate (PSR, PSP, TIC, DSS, OMS), "FINALITÀ" letta come "FINALIT", BIOSIRIS non spiegato (8 lettere), PagoPA e AppIO non visti; anteprima fedele (colori, posizioni, SVG, Gantt) ma senza loghi e numero slide del layout, tabella senza stile né celle unite, intestazioni che sforano per il carattere sostituito, quadrati `custGeom` disegnati come rettangoli; esportazione dopo riordino/duplicazione/eliminazione che si riapre ma lascia 3 immagini orfane (`image11.png`, `image12.svg`, `image17.svg`) e non aggiorna `Notes`/`TitlesOfParts` in `app.xml`. Punteggio **77%**, abbassato dai falsi avvisi.
 
-**Con Cippi 0.2.0 (dopo le funzioni aggiunte il 01/10/2026, vedi `docs/REPORT/2026-10-01-cippi-kickoff.md`):**
+**Con MPoint 0.2.0 (dopo le funzioni aggiunte il 01/10/2026, vedi `docs/REPORT/2026-10-01-cippi-kickoff.md`):**
 
 - 13 tipi giusti su 13: copertina, indice, 2 testo, 7 schede, masterplan, tabella.
 - 7 sezioni native (Copertina, Indice, Introduzione e contesto, Obiettivi, Ambito, Masterplan, Sintesi contratto esecutivo).
@@ -171,7 +171,7 @@ Da realizzare (uso possibile indicato nell'analisi, non ancora nell'app):
 - Anteprima con loghi e barre del layout, tabella con celle unite e stile, forme esagonali degli obiettivi disegnate.
 - Esportazione con riordino, cella e riga di tabella aggiunte, piè di pagina sostituito: file valido (`validate.py`: tutte le verifiche passate), nessun media orfano (15 media su 18, i 3 orfani tolti).
 
-Le funzioni proposte il 01/10/2026 sono state approvate e realizzate in Cippi 0.2.0. Limiti che restano (da `docs/CIPPI.md`): le righe nuove delle tabelle si vedono nel file esportato e dopo "Salva versione", non nell'anteprima; i grassetti dentro una frase modificata vanno rifatti in PowerPoint; i caratteri dell'anteprima sono quelli del PC.
+Le funzioni proposte il 01/10/2026 sono state approvate e realizzate in MPoint 0.2.0. Limiti che restano (da `docs/MPOINT.md`): le righe nuove delle tabelle si vedono nel file esportato e dopo "Salva versione", non nell'anteprima; i grassetti dentro una frase modificata vanno rifatti in PowerPoint; i caratteri dell'anteprima sono quelli del PC.
 
 ## 8. Dubbi aperti
 
@@ -184,15 +184,15 @@ Le funzioni proposte il 01/10/2026 sono state approvate e realizzate in Cippi 0.
 
 ## 9. Da classificare
 
-- Impronta, blocco `cippi` (misura storica con Cippi 0.1.0 / ANALYZER 3): tipi riconosciuti per slide 1 "testo (atteso copertina)", 2 "indice", 3 "testo", 4 "testo", 5 "schema (atteso scheda)", 6 "testo (atteso scheda)", 7–10 "scheda", 11 "testo (atteso scheda)", 12 "testo (atteso masterplan)", 13 "tabella"; punteggio 77; falsi avvisi 6.
-- La prima versione della scheda (commit `e5ab667`) chiudeva con: "Le funzioni mancanti e la loro priorità sono nella proposta inviata il 01/10/2026 (da approvare prima di toccare il codice)"; la seconda (`fff10ab`) con: "Le funzioni proposte il 01/10/2026 sono state approvate e realizzate in Cippi 0.2.0".
+- Impronta, blocco `cippi` (misura storica con MPoint 0.1.0 / ANALYZER 3): tipi riconosciuti per slide 1 "testo (atteso copertina)", 2 "indice", 3 "testo", 4 "testo", 5 "schema (atteso scheda)", 6 "testo (atteso scheda)", 7–10 "scheda", 11 "testo (atteso scheda)", 12 "testo (atteso masterplan)", 13 "tabella"; punteggio 77; falsi avvisi 6.
+- La prima versione della scheda (commit `e5ab667`) chiudeva con: "Le funzioni mancanti e la loro priorità sono nella proposta inviata il 01/10/2026 (da approvare prima di toccare il codice)"; la seconda (`fff10ab`) con: "Le funzioni proposte il 01/10/2026 sono state approvate e realizzate in MPoint 0.2.0".
 - Nomi dell'autrice e dei co-autori (sezione 1) e importo del contratto (sezione 7): la regola della memoria vieta i dati personali e del cliente; sono qui perché erano nella scheda originale. Decisione in `../CONFLITTI.md`, voce 2.
 - Tema: dk1 `000000` e lt1 `FFFFFF` (dall'impronta; la scheda originale non li elencava).
 
 ## 10. Fonti
 
-- `admiring-hopper`, sessione `session_01GqNo1MzxngbR1RQrFUDijL`, commit `e5ab667` (docs/MEMORIA/pptx/kickoff-txt-biosiris.md e .impronta.json, prima versione; docs/MEMORIA/README.md): identità, struttura, stile, impronta, caratteristiche trovate, stato con Cippi 0.1.0, funzioni da usare.
-- `admiring-hopper`, commit `fff10ab` (stessa scheda, aggiornata; `docs/REPORT/2026-10-01-cippi-kickoff.md`; `docs/CIPPI.md`): misure con Cippi 0.2.0, esportazione valida, limiti che restano, nomi reali delle funzioni.
+- `admiring-hopper`, sessione `session_01GqNo1MzxngbR1RQrFUDijL`, commit `e5ab667` (docs/MEMORIA/pptx/kickoff-txt-biosiris.md e .impronta.json, prima versione; docs/MEMORIA/README.md): identità, struttura, stile, impronta, caratteristiche trovate, stato con MPoint 0.1.0, funzioni da usare.
+- `admiring-hopper`, commit `fff10ab` (stessa scheda, aggiornata; `docs/REPORT/2026-10-01-cippi-kickoff.md`; `docs/MPOINT.md`): misure con MPoint 0.2.0, esportazione valida, limiti che restano, nomi reali delle funzioni.
 - `kickoff-txt-biosiris.impronta.json` (admiring-hopper, `e5ab667`): colori completi del tema, layout disponibili, forme del layout, segnali per parte, larghezze della tabella, glossario atteso, blocco `cippi`.
 - `app/src/cippi/impronta.js` (admiring-hopper, `fff10ab`): quali campi dell'impronta vengono confrontati.
 - `cool-noether`, commit `74c4dad` (`../docx/kit-aq-id2610.conoscenza.json`, `../fascicoli/fascicolo-aq-id2610.md`) e `8314b5a` (`../xlsx/piano-di-lavoro-txt-biosiris.md`): aziende del RTI, catena dei documenti, sinergia con il piano di lavoro.

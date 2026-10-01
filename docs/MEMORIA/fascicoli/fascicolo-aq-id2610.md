@@ -11,8 +11,8 @@ Piano dei Fabbisogni (PA)            ← non ancora visto
          + Appendici 1-3 (vincoli)   ../docx/appendici-aq-consip-id2610.md → ../docx/kit-aq-id2610.conoscenza.json
    └─> Contratto Esecutivo / ODA
          └─> Piano di Lavoro         ../xlsx/piano-di-lavoro-txt-biosiris.md           [GestioneCelle]
-               └─> Kick-off          ../pptx/kickoff-txt-biosiris.md                   [Cippi]
-                     └─> SAL         ../docx/sal-verbale.md / ../pptx/sal-presentazione.md  [Verbale Studio + Cippi]
+               └─> Kick-off          ../pptx/kickoff-txt-biosiris.md                   [MPoint]
+                     └─> SAL         ../docx/sal-verbale.md / ../pptx/sal-presentazione.md  [Verbale Studio + MPoint]
                                      (fascicolo SAL del progetto R-CAP.AC: l'appartenenza a questo AQ è da confermare, vedi sotto)
 ```
 
@@ -32,7 +32,7 @@ Piano dei Fabbisogni (PA)            ← non ancora visto
 
 Conseguenze per le app:
 
-1. **Un modello dei dati condiviso** (contratto esecutivo → servizi → attività/obiettivi → milestone → deliverable → persone/aziende) in cui ogni app legge e scrive la sua parte: GestioneCelle il piano, Cippi le slide, Verbale Studio i documenti Word.
+1. **Un modello dei dati condiviso** (contratto esecutivo → servizi → attività/obiettivi → milestone → deliverable → persone/aziende) in cui ogni app legge e scrive la sua parte: GestioneCelle il piano, MPoint le slide, Verbale Studio i documenti Word.
 2. I **codici** devono coincidere tra documenti (sigle dei servizi, codici attività `S_n.m`, nomi dei deliverable): i controlli incrociati sono la funzione più utile del portale.
 3. La **conoscenza del kit** (`../docx/kit-aq-id2610.conoscenza.json`) è il dizionario contro cui si controllano tutti: profili ammessi, indicatori e soglie, prodotti per ciclo di vita, sigle, glossario.
 
