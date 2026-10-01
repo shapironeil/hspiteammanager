@@ -1,0 +1,66 @@
+{
+  "nota": "Impronte dei modelli di file conosciuti. Ogni segnale di riconoscimento è un controllo che il codice può fare sul file; 'punteggio_minimo' dice quanti segnali devono tornare perché il modello sia riconosciuto.",
+  "modelli": [
+    {
+      "id": "excel-piano-di-lavoro-gantt",
+      "formato": "xlsx",
+      "nome": "Piano di lavoro di dettaglio (Gantt mensile a due livelli)",
+      "scheda": "excel-piano-di-lavoro-gantt.md",
+      "app": "gestione-celle",
+      "riconoscimento": {
+        "punteggio_minimo": 4,
+        "segnali": [
+          { "tipo": "nome_foglio", "valore": "Piano di lavoro", "peso": 1 },
+          { "tipo": "intestazioni_in_riga", "valori": ["LIV 1", "Work Package", "LIV 2", "Work Package", "Owner", "Note"], "riga": "entro le prime 6", "peso": 2 },
+          { "tipo": "riga_iniziali_mesi", "sequenza": "G F M A M G L A S O N D (iniziali italiane, può partire da un mese qualsiasi)", "almeno": 12, "peso": 2 },
+          { "tipo": "riga_trimestri", "valori": ["Q1", "Q2", "Q3", "Q4"], "celle_unite_da": 3, "peso": 1 },
+          { "tipo": "riga_anni", "celle_unite_da": 12, "peso": 1 },
+          { "tipo": "barre_a_colore", "descrizione": "nelle colonne dei mesi ci sono celle con riempimento pieno e senza valore", "peso": 2 },
+          { "tipo": "assenza", "di": ["tabelle Excel", "formati condizionali", "convalide", "nomi definiti"], "peso": 0 },
+          { "tipo": "nome_file", "regex": "(?i)pdl|piano.?di.?lavoro|gantt|masterplan", "peso": 1 }
+        ]
+      },
+      "struttura": {
+        "righe_intestazione": 3,
+        "colonne_fisse": ["LIV 1", "Work Package (livello 1)", "LIV 2", "Work Package (livello 2 = fase)", "Owner", "Note"],
+        "prima_colonna_mesi": "H",
+        "livelli": 2,
+        "barre": "riempimento di cella, colore per famiglia (livello 1 scuro, livello 2 chiaro)"
+      },
+      "funzioni_consigliate": [
+        "riconosci modello",
+        "leggi piano (asse dei mesi, work package, fasi, owner, note, barre con inizio/fine/segmenti)",
+        "controlla piano (codici, duplicati, tipi misti, nomi ripetuti, barre non contigue, owner mancanti, spazi, formule di propagazione)",
+        "normalizza (TRIM, codici coerenti, tipi uniformi, formule di propagazione regolari)",
+        "applica fasi standard a un work package",
+        "sposta / allunga / accorcia barre e work package per mesi",
+        "estendi o riduci l'orizzonte temporale",
+        "esporta piano (stesso aspetto: intestazione a tre righe, colori per famiglia, bordi, larghezze, zoom)",
+        "confronta due versioni del piano"
+      ],
+      "esempio_visto": {
+        "file": "BIOSIRIS_PdL_di_dettaglio_v0.4.xlsx",
+        "data": "2026-10-01",
+        "numeri": { "fogli": 1, "work_package": 6, "fasi": 46, "mesi": 39, "formule": 54, "celle_unite": 17 },
+        "arco": "ottobre 2026 - dicembre 2029"
+      }
+    },
+    {
+      "id": "excel-bpb-processi",
+      "formato": "xlsx",
+      "nome": "Mappa dei processi BPB (macro / processo / micro)",
+      "scheda": "../GESTIONECELLE.md",
+      "app": "gestione-celle",
+      "riconoscimento": {
+        "punteggio_minimo": 3,
+        "segnali": [
+          { "tipo": "tabella_excel", "valore": "tblMacro", "peso": 1 },
+          { "tipo": "tabella_excel", "valore": "tblProcessi", "peso": 1 },
+          { "tipo": "tabella_excel", "valore": "tblBPB", "peso": 1 },
+          { "tipo": "nome_foglio", "valore": "Anagrafica Processi BPB", "peso": 1 }
+        ]
+      },
+      "funzioni_consigliate": ["importa BPB (già in GestioneCelle: app/src/celle/import.js)", "scarica Excel / salva nel progetto (già: app/src/celle/xlsx-write.js)"]
+    }
+  ]
+}
