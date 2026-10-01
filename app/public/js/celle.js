@@ -1,4 +1,4 @@
-// Trama: mappe di processi macro → processo → micro, come il file BPB, ma nel portale.
+// GestioneCelle: mappe di processi macro → processo → micro, come il file BPB, ma nel portale.
 // Albero navigabile con codici automatici (1, 1.2, 1.2.3), scheda di ogni voce (ambito, responsabile, scadenza,
 // stato, note, storico), tabella filtrabile, controlli, eliminazione con conferme, import/export Excel.
 import { get, post, patch, del, upload } from './api.js';
@@ -9,12 +9,12 @@ const CHILD = { 1: 'processo', 2: 'micro processo' };
 const STATUS_CHIP = { 'da fare': '', 'in corso': 'warn', fatto: 'ok', bloccato: 'danger' };
 const enc = encodeURIComponent;
 const params = () => new URLSearchParams(location.hash.split('?')[1] || '');
-const setHash = (q) => history.replaceState(null, '', `#/trama${q ? `?${q}` : ''}`);
+const setHash = (q) => history.replaceState(null, '', `#/celle${q ? `?${q}` : ''}`);
 const shortDate = (iso) => (iso ? iso.split('-').reverse().join('/') : '');
 
 // ---- Elenco delle mappe ------------------------------------------------------------------
 async function viewList(el) {
-  const d = await get('/api/trama/maps');
+  const d = await get('/api/celle/maps');
   const byProject = new Map(d.projects.map((p) => [p.id, []]));
   for (const m of d.maps) byProject.get(m.projectId).push(m);
   const newMap = () => {
@@ -25,16 +25,16 @@ async function viewList(el) {
       field('Descrizione (facoltativa)', h('input', { type: 'text', name: 'description', maxlength: '500' })),
       h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Crea')),
     ], async (v) => {
-      const r = await post('/api/trama/maps', { ...v, projectId: Number(v.projectId) });
+      const r = await post('/api/celle/maps', { ...v, projectId: Number(v.projectId) });
       m.close();
       setHash(`mappa=${r.id}`);
-      await viewTrama(el);
+      await viewCelle(el);
     }));
   };
   el.replaceChildren(
-    pageHead('Trama', 'Le mappe dei processi: macro (1), processi (1.2), micro processi (1.2.3). I codici si aggiornano da soli; il file Excel si importa e si esporta con le stesse formule.',
+    pageHead('GestioneCelle', 'Le mappe dei processi: macro (1), processi (1.2), micro processi (1.2.3). I codici si aggiornano da soli; il file Excel si importa e si esporta con le stesse formule.',
       h('button', { class: 'btn primary', type: 'button', onclick: newMap }, icon('plus'), 'Nuova mappa')),
-    d.maps.length ? h('div', { class: 'grid' }, d.maps.map((m) => h('button', { class: 'project glass', type: 'button', onclick: () => { setHash(`mappa=${m.id}`); viewTrama(el).catch(toastError); } },
+    d.maps.length ? h('div', { class: 'grid' }, d.maps.map((m) => h('button', { class: 'project glass', type: 'button', onclick: () => { setHash(`mappa=${m.id}`); viewCelle(el).catch(toastError); } },
       h('div', { class: 'row', style: 'justify-content:space-between;width:100%' }, h('h3', {}, m.name), m.pendingRequests ? h('span', { class: 'chip warn' }, `${m.pendingRequests} richieste`) : null),
       h('div', { class: 'small muted' }, m.project),
       m.description ? h('p', {}, m.description) : null,
@@ -49,7 +49,7 @@ function importWizard(mapId, onDone) {
     const file = input.files[0];
     if (!file) return;
     try {
-      const r = await upload(`/api/trama/import?name=${enc(file.name)}`, file);
+      const r = await upload(`/api/celle/import?name=${enc(file.name)}`, file);
       if (r.format === 'bpb') {
         const m = modal('Importa il file BPB', h('div', {},
           h('p', { class: 'muted' }, `Riconosciuto il formato BPB (tabelle Macro, Processi e BPB): ${r.summary.macros} macro, ${r.summary.processes} processi, ${r.summary.micros} micro processi. Ordine e codici restano quelli del file.`),
@@ -57,7 +57,7 @@ function importWizard(mapId, onDone) {
             h('button', { class: 'btn', type: 'button', onclick: () => m.close() }, 'Annulla'),
             h('button', { class: 'btn primary', type: 'button', onclick: async (e) => {
               e.currentTarget.disabled = true;
-              try { const x = await post(`/api/trama/maps/${mapId}/import`, { token: r.token }); m.close(); report(x); onDone(); } catch (err) { toastError(err); e.currentTarget.disabled = false; }
+              try { const x = await post(`/api/celle/maps/${mapId}/import`, { token: r.token }); m.close(); report(x); onDone(); } catch (err) { toastError(err); e.currentTarget.disabled = false; }
             } }, 'Importa'))));
         return;
       }
@@ -92,7 +92,7 @@ function mappingDialog(mapId, r, onDone) {
       const mapping = {};
       for (const [f, s] of Object.entries(selects)) if (s.value !== '') mapping[f] = Number(s.value);
       e.currentTarget.disabled = true;
-      try { const x = await post(`/api/trama/maps/${mapId}/import`, { token: r.token, sheet: sheet.name, mapping }); m.close(); report(x); onDone(); } catch (err) { toastError(err); e.currentTarget.disabled = false; }
+      try { const x = await post(`/api/celle/maps/${mapId}/import`, { token: r.token, sheet: sheet.name, mapping }); m.close(); report(x); onDone(); } catch (err) { toastError(err); e.currentTarget.disabled = false; }
     } }, 'Importa'))), { wide: true });
 }
 
@@ -102,7 +102,7 @@ async function viewMap(el, mapId) {
   let d;
   const byId = new Map();
   const load = async () => {
-    d = await get(`/api/trama/maps/${mapId}`);
+    d = await get(`/api/celle/maps/${mapId}`);
     byId.clear();
     const walk = (list, parent) => { for (const n of list) { n.parent = parent; byId.set(n.id, n); walk(n.children, n); } };
     walk(d.macros, null);
@@ -120,9 +120,9 @@ async function viewMap(el, mapId) {
   // --- intestazione e azioni
   const actions = () => h('div', { class: 'row' },
     !d.macros.length ? h('button', { class: 'btn', type: 'button', onclick: () => importWizard(mapId, () => reload()) }, icon('upload'), 'Importa Excel') : null,
-    h('a', { class: 'btn', href: `/api/trama/maps/${mapId}/export` }, icon('download'), 'Scarica Excel'),
-    h('button', { class: 'btn', type: 'button', title: 'Salva il file Excel nella cartella del progetto (Trama/), con le versioni', onclick: async () => {
-      try { const r = await post(`/api/trama/maps/${mapId}/export`); toast('Salvato nel progetto.'); window.open(`/#/esplora?spazio=${r.space}&percorso=Trama`, '_blank', 'noopener'); } catch (err) { toastError(err); }
+    h('a', { class: 'btn', href: `/api/celle/maps/${mapId}/export` }, icon('download'), 'Scarica Excel'),
+    h('button', { class: 'btn', type: 'button', title: 'Salva il file Excel nella cartella del progetto (GestioneCelle/), con le versioni', onclick: async () => {
+      try { const r = await post(`/api/celle/maps/${mapId}/export`); toast('Salvato nel progetto.'); window.open(`/#/esplora?spazio=${r.space}&percorso=GestioneCelle`, '_blank', 'noopener'); } catch (err) { toastError(err); }
     } }, icon('folder'), 'Salva nel progetto'),
     h('button', { class: 'icon-btn', type: 'button', title: 'Cestino', 'aria-label': 'Cestino', onclick: trashDialog }, icon('trash')),
     h('button', { class: 'icon-btn', type: 'button', title: 'Storico', 'aria-label': 'Storico', onclick: historyDialog }, icon('history')),
@@ -157,20 +157,20 @@ async function viewMap(el, mapId) {
       return h('div', { class: 'empty' }, d.macros.length ? 'Scegli una voce dall\'albero per vederla e modificarla.' : 'Mappa vuota: aggiungi il primo macro processo oppure importa un file Excel.',
         h('div', { class: 'row', style: 'margin-top:12px' }, h('button', { class: 'btn primary', type: 'button', onclick: () => addChild(null) }, icon('plus'), 'Aggiungi macro processo')));
     }
-    const save = async (body) => { try { await patch(`/api/trama/nodes/${n.id}`, body); await reload(n.id); } catch (err) { toastError(err); render(); } };
+    const save = async (body) => { try { await patch(`/api/celle/nodes/${n.id}`, body); await reload(n.id); } catch (err) { toastError(err); render(); } };
     const crumbs = [];
     for (let x = n; x; x = x.parent) crumbs.unshift(x);
     const input = (key, attrs = {}) => h('input', { type: 'text', value: n[key] ?? '', ...attrs, onchange: (e) => save({ [key]: e.target.value }) });
     const siblingsOf = n.parent ? n.parent.children : d.macros;
     const idx = siblingsOf.indexOf(n);
-    const moveTo = (index, parentId) => post(`/api/trama/nodes/${n.id}/move`, { index, parentId }).then((r) => { toast(`${r.before} → ${r.after}`); return reload(n.id); }).catch(toastError);
+    const moveTo = (index, parentId) => post(`/api/celle/nodes/${n.id}/move`, { index, parentId }).then((r) => { toast(`${r.before} → ${r.after}`); return reload(n.id); }).catch(toastError);
     const parents = n.level === 1 ? [] : n.level === 2 ? d.macros : d.macros.flatMap((m) => m.children);
     const comments = h('div', {}, h('div', { class: 'empty' }, 'Carico…'));
-    get(`/api/trama/nodes/${n.id}`).then((x) => comments.replaceChildren(
+    get(`/api/celle/nodes/${n.id}`).then((x) => comments.replaceChildren(
       h('h3', { class: 'tr-h3' }, 'Note del team'),
       x.comments.length ? h('ul', { class: 'list' }, x.comments.map((c) => h('li', { style: 'display:block' }, h('div', { class: 'meta' }, `${c.by || '?'} · ${fmtDate(c.at)}`), h('div', { style: 'white-space:pre-wrap' }, c.text)))) : h('div', { class: 'small muted' }, 'Nessuna nota.'),
       form([h('textarea', { name: 'text', placeholder: 'Scrivi una nota per il team…', style: 'min-height:60px' }), h('div', { class: 'row end' }, h('button', { class: 'btn sm', type: 'submit' }, 'Aggiungi nota'))],
-        async (v) => { await post(`/api/trama/nodes/${n.id}/comments`, v); render(); }),
+        async (v) => { await post(`/api/celle/nodes/${n.id}/comments`, v); render(); }),
       h('details', { class: 'detail' }, h('summary', {}, 'Storico della voce'), h('ul', { class: 'list' }, x.history.map((hh) => h('li', { style: 'display:block' },
         h('div', { class: 'meta' }, `${fmtDate(hh.at)} · ${hh.by || 'sistema'} · ${hh.action}`), hh.detail ? h('div', { class: 'small mono', style: 'overflow-wrap:anywhere' }, describe(hh)) : null)))),
       h('div', { class: 'small muted', style: 'margin-top:8px' }, `Creata da ${x.createdBy || '?'} il ${fmtDate(x.createdAt)}${x.updatedBy ? ` · ultima modifica di ${x.updatedBy}` : ''}`))).catch(() => comments.replaceChildren());
@@ -221,7 +221,7 @@ async function viewMap(el, mapId) {
       field('Nome', h('textarea', { name: 'name', style: 'min-height:60px' }), parent ? `Dentro ${parent.code} ${parent.name}` : 'Il codice (ID Macro) è il primo numero libero: puoi cambiarlo dopo.'),
       h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Aggiungi')),
     ], async (v) => {
-      const r = await post(`/api/trama/maps/${mapId}/nodes`, { level, parentId: parent ? parent.id : null, name: v.name });
+      const r = await post(`/api/celle/maps/${mapId}/nodes`, { level, parentId: parent ? parent.id : null, name: v.name });
       m.close();
       toast(`Aggiunto ${r.code}.`);
       if (parent) state.open.add(parent.id);
@@ -233,7 +233,7 @@ async function viewMap(el, mapId) {
       field('Nome', h('textarea', { name: 'name', style: 'min-height:60px' }), `Va subito dopo ${n.code}: i codici successivi scalano di uno.`),
       h('div', { class: 'modal-actions' }, h('button', { class: 'btn primary', type: 'submit' }, 'Aggiungi')),
     ], async (v) => {
-      const r = await post(`/api/trama/maps/${mapId}/nodes`, { level: n.level, parentId: n.parent ? n.parent.id : null, name: v.name, afterId: n.id });
+      const r = await post(`/api/celle/maps/${mapId}/nodes`, { level: n.level, parentId: n.parent ? n.parent.id : null, name: v.name, afterId: n.id });
       m.close();
       toast(`Aggiunto ${r.code}.`);
       await reload(r.id);
@@ -244,7 +244,7 @@ async function viewMap(el, mapId) {
   async function removeNode(n) {
     let info;
     try {
-      const res = await fetch(`/api/trama/nodes/${n.id}`, { method: 'DELETE', headers: { 'x-hspi': '1' }, credentials: 'same-origin' });
+      const res = await fetch(`/api/celle/nodes/${n.id}`, { method: 'DELETE', headers: { 'x-hspi': '1' }, credentials: 'same-origin' });
       info = await res.json();
       if (res.status !== 409) throw new Error(info.error || 'Operazione non riuscita.');
     } catch (err) { return toastError(err); }
@@ -266,7 +266,7 @@ async function viewMap(el, mapId) {
         h('button', { class: 'btn', type: 'button', onclick: () => m.close() }, 'Annulla'),
         h('button', { class: 'btn danger', type: 'button', onclick: async () => {
           try {
-            const r = await fetch(`/api/trama/nodes/${n.id}?conferma=1&motivo=${enc(reason.value)}`, { method: 'DELETE', headers: { 'x-hspi': '1' }, credentials: 'same-origin' });
+            const r = await fetch(`/api/celle/nodes/${n.id}?conferma=1&motivo=${enc(reason.value)}`, { method: 'DELETE', headers: { 'x-hspi': '1' }, credentials: 'same-origin' });
             const x = await r.json();
             if (!r.ok) throw new Error(x.error || 'Operazione non riuscita.');
             m.close();
@@ -279,15 +279,15 @@ async function viewMap(el, mapId) {
   async function trashDialog() {
     const box = h('div', {}, h('div', { class: 'empty' }, 'Carico…'));
     const m = modal('Cestino della mappa', box, { wide: true });
-    const x = await get(`/api/trama/maps/${mapId}/trash`).catch(toastError);
+    const x = await get(`/api/celle/maps/${mapId}/trash`).catch(toastError);
     if (!x) return;
     box.replaceChildren(x.items.length ? h('ul', { class: 'list' }, x.items.map((t) => h('li', {}, h('div', { class: 'grow' }, h('div', { class: 'title' }, `${LEVEL[t.level]}: ${t.name}`),
       h('div', { class: 'meta' }, `${t.items} voci · eliminato ${fmtDate(t.deletedAt)}${t.by ? ` da ${t.by}` : ''}`)),
-      d.canManage ? h('button', { class: 'btn sm', type: 'button', onclick: async () => { try { await post(`/api/trama/nodes/${t.id}/restore`); m.close(); toast('Ripristinato.'); await reload(t.id); } catch (err) { toastError(err); } } }, icon('restore'), 'Ripristina') : null)))
+      d.canManage ? h('button', { class: 'btn sm', type: 'button', onclick: async () => { try { await post(`/api/celle/nodes/${t.id}/restore`); m.close(); toast('Ripristinato.'); await reload(t.id); } catch (err) { toastError(err); } } }, icon('restore'), 'Ripristina') : null)))
       : h('div', { class: 'empty' }, 'Il cestino è vuoto.'));
   }
   async function historyDialog() {
-    const x = await get(`/api/trama/maps/${mapId}/history`).catch(toastError);
+    const x = await get(`/api/celle/maps/${mapId}/history`).catch(toastError);
     if (!x) return;
     modal('Storico della mappa', h('ul', { class: 'list' }, x.map((hh) => h('li', { style: 'display:block' }, h('div', { class: 'meta' }, `${fmtDate(hh.at)} · ${hh.by || 'sistema'} · ${hh.action}`),
       hh.detail ? h('div', { class: 'small' }, describe(hh)) : null))), { wide: true });
@@ -298,10 +298,10 @@ async function viewMap(el, mapId) {
       field('Descrizione', h('input', { type: 'text', name: 'description', value: d.map.description, maxlength: '500' })),
       h('div', { class: 'modal-actions' },
         h('button', { class: 'btn danger left', type: 'button', onclick: () => confirmDialog('Eliminare la mappa?', `"${d.map.name}" sparisce dall'elenco. Resta nel database e l'Hacker può recuperarla.`, 'Elimina mappa', async () => {
-          try { await del(`/api/trama/maps/${mapId}`); m.close(); setHash(''); await viewTrama(el); } catch (err) { toastError(err); }
+          try { await del(`/api/celle/maps/${mapId}`); m.close(); setHash(''); await viewCelle(el); } catch (err) { toastError(err); }
         }) }, 'Elimina mappa'),
         h('button', { class: 'btn primary', type: 'submit' }, 'Salva')),
-    ], async (v) => { await patch(`/api/trama/maps/${mapId}`, v); m.close(); await reload(); }));
+    ], async (v) => { await patch(`/api/celle/maps/${mapId}`, v); m.close(); await reload(); }));
   }
 
   // --- tabella (come il foglio BPB) con filtri
@@ -345,7 +345,7 @@ async function viewMap(el, mapId) {
       d.canApprove ? [h('button', { class: 'btn sm', type: 'button', onclick: () => decide(r, false) }, 'Rifiuta'), h('button', { class: 'btn sm danger', type: 'button', onclick: () => decide(r, true) }, 'Elimina')] : h('span', { class: 'small muted' }, 'in attesa di un Manager'))))
       : h('div', { class: 'empty' }, 'Nessuna richiesta di eliminazione.');
   }
-  const decide = async (r, approve) => { try { await post(`/api/trama/requests/${r.id}`, { approve }); toast(approve ? 'Eliminata.' : 'Richiesta rifiutata.'); await reload(); } catch (err) { toastError(err); } };
+  const decide = async (r, approve) => { try { await post(`/api/celle/requests/${r.id}`, { approve }); toast(approve ? 'Eliminata.' : 'Richiesta rifiutata.'); await reload(); } catch (err) { toastError(err); } };
 
   function render() {
     const selected = state.selected ? byId.get(state.selected) : null;
@@ -365,7 +365,7 @@ async function viewMap(el, mapId) {
         h('section', { class: 'card glass' }, detail(selected)));
     }
     el.replaceChildren(
-      h('div', { style: 'margin-bottom:10px' }, h('button', { class: 'btn sm', type: 'button', onclick: () => { setHash(''); viewTrama(el).catch(toastError); } }, icon('back'), 'Tutte le mappe')),
+      h('div', { style: 'margin-bottom:10px' }, h('button', { class: 'btn sm', type: 'button', onclick: () => { setHash(''); viewCelle(el).catch(toastError); } }, icon('back'), 'Tutte le mappe')),
       pageHead(d.map.name, `${d.map.project}${d.map.description ? ` · ${d.map.description}` : ''}`, actions()),
       h('datalist', { id: 'tr-ambiti' }, d.ambiti.map((a) => h('option', { value: a }))),
       tabs(), body);
@@ -378,7 +378,7 @@ async function viewMap(el, mapId) {
   render();
 }
 
-export async function viewTrama(el) {
+export async function viewCelle(el) {
   const id = Number(params().get('mappa'));
   if (id) {
     try { return await viewMap(el, id); } catch (err) { if (err.status !== 404) throw err; setHash(''); }
@@ -388,12 +388,12 @@ export async function viewTrama(el) {
 
 // Riquadro per la Home: le mie voci in scadenza (o scadute).
 export async function myDeadlinesCard() {
-  const list = await get('/api/trama/mine').catch(() => []);
+  const list = await get('/api/celle/mine').catch(() => []);
   if (!list.length) return null;
   const today = new Date().toISOString().slice(0, 10);
-  return h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Le mie scadenze in Trama')),
+  return h('section', { class: 'card glass' }, h('div', { class: 'card-head' }, h('h2', {}, 'Le mie scadenze in GestioneCelle')),
     h('ul', { class: 'list' }, list.map((x) => h('li', {}, icon('clock'),
-      h('div', { class: 'grow' }, h('a', { class: 'title', href: `#/trama?mappa=${x.mapId}&voce=${x.id}`, style: 'color:inherit;text-decoration:none;display:block' }, `${x.code} ${x.name}`),
+      h('div', { class: 'grow' }, h('a', { class: 'title', href: `#/celle?mappa=${x.mapId}&voce=${x.id}`, style: 'color:inherit;text-decoration:none;display:block' }, `${x.code} ${x.name}`),
         h('div', { class: 'meta' }, `${x.project} · ${x.map}${x.status ? ` · ${x.status}` : ''}`)),
       h('span', { class: `chip ${x.dueDate < today ? 'danger' : 'warn'}` }, x.dueDate < today ? `scaduta ${shortDate(x.dueDate)}` : shortDate(x.dueDate))))));
 }

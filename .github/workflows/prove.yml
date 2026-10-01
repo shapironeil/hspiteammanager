@@ -1,0 +1,21 @@
+# Prove automatiche: a ogni pull request e a ogni modifica di main.
+# Esito visibile su GitHub (✓ / ✗) e nel portale: Sistema → Aggiornamenti e pull request.
+name: Prove
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prove del portale (API, aggiornamento, backup, GestioneCelle, client)
+        working-directory: app
+        run: node --test --test-concurrency=1 test/*.test.js

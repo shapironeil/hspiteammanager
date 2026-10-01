@@ -51,21 +51,26 @@
     setTimeout(() => { location.href = '/'; }, 1500);
   }
   // Motore locale di HSPI Client (sul PC di chi usa il portale): se c'e', l'AI locale gira li' e non sull'host.
+  // Il motore dell'AI arriva con il pacchetto di Verbale Studio (pagina App del portale) e risponde su /app/verbale-studio.
   const ENGINE = 'http://127.0.0.1:4320';
+  const VS_ENGINE = ENGINE + '/app/verbale-studio';
   let engineOn = false;
+  let clientOn = false; // HSPI Client aperto, anche se Verbale Studio non e' ancora scaricato sul PC
   async function detectEngine() {
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 1200);
       const r = await fetch(ENGINE + '/stato', { signal: ctrl.signal });
       clearTimeout(t);
-      engineOn = r.ok && (await r.json()).app === 'hspi-client';
-    } catch { engineOn = false; }
+      const st = r.ok ? await r.json() : {};
+      clientOn = st.app === 'hspi-client';
+      engineOn = clientOn && !!(st.apps || {})['verbale-studio'];
+    } catch { engineOn = false; clientOn = false; }
     document.body.classList.toggle('engine-on', engineOn);
     return engineOn;
   }
   async function engine(method, pathname, body) {
-    const res = await fetch(ENGINE + pathname, { method, headers: body !== undefined ? { 'Content-Type': 'application/json' } : {}, body: body !== undefined ? JSON.stringify(body) : undefined });
+    const res = await fetch(VS_ENGINE + pathname, { method, headers: body !== undefined ? { 'Content-Type': 'application/json' } : {}, body: body !== undefined ? JSON.stringify(body) : undefined });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || `Errore ${res.status}`);
     return data;
@@ -1651,7 +1656,7 @@
       const chatBody = { projectId: cp.projectId, checkpointId: cp.id, messages: history, context: ctx, template: state.tpl, format: output === 'summary' ? summarySchema(state.tpl) : undefined };
       // con HSPI Client l'AI risponde dal motore locale; il portale prepara solo il contesto
       const res = engineOn
-        ? await fetch(ENGINE + '/ollama/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(await hostApi('POST', '/api/ollama/prepare', { ...chatBody, kind: 'chat' })), signal: ctrl.signal })
+        ? await fetch(VS_ENGINE + '/ollama/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(await hostApi('POST', '/api/ollama/prepare', { ...chatBody, kind: 'chat' })), signal: ctrl.signal })
         : await fetch(apiUrl('/api/ollama/chat'), { method: 'POST', credentials: 'same-origin', headers: { ...HSPI, 'Content-Type': 'application/json' }, body: JSON.stringify(chatBody), signal: ctrl.signal });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `Errore ${res.status}`);
       const reader = res.body.getReader();
@@ -1872,6 +1877,8 @@
     const pct = (j) => (j?.total ? Math.round((j.completed / j.total) * 100) : 0);
     const where = engineOn
       ? '<p class="note-box">L\'AI gira <b>sul tuo PC</b> grazie a HSPI Client: il PC del portale non viene appesantito.</p>'
+      : clientOn
+        ? '<p class="note-box">HSPI Client è aperto: scarica Verbale Studio sul PC e l\'AI girerà <b>sul tuo PC</b>. <button class="btn btn-primary btn-sm" id="olGetApp">Scarica Verbale Studio sul PC</button></p>'
       : st.disabled
         ? `<p class="note-box"><b>AI locale non disponibile da qui.</b> ${esc(st.message || '')} <a href="/scarica" target="_blank" rel="noopener">Scarica HSPI Client</a>, aprilo e ricarica questa pagina.</p>`
         : '<p class="note-box">L\'AI gira <b>sul PC del portale</b>. Con HSPI Client girerebbe sul tuo PC.</p>';
@@ -2612,7 +2619,14 @@
       const b = e.target.closest('button');
       if (!b) return;
       try {
-        if (b.id === 'olInstall') await api('POST', '/api/ollama/install');
+        if (b.id === 'olGetApp') {
+          await busy(b, async () => {
+            const r = await fetch(ENGINE + '/app/installa', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: 'verbale-studio' }) });
+            if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `Errore ${r.status}`);
+            await detectEngine();
+            toast('Verbale Studio è sul tuo PC: l\'AI locale gira lì.');
+          });
+        } else if (b.id === 'olInstall') await api('POST', '/api/ollama/install');
         else if (b.id === 'olStart') { await api('POST', '/api/ollama/start'); toast('Avvio di Ollama…'); await new Promise((r) => setTimeout(r, 2500)); }
         else if (b.dataset.pull) await api('POST', '/api/ollama/pull', { model: b.dataset.pull });
         else if (b.dataset.usemodel) { state.settings = await api('PUT', '/api/settings', { ollamaModel: b.dataset.usemodel }); toast(`Modello in uso: ${b.dataset.usemodel}`); }

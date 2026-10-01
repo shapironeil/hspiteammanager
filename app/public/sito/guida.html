@@ -4,19 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Guida · HSPI Team Manager</title>
-  <link rel="icon" href="/img/logo.svg">
+  <link rel="icon" id="favicon" href="/img/logo.svg">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="stylesheet" href="/sito/sito.css">
 </head>
 <body>
 <div class="wrap">
-  <header class="top"><img src="/img/logo.svg" alt=""><strong>HSPI Team Manager</strong><nav><a href="/benvenuto">Il portale</a><a href="/guida" class="on">Guida</a><a href="/scarica">Scarica</a><a href="/">Accedi</a></nav></header>
+  <header class="top"><a class="brand" href="/benvenuto"><img data-logo src="/img/logo.svg" alt=""><strong data-portal-name>HSPI Team Manager</strong></a><nav><a href="/benvenuto">Il portale</a><a href="/guida" class="on">Guida</a><a href="/scarica">Scarica</a><a href="/">Accedi</a></nav></header>
   <section class="hero" style="padding-bottom:10px"><h1>Guida</h1><p>Cos'è il portale, come funziona, come si installa e come ci si collega.</p></section>
   <div class="two">
-    <nav class="toc card"><a href="#cos-e">Cos'è</a><a href="#funziona">Come funziona</a><a href="#installa">Come si installa</a><a href="#collega">Come ci si collega</a><a href="#telefono">Dal telefono</a><a href="#domande">Domande</a></nav>
+    <nav class="toc card"><a href="#cos-e">Cos'è</a><a href="#funziona">Come funziona</a><a href="#installa">Come si installa</a><a href="#app">Le app</a><a href="#collega">Come ci si collega</a><a href="#telefono">Dal telefono</a><a href="#domande">Domande</a></nav>
     <div>
       <h2 id="cos-e">Cos'è</h2>
-      <p>HSPI Team Manager è il portale interno del team. Raccoglie i progetti e le persone che ci lavorano, i file (in cartelle vere, con versioni e cestino), i verbali delle riunioni (Verbale Studio) e le mappe dei processi (Trama). Ognuno vede solo i progetti di cui fa parte.</p>
+      <p>HSPI Team Manager è il portale interno del team. Raccoglie i progetti e le persone che ci lavorano, i file (in cartelle vere, con versioni e cestino), i verbali delle riunioni (Verbale Studio) e le mappe dei processi (GestioneCelle). Ognuno vede solo i progetti di cui fa parte.</p>
 
       <h2 id="funziona">Come funziona</h2>
       <div class="grid">
@@ -31,6 +31,14 @@
         <li><b>HSPI Client</b>: dalla pagina <a href="/scarica">Scarica</a> prendi lo ZIP, estrailo (tasto destro → Estrai tutto) e fai doppio clic su <code>installa.bat</code>. Non servono diritti di amministratore.</li>
         <li>Sul desktop compare <b>HSPI</b>: da lì apri sempre il portale. All'avvio si aggiorna da solo alla stessa versione del portale.</li>
       </ol>
+
+      <h2 id="app">Le app</h2>
+      <p>Verbale Studio, GestioneCelle e Cippi sono app del portale, con una versione propria. Si usano in tre modi, senza installazioni guidate e senza spostare cartelle:</p>
+      <div class="grid">
+        <div class="card"><h3>Nel browser</h3><p>Dal portale, <i>App e programmi</i> → <b>Apri</b>. Funziona sempre, anche dal telefono.</p></div>
+        <div class="card"><h3>Come app del browser</h3><p><b>Installa nel browser</b>: Edge o Chrome la mettono in una finestra a sé, con l'icona nel menu Start.</p></div>
+        <div class="card"><h3>Sul PC, con HSPI Client</h3><p><b>Scarica sul PC</b>: HSPI Client prende il pacchetto dal portale, crea il collegamento sul desktop e lo tiene aggiornato. Se l'app è già sul PC, il pulsante diventa <b>Apri sul PC</b>. Qui gira anche il motore locale, per esempio l'AI di Verbale Studio.</p></div>
+      </div>
 
       <h2 id="collega">Come ci si collega</h2>
       <ol class="steps">
@@ -50,7 +58,7 @@
     </div>
   </div>
 
-  <footer>HSPI Team Manager · raggiungibile solo dalla rete privata del team (Tailscale). <span id="versione"></span></footer>
+  <footer><span data-portal-name>HSPI Team Manager</span> · raggiungibile solo dalla rete privata del team (Tailscale). <span id="versione"></span></footer>
 </div>
 <script src="/sito/sito.js" defer></script>
 </body>

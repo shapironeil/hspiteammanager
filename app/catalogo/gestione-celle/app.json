@@ -1,0 +1,19 @@
+{
+  "id": "gestione-celle",
+  "name": "GestioneCelle",
+  "version": "0.8.0",
+  "released": "2026-10-01",
+  "summary": "Mappe dei processi (macro, processi, micro) con codici automatici, scadenze, note e il file Excel di sempre.",
+  "description": "Albero e tabella delle voci con codici 1, 1.2, 1.2.3 che si aggiornano da soli, controlli dei duplicati come nel file BPB, responsabili e scadenze, eliminazione con conferme e richieste, import ed export Excel con le stesse formule.",
+  "web": "/celle/",
+  "color": "#2f8f7a",
+  "icon": "icon.svg",
+  "minPortal": "0.7.0",
+  "engine": null,
+  "novita": [
+    { "version": "0.8.0", "date": "2026-10-01", "items": [
+      "Trama si chiama ora GestioneCelle.",
+      "Diventa un'app del catalogo: si apre nella sua finestra (/celle/) e ha un collegamento sul PC con HSPI Client."
+    ] }
+  ]
+}

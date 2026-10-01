@@ -11,16 +11,16 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const config = require('./config');
-const { writeZip } = require('./trama/zip');
+const { writeZip } = require('./celle/zip');
 
 const CLIENT_DIR = path.join(config.CODE_ROOT, 'client');
 
 // Il programma del client: hspi-client.js + i moduli condivisi con il portale (una sola copia nel repository).
+// I motori delle app (per esempio l'AI di Verbale Studio) non stanno qui: arrivano con i pacchetti del catalogo.
 function appFiles() {
   return [
     { name: 'app/hspi-client.js', data: fs.readFileSync(path.join(CLIENT_DIR, 'app', 'hspi-client.js')) },
-    { name: 'app/ollama.js', data: fs.readFileSync(path.join(__dirname, 'verbali', 'ollama.js')) },
-    { name: 'app/zip.js', data: fs.readFileSync(path.join(__dirname, 'trama', 'zip.js')) },
+    { name: 'app/zip.js', data: fs.readFileSync(path.join(__dirname, 'celle', 'zip.js')) },
     { name: 'app/version.json', data: fs.readFileSync(path.join(config.CODE_ROOT, 'version.json')) },
   ];
 }

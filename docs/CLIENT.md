@@ -31,12 +31,15 @@
 2. Se la sua versione è diversa, scarica `/scarica/client-app.zip` e controlla l'**impronta SHA-256** pubblicata dall'host.
 3. Prepara la nuova versione accanto alla vecchia e le scambia. La vecchia va in `precedenti\` (si tengono le ultime 2). Se qualcosa va storto resta quella di prima.
 4. Riparte con la versione nuova.
-5. Accende il **motore locale** su `http://127.0.0.1:4320`, che risponde solo alle pagine del portale.
-6. Apre il portale nel browser.
+5. Aggiorna allo stesso modo le **app del catalogo** già scaricate (`apps\<id>\`, vedi `docs/APP.md`).
+6. Accende il **motore locale** su `http://127.0.0.1:4320`, che risponde solo alle pagine del portale.
+7. Apre il portale nel browser. Con `--apri <app>`, lanciato dal collegamento di un'app, apre invece quell'app nella sua finestra.
 
 **Motore locale:**
 
-- Verbale Studio lo cerca all'apertura. Se c'è, l'AI locale gira sul PC dell'utente: installazione di Ollama, download dei modelli, riformulazioni, correzioni, addestramento e chat.
+- I motori delle app arrivano con i loro pacchetti, non con il programma. Quello di Verbale Studio contiene l'AI locale.
+- Verbale Studio cerca il client all'apertura. Se c'è ma Verbale Studio non è ancora sul PC, propone **Scarica Verbale Studio sul PC**. Poi l'AI locale gira sul PC dell'utente: installazione di Ollama, download dei modelli, riformulazioni, correzioni, addestramento e chat.
+- Chi aveva un client 0.6, con l'AI dentro il programma, al primo aggiornamento riceve Verbale Studio da solo.
 - L'host prepara soltanto i testi da passare all'AI (contesto della riunione, glossario, esempi): è un lavoro leggero.
 - Se il client non c'è, Verbale Studio lo dice e rimanda alla pagina Scarica. Il resto del portale funziona normalmente.
 
@@ -46,7 +49,9 @@ Pagine senza accesso (comunque solo dentro la rete privata):
 
 - `/benvenuto`: presentazione;
 - `/guida`: cos'è, come funziona, come si installa, come ci si collega, domande;
-- `/scarica`: HSPI Client con versione e istruzioni.
+- `/scarica`: le app del catalogo e HSPI Client, con versione e istruzioni.
+
+Le pagine usano lo stesso logo, nome e tema del portale: logo dalla cartella `logo`, nome da Sistema → Impostazioni.
 
 Dalla pagina di accesso del portale c'è il link *Cos'è e come si installa*.
 

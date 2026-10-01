@@ -89,10 +89,6 @@ route('POST', '/api/register', { public: true }, async (ctx) => {
     db.log({ actor: username, ip: ctx.ip }, 'registrazione', `${name}: in attesa di approvazione`);
     return ctx.json(201, { pending: true, username });
   }
-  db.run('INSERT INTO programs(name, description, version, guide, created_by, updated_at) VALUES(?,?,?,?,?,?)',
-    'Verbale Studio', 'App per la redazione dei verbali.', '',
-    '# Verbale Studio\n\nScrivi qui la guida all\'uso: installazione, primo avvio, funzioni principali.\n\nPoi carica il file del programma con **Carica file**.',
-    id, db.now());
   db.log({ user, ip: ctx.ip }, 'setup', 'Portale configurato, creato account Hacker');
   ctx.json(201, { pending: false, username, user: publicUser(user) }, { 'Set-Cookie': security.sessionCookie(security.createSession(id)) });
 });

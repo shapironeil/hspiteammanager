@@ -201,43 +201,66 @@ textarea.tall { min-height: 260px; font-family: var(--mono); font-size: 13px; }
 .auth-foot { text-align: center; margin-top: 18px; font-size: 12.5px; color: var(--faint); }
 
 /* ---- Struttura ------------------------------------------------------------ */
+/* Menu laterale dinamico:
+   - chiuso: una colonna di sole icone, centrate; i gruppi sono un trattino;
+   - passandoci sopra si apre (dopo un attimo, classe "open" messa da app.js) SOPRA il contenuto, senza spostarlo,
+     e si richiude quando il mouse esce o dopo aver scelto una voce;
+   - "bloccato" (pulsante menu in alto o puntina in fondo): resta aperto e il contenuto si sposta. */
 .shell { min-height: 100vh; padding-left: var(--rail); transition: padding-left 0.22s ease; }
 .shell.pinned { padding-left: var(--side); }
 .sidebar {
   position: fixed; z-index: 30; top: 12px; bottom: 12px; left: 12px;
-  width: calc(var(--rail) - 22px); padding: 12px 8px; overflow: hidden;
+  width: calc(var(--rail) - 20px); padding: 12px 8px; overflow: hidden;
   display: flex; flex-direction: column; gap: 4px;
   background: var(--side-bg);
-  transition: width 0.22s ease, transform 0.22s ease;
+  transition: width 0.24s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.24s ease, transform 0.22s ease;
 }
-.sidebar:hover, .sidebar:focus-within, .shell.pinned .sidebar { width: calc(var(--side) - 22px); }
-.side-brand { display: flex; align-items: center; gap: 12px; padding: 2px 0 14px; white-space: nowrap; }
+.sidebar.open, .sidebar:has(:focus-visible), .shell.pinned .sidebar { width: calc(var(--side) - 22px); }
+.shell:not(.pinned) .sidebar.open { box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35); }
+.side-brand { display: flex; align-items: center; gap: 12px; padding: 2px 0 12px; min-height: 52px; white-space: nowrap; overflow: hidden; }
 .side-brand img { width: 40px; height: 40px; flex: none; object-fit: contain; }
 .side-brand strong { font-family: var(--serif); font-weight: 500; font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; }
-.nav { display: flex; flex-direction: column; gap: 3px; flex: 1; overflow-y: auto; overflow-x: hidden; }
-.nav-sep { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; margin: 10px 0 3px; padding: 5px 10px; border: 0; border-radius: 9px; background: none; cursor: pointer;
-  font: inherit; font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--faint); white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.18s; }
+.nav { display: flex; flex-direction: column; gap: 3px; flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+.nav::-webkit-scrollbar { display: none; }
+.sidebar.open .nav, .shell.pinned .nav { scrollbar-width: thin; }
+.nav-sep { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 26px; margin: 8px 0 2px; padding: 5px 10px; border: 0; border-radius: 9px; background: none; cursor: pointer;
+  font: inherit; font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
 .nav-sep:hover { color: var(--text); background: var(--glass); }
 .nav-sep:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 1px; }
 .nav-sep svg { width: 13px; height: 13px; flex: none; transition: transform 0.18s; }
 .nav-sep[aria-expanded="true"] svg { transform: rotate(90deg); }
+/* da chiuso il titolo del gruppo diventa un trattino al centro */
+.nav-sep::before { content: ""; position: absolute; left: 50%; top: 50%; width: 18px; height: 2px; margin-left: -9px; border-radius: 2px; background: var(--border-strong); transition: opacity 0.15s; }
 .nav-group { display: flex; flex-direction: column; gap: 3px; }
 .nav-group.closed { display: none; }
 .icon-btn.spin svg { animation: spin 0.6s ease; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .nav-item {
-  display: flex; align-items: center; gap: 13px; padding: 8px 10px; border-radius: 11px;
+  position: relative; display: flex; align-items: center; gap: 13px; padding: 8px 10px; border-radius: 11px;
   color: var(--muted); text-decoration: none; white-space: nowrap; border: 1px solid transparent;
   background: none; cursor: pointer; text-align: left; width: 100%;
 }
 .nav-item svg { width: 20px; height: 20px; flex: none; }
-.nav-item span { opacity: 0; transition: opacity 0.18s; }
 .nav-item:hover { color: var(--text); background: var(--glass); }
 .nav-item.active { color: var(--text); background: rgba(217, 119, 87, 0.2); border-color: rgba(233, 162, 127, 0.35); }
 .nav-item.active svg { color: var(--link); }
-.sidebar:hover .nav-item span, .sidebar:focus-within .nav-item span, .shell.pinned .nav-item span,
-.sidebar:hover .nav-sep, .sidebar:focus-within .nav-sep, .shell.pinned .nav-sep { opacity: 1; pointer-events: auto; }
+.sidebar .nav-item { height: 40px; padding: 0 0 0 10px; overflow: hidden; flex: none; }
+.sidebar .nav-item.active::before { content: ""; position: absolute; left: 0; top: 9px; bottom: 9px; width: 3px; border-radius: 3px; background: var(--accent); }
+/* testi: nascosti del tutto da chiuso (niente lettere tagliate), compaiono scorrendo quando si apre */
+.sidebar .nav-item span, .nav-sep > span, .side-brand strong { opacity: 0; transform: translateX(-6px); transition: opacity 0.16s ease, transform 0.2s ease; pointer-events: none; }
+.nav-sep svg { opacity: 0; transition: opacity 0.16s ease, transform 0.18s; }
+.sidebar.open :is(.nav-item span, .nav-sep > span, .side-brand strong),
+.sidebar:has(:focus-visible) :is(.nav-item span, .nav-sep > span, .side-brand strong),
+.shell.pinned .sidebar :is(.nav-item span, .nav-sep > span, .side-brand strong) { opacity: 1; transform: none; pointer-events: auto; transition-delay: 0.06s; }
+.sidebar.open .nav-sep svg, .sidebar:has(:focus-visible) .nav-sep svg, .shell.pinned .sidebar .nav-sep svg { opacity: 1; }
+.sidebar.open .nav-sep::before, .sidebar:has(:focus-visible) .nav-sep::before, .shell.pinned .sidebar .nav-sep::before { opacity: 0; }
+/* da chiuso i gruppi si possono aprire solo da aperto: il trattino non e' cliccabile */
+.sidebar:not(.open):not(:has(:focus-visible)) .nav-sep { pointer-events: none; }
+.shell.pinned .sidebar .nav-sep { pointer-events: auto; }
 .side-foot { border-top: 1px solid var(--border); padding-top: 8px; display: flex; flex-direction: column; gap: 3px; }
+.side-pin { opacity: 0.85; }
+.side-pin svg { transition: transform 0.2s; }
+.shell.pinned .side-pin svg { transform: rotate(90deg); color: var(--link); }
 
 .main { padding: 12px 24px 56px; max-width: 1160px; margin: 0 auto; }
 .topbar { display: flex; align-items: center; gap: 10px; padding: 6px 0 18px; }
@@ -404,7 +427,10 @@ details.detail pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/
   .shell, .shell.pinned { padding-left: 0; }
   .sidebar, .shell.pinned .sidebar { width: min(280px, calc(100vw - 56px)); transform: translateX(calc(-100% - 16px)); }
   .shell.menu-open .sidebar { transform: none; }
-  .sidebar .nav-item span, .sidebar .nav-sep { opacity: 1; pointer-events: auto; }
+  .sidebar :is(.nav-item span, .nav-sep > span, .side-brand strong, .nav-sep svg) { opacity: 1; transform: none; pointer-events: auto; }
+  .sidebar .nav-sep { pointer-events: auto; }
+  .sidebar .nav-sep::before { opacity: 0; }
+  .side-pin { display: none; }
   .shell.menu-open .scrim { display: block; position: fixed; inset: 0; z-index: 25; background: var(--scrim); }
   .only-mobile { display: inline-grid; }
   .only-desktop { display: none; }
@@ -443,7 +469,7 @@ details.detail pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/
 .league .league-input:first-of-type { font-family: var(--serif); font-size: 16px; }
 .league-arrow { align-self: center; font-size: 28px; color: var(--faint); flex: none; }
 
-/* ---- Trama ---------------------------------------------------------------- */
+/* ---- GestioneCelle ---------------------------------------------------------------- */
 .tr-tabs { display: inline-grid; grid-auto-flow: column; grid-template-columns: none; margin-bottom: 14px; }
 .tr-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 16px; align-items: start; }
 .tr-layout .card + .card { margin-top: 0; }
@@ -481,3 +507,11 @@ details.detail pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/
   .tr-tree { position: static; max-height: 55vh; }
   .tr-tabs { display: flex; overflow-x: auto; }
 }
+
+/* ---- App del catalogo (pagina App e programmi) e finestre delle app ---- */
+.app-icon { width: 44px; height: 44px; border-radius: 12px; flex: none; display: block; }
+.app-card .row { flex-wrap: wrap; }
+.app-window { padding-top: 8px; }
+.app-brand { display: inline-flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
+.app-brand img { width: 34px; height: 34px; border-radius: 9px; }
+.app-brand strong { font-family: var(--serif); font-weight: 500; font-size: 18px; }

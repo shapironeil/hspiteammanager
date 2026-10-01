@@ -1,0 +1,22 @@
+{
+  "id": "cippi",
+  "name": "Cippi",
+  "version": "0.1.0",
+  "released": "2026-10-01",
+  "summary": "Presentazioni PowerPoint del team: le legge, propone i punti chiave e i controlli, le rifà da un modello.",
+  "description": "Importa un .pptx e ne ricostruisce la struttura: sezioni dall'indice, tipo di ogni slide, blocchi nell'ordine di lettura con la loro gerarchia, flussi a corsie (attori, step, decisioni Si/No, sistemi, rimandi), legenda dei colori, sigle. Modalità Revisione con pannello strumenti, visione e punti chiave; modifica dei testi e dell'ordine; modelli riutilizzabili; esportazione in .pptx con la stessa grafica.",
+  "web": "/cippi/",
+  "color": "#5b4fd6",
+  "icon": "icon.svg",
+  "minPortal": "0.8.0",
+  "engine": null,
+  "novita": [
+    { "version": "0.1.0", "date": "2026-10-01", "items": [
+      "Lettura delle presentazioni: tipi di slide, sezioni, ordine dei blocchi, gerarchia, flussi a corsie, legenda, sigle.",
+      "Modalità Revisione: pannello strumenti, pannello visione, punti chiave; confronto To-Be / As-Is affiancato.",
+      "Modifica di testi e ordine, salvataggio di versioni nella cartella del progetto, esportazione .pptx.",
+      "Modelli: si salvano dalla presentazione migliore, si usano per crearne di nuove e per misurare la completezza.",
+      "Sinergie: archivio in Esplora file, processi collegati a GestioneCelle, glossario del progetto, appunti accanto al documento."
+    ] }
+  ]
+}

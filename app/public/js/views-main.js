@@ -1,8 +1,8 @@
-// Schermate visibili a tutti: Home, Programmi, File, Profilo.
+// Schermate visibili a tutti: Home, App e programmi, File, Profilo.
 import { get, post, patch, del, upload } from './api.js';
 import { h, icon, modal, confirmDialog, form, field, toast, toastError, fmtBytes, fmtDate, pageHead, meter, markdown, avatarEl } from './ui.js';
 import { app, refresh, boot, roleText } from './app.js';
-import { myDeadlinesCard } from './trama.js';
+import { myDeadlinesCard } from './celle.js';
 
 // ---- Home ------------------------------------------------------------------
 export async function viewHome(el) {
@@ -87,8 +87,82 @@ function checkSize(file) {
   if (file.size === 0) throw new Error('Il file è vuoto.');
 }
 
+// ---- App del catalogo -------------------------------------------------------------
+// Le app dedicate (Verbale Studio, GestioneCelle, ...) hanno una versione propria e si aprono in tre modi:
+//   nel browser (sempre), installate come app del browser (finestra a se', nessun setup),
+//   oppure scaricate sul PC con HSPI Client (collegamento sul desktop, motore locale, aggiornamenti automatici).
+const CLIENT = 'http://127.0.0.1:4320';
+async function clientState() {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 1200);
+  try { const r = await fetch(`${CLIENT}/stato`, { signal: ctrl.signal }); const d = r.ok ? await r.json() : null; return d && d.app === 'hspi-client' ? d : null; } catch { return null; } finally { clearTimeout(t); }
+}
+async function clientCall(pathname, body) {
+  const r = await fetch(CLIENT + pathname, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || `HSPI Client: errore ${r.status}`);
+  return d;
+}
+
+function novitaDialog(a) {
+  modal(`Novità · ${a.name}`, h('div', {},
+    a.novita.length ? a.novita.map((n) => h('div', { style: 'margin-bottom:12px' },
+      h('h3', {}, `v${n.version}`, n.date ? h('span', { class: 'small muted' }, ` · ${n.date.split('-').reverse().join('/')}`) : null),
+      h('ul', { style: 'margin:6px 0 0;padding-left:20px' }, (n.items || []).map((x) => h('li', {}, x)))))
+      : h('p', { class: 'muted' }, 'Nessuna nota per questa versione.'),
+    a.engine ? h('p', { class: 'note' }, `Sul PC, con HSPI Client: ${a.engine.does}.`) : null));
+}
+
+async function catalogSection() {
+  const [{ apps }, client] = await Promise.all([get('/api/catalogo'), clientState()]);
+  const box = h('div', { class: 'grid' });
+  const draw = (cl) => box.replaceChildren(...apps.map((a) => appCard(a, cl, async () => draw(await clientState()))));
+  draw(client);
+  return h('section', { class: 'catalog' },
+    h('div', { class: 'row', style: 'justify-content:space-between;align-items:baseline;margin:4px 0 10px' },
+      h('h2', {}, 'App del portale'),
+      h('span', { class: 'small muted' }, client ? `HSPI Client aperto su questo PC (v${client.version})` : h('span', {}, 'HSPI Client non aperto su questo PC · ', h('a', { href: '/scarica', target: '_blank', rel: 'noopener' }, 'scaricalo')))),
+    box);
+}
+
+function appCard(a, client, redraw) {
+  const local = client && client.apps ? client.apps[a.id] : null;
+  const run = (fn) => async (e) => {
+    const b = e.currentTarget;
+    b.disabled = true;
+    try { await fn(); } catch (err) { toastError(err); } finally { b.disabled = false; }
+  };
+  const install = run(async () => {
+    const r = await clientCall('/app/installa', { id: a.id });
+    toast(r.updated ? `${a.name} aggiornata alla versione ${r.version}.` : `${a.name} è sul tuo PC: trovi il collegamento sul desktop.`);
+    await redraw();
+  });
+  const openLocal = run(async () => { await clientCall('/app/apri', { id: a.id }); toast(`Apro ${a.name}…`); });
+  const actions = [h('a', { class: 'btn primary sm', href: a.web, target: '_blank', rel: 'noopener' }, icon('play'), 'Apri')];
+  if (client) {
+    if (local) {
+      actions.push(h('button', { class: 'btn sm', type: 'button', onclick: openLocal, title: 'Apre l\'app nella sua finestra, dal tuo PC' }, icon('apps'), 'Apri sul PC'));
+      if (local !== a.version) actions.push(h('button', { class: 'btn sm', type: 'button', onclick: install }, icon('download'), `Aggiorna a v${a.version}`));
+    } else actions.push(h('button', { class: 'btn sm', type: 'button', onclick: install, title: 'HSPI Client scarica il pacchetto e crea il collegamento sul desktop' }, icon('download'), 'Scarica sul PC'));
+  } else {
+    actions.push(h('a', { class: 'btn sm', href: `${a.web}?installa=1`, target: '_blank', rel: 'noopener', title: 'Installa l\'app nel browser: una finestra a sé, senza setup' }, icon('download'), 'Installa nel browser'));
+  }
+  actions.push(h('button', { class: 'btn sm', type: 'button', onclick: () => novitaDialog(a) }, icon('book'), 'Novità'));
+  const status = local
+    ? (local === a.version ? h('span', { class: 'chip ok' }, 'Sul tuo PC') : h('span', { class: 'chip warn' }, `Sul PC: v${local}`))
+    : null;
+  return h('article', { class: 'program glass app-card', 'data-app': a.id },
+    h('div', { class: 'program-top' },
+      h('img', { class: 'app-icon', src: a.icon, alt: '' }),
+      h('div', {}, h('h3', {}, a.name),
+        h('div', { class: 'row', style: 'gap:6px;margin-top:4px' }, h('span', { class: 'chip' }, `v${a.version}`), status,
+          a.compatible ? null : h('span', { class: 'chip danger', title: `Richiede il portale ${a.minPortal}` }, 'Da aggiornare il portale')))),
+    h('p', {}, a.summary),
+    h('div', { class: 'row' }, actions));
+}
+
 export async function viewPrograms(el) {
-  const programs = await get('/api/programs');
+  const [programs, catalog] = await Promise.all([get('/api/programs'), catalogSection()]);
   const canEdit = app.can('manager');
 
   const card = (p) => {
@@ -123,7 +197,9 @@ export async function viewPrograms(el) {
   };
 
   el.replaceChildren(
-    pageHead('Programmi', 'Gli strumenti del team: apri il programma dal portale e leggi la guida per usarlo.'),
+    pageHead('App e programmi', 'Le app del portale si aprono nel browser oppure si scaricano sul PC con HSPI Client, senza installazioni. Sotto, gli altri strumenti del team.'),
+    catalog,
+    h('h2', { style: 'margin:26px 0 10px' }, 'Programmi del team'),
     programs.length ? h('div', { class: 'grid' }, programs.map(card)) : h('div', { class: 'card glass empty' }, 'Nessun programma disponibile.'),
     canEdit ? h('p', { class: 'note', style: 'margin-top:16px' }, 'I programmi arrivano dalla cartella "apptools": ogni sottocartella con una web app compare qui da sola. Descrizione, versione e guida si scrivono con Modifica.') : null);
 }

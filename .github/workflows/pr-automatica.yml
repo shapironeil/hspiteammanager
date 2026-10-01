@@ -1,0 +1,68 @@
+# Pull request automatiche verso main.
+#  - a ogni push su un ramo di lavoro (non main): se non c'e' gia' una pull request aperta, la crea;
+#  - ogni giorno alle 07:00 (UTC): controlla tutti i rami con modifiche nuove e apre quelle che mancano;
+#  - a mano: GitHub → Actions → "Pull request automatica" → Run workflow (si puo' indicare un ramo).
+# Il merge resta sempre una scelta del proprietario: qui si aprono le pull request, non si uniscono.
+# Requisito: Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests".
+name: Pull request automatica
+
+on:
+  push:
+    branches-ignore: [main]
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      ramo:
+        description: 'Ramo da proporre (vuoto = tutti i rami con modifiche nuove)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  apri:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apri le pull request mancanti
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RAMO_PUSH: ${{ github.event_name == 'push' && github.ref_name || '' }}
+          RAMO_MANUALE: ${{ github.event.inputs.ramo }}
+        run: |
+          set -e
+          rami="${RAMO_PUSH:-$RAMO_MANUALE}"
+          if [ -z "$rami" ]; then
+            rami=$(git for-each-ref --format='%(refname:lstrip=3)' refs/remotes/origin | grep -v -E '^(HEAD|main)$' || true)
+          fi
+          for ramo in $rami; do
+            nuovi=$(git rev-list --count "origin/main..origin/$ramo" 2>/dev/null || echo 0)
+            if [ "$nuovi" = "0" ]; then echo "$ramo: niente di nuovo rispetto a main"; continue; fi
+            aperte=$(gh pr list --head "$ramo" --base main --state open --json number --jq 'length')
+            if [ "$aperte" != "0" ]; then echo "$ramo: pull request gia' aperta"; continue; fi
+            versione=$(git show "origin/$ramo:version.json" 2>/dev/null | sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' | head -1)
+            {
+              echo "Pull request aperta automaticamente dal ramo \`$ramo\` ($nuovi modifiche nuove)."
+              echo
+              echo "## Modifiche"
+              git log --no-merges --format='- %s' "origin/main..origin/$ramo" | head -40
+              echo
+              echo "Le prove automatiche partono da sole. Il merge lo decide il proprietario."
+            } > corpo.md
+            if ! gh pr create --base main --head "$ramo" --title "${versione:+v$versione: }aggiornamento da $ramo" --body-file corpo.md 2> errore.txt; then
+              cat errore.txt
+              if grep -q "not permitted to create" errore.txt; then
+                # e' un'impostazione del repository, non un errore del codice: avviso ben visibile, senza "✗" sulle pull request
+                echo "::warning title=Pull request non creata: permesso mancante::Abilita su GitHub: Settings → Actions → General → Workflow permissions → 'Allow GitHub Actions to create and approve pull requests'. Poi rilancia questo workflow."
+                echo "### Pull request non creata per \`$ramo\`" >> "$GITHUB_STEP_SUMMARY"
+                echo "Manca il permesso: Settings → Actions → General → Workflow permissions → *Allow GitHub Actions to create and approve pull requests*." >> "$GITHUB_STEP_SUMMARY"
+                continue
+              fi
+              exit 1
+            fi
+          done
