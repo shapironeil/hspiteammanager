@@ -57,7 +57,11 @@ jobs:
             if ! gh pr create --base main --head "$ramo" --title "${versione:+v$versione: }aggiornamento da $ramo" --body-file corpo.md 2> errore.txt; then
               cat errore.txt
               if grep -q "not permitted to create" errore.txt; then
-                echo "::error title=Permesso mancante::Abilita su GitHub: Settings → Actions → General → Workflow permissions → 'Allow GitHub Actions to create and approve pull requests'. Poi rilancia questo workflow."
+                # e' un'impostazione del repository, non un errore del codice: avviso ben visibile, senza "✗" sulle pull request
+                echo "::warning title=Pull request non creata: permesso mancante::Abilita su GitHub: Settings → Actions → General → Workflow permissions → 'Allow GitHub Actions to create and approve pull requests'. Poi rilancia questo workflow."
+                echo "### Pull request non creata per \`$ramo\`" >> "$GITHUB_STEP_SUMMARY"
+                echo "Manca il permesso: Settings → Actions → General → Workflow permissions → *Allow GitHub Actions to create and approve pull requests*." >> "$GITHUB_STEP_SUMMARY"
+                continue
               fi
               exit 1
             fi
