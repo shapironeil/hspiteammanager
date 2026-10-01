@@ -6,6 +6,8 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { startPortal, setupHacker, addUser } = require('./helpers');
 const { pptx } = require('./pptx-prova');
+const { kickoff } = require('./pptx-kickoff-prova');
+const { readZip } = require('../src/celle/zip');
 const { readPptx } = require('../src/cippi/pptx-read');
 const { analyze } = require('../src/cippi/analyze');
 
@@ -161,4 +163,90 @@ test('eliminazione: chi l\'ha creato o il Manager del progetto', async () => {
   assert.equal((await ospite.del(`/api/cippi/docs/${other}`)).status, 404);
   assert.equal((await mario.del(`/api/cippi/docs/${other}`)).status, 200);
   assert.equal((await luca.get(`/api/cippi/docs/${other}`)).status, 404);
+});
+
+// ---- Presentazioni di kick-off: sezioni native, schede, tabelle, masterplan, impronta, modifiche per funzione ----
+test('kick-off: sezioni native, copertina, indice a due livelli senza falsi avvisi, pillole, tabella disegnata, Gantt, totale, caratteri', () => {
+  const pres = readPptx(kickoff());
+  const a = analyze(pres);
+  assert.deepEqual(a.slides.map((s) => s.kind), ['copertina', 'indice', 'testo', 'scheda', 'scheda', 'masterplan', 'tabella']);
+  assert.equal(a.nativeSections, true, 'le sezioni sono quelle di PowerPoint');
+  assert.deepEqual(a.sections.map((s) => s.title), ['Copertina', 'Indice', 'Introduzione', 'Ambito', 'Masterplan', 'Sintesi contratto']);
+  assert.deepEqual(a.sections[3].slides, [4, 5]);
+  assert.ok(!a.checks.some((c) => /indice senza slide|Manca una slide di titolo/.test(c.text)), 'le sotto-voci dell\'indice trovano le slide "Ambito - ..."');
+  const s4 = a.slides[3];
+  assert.ok(!s4.blocks.some((b) => /Kick-off Progetto Prova/.test(b.text)), 'il piè di pagina non è un blocco');
+  const pills = s4.blocks.filter((b) => b.role === 'intestazione');
+  assert.deepEqual(pills.map((b) => b.fill), ['00B095', '1482AB'], 'pillole: testo sopra la forma colorata = intestazione con quel colore');
+  const drawn = s4.blocks.find((b) => b.role === 'tabella');
+  assert.ok(drawn && drawn.drawn && drawn.header, 'tabella disegnata con le forme riconosciuta');
+  assert.deepEqual(drawn.rows[0], ['FUNZIONALITÀ', 'PIATTAFORMA ABILITANTE', 'FINALITÀ']);
+  assert.equal(drawn.rows[1][1], 'PDND');
+  assert.equal(drawn.ids.length, 3, 'ogni cella ha la sua forma, modificabile');
+  const g = a.slides[5].gantt;
+  assert.ok(g && g.from === '2026-10' && g.to === '2027-12', 'masterplan letto dall\'SVG: periodo');
+  assert.deepEqual(g.rows.map((r) => [r.kind, r.text, r.from, r.to]), [
+    ['componente', 'COMPONENTE UNO', '2026-10', '2027-05'], ['attivita', 'Design e analisi funzionale', '2026-10', '2026-12'],
+    ['attivita', 'Sviluppo applicativi, Test e Implementazione', '2026-12', '2027-05'], ['componente', 'COMPONENTE DUE', '2027-06', '2027-12'], ['attivita', 'Rilascio e manutenzione', '2027-06', '2027-12']]);
+  const t = a.slides[6].blocks.find((b) => b.role === 'tabella');
+  assert.equal(t.cells[3][0].gridSpan, 2, 'celle unite');
+  assert.equal(t.cells[3][2].fill, '225546');
+  assert.ok(t.cells[1][2].bold);
+  assert.ok(a.checks.some((c) => c.level === 'info' && /Totale verificato/.test(c.text)), 'il totale torna');
+  const bad = analyze(readPptx(kickoff({ totaleSbagliato: true })));
+  assert.ok(bad.checks.some((c) => c.level === 'errore' && /tabella dice 160, la somma delle righe fa 150/.test(c.text)), 'totale che non torna');
+  assert.ok(a.checks.some((c) => /Carattere di prova "FT Habit Trial"/.test(c.text)));
+  assert.ok(a.checks.some((c) => c.slide === 4 && /Testo ridotto/.test(c.text)));
+  assert.equal(a.glossary.find((x) => x.term === 'PagoPA').known, true, 'glossario della PA');
+  assert.equal(a.glossary.find((x) => x.term === 'BIPS').meaning, 'Basi informative per lo sviluppo');
+  assert.ok(!a.glossary.some((x) => x.term === 'FINALIT'), 'FINALITÀ non è una sigla');
+  assert.equal(pres.meta.company, 'Fornitore di prova S.p.A.');
+  assert.ok(pres.slides[2].background.some((s) => (s.paragraphs || []).some((p) => p.text === 'RISERVATO')), 'forme fisse del layout per l\'anteprima');
+  assert.ok(a.reading.some((r) => r.title === 'Piano di progetto') && a.keyPoints.some((k) => k.kind === 'piano'));
+});
+
+test('kick-off nel portale: modello noto riconosciuto, sfondo del layout, trova e sostituisci, celle e righe delle tabelle, esportazione pulita', async () => {
+  const r = await luca.put(`/api/cippi/import?projectId=${pid}&name=${encodeURIComponent('Kick-off prova.pptx')}`, kickoff());
+  assert.equal(r.status, 201, JSON.stringify(r.data));
+  const kid = r.data.id;
+  const d = (await luca.get(`/api/cippi/docs/${kid}`)).data;
+  assert.ok(d.impronta && d.impronta.somiglianze.some((x) => x.id === 'kickoff-txt-biosiris' && x.punteggio >= 60), 'somiglia al kick-off in memoria: ' + JSON.stringify(d.impronta && d.impronta.somiglianze));
+  assert.equal(d.analysis.meta.company, 'Fornitore di prova S.p.A.');
+  const sl = (await luca.get(`/api/cippi/docs/${kid}/slide/3`)).data;
+  assert.ok(sl.background.some((s) => (s.paragraphs || []).some((p) => p.text === 'RISERVATO')), 'la slide porta con sé le forme del layout');
+  // trova e sostituisci: nelle slide (piè di pagina di ogni slide) e nel layout (scritta fissa)
+  const s1 = await luca.post(`/api/cippi/docs/${kid}/sostituisci`, { find: 'Kick-off Progetto Prova', replace: 'SAL 1 Progetto Prova', layouts: true });
+  assert.equal(s1.status, 200, JSON.stringify(s1.data));
+  assert.deepEqual([s1.data.count, s1.data.slides], [5, [3, 4, 5, 6, 7]]);
+  const s2 = (await luca.post(`/api/cippi/docs/${kid}/sostituisci`, { find: 'riservato', replace: 'PUBBLICO', layouts: true })).data;
+  assert.deepEqual([s2.count, s2.layoutCount], [0, 1], 'la scritta del layout si conta nel file');
+  assert.equal((await luca.post(`/api/cippi/docs/${kid}/sostituisci`, { find: 'xyz-non-esiste', replace: 'a', anteprima: true })).data.count, 0);
+  const after = (await luca.get(`/api/cippi/docs/${kid}`)).data;
+  assert.equal(after.edits.replace.length, 1);
+  assert.ok(after.list[2].texts && Object.values(after.list[2].texts).some((l) => JSON.stringify(l).includes('SAL 1 Progetto Prova')), 'nelle slide è una modifica dei testi');
+  // celle della tabella e una riga nuova; una cella della tabella disegnata (forma) tramite i testi
+  const tbl = after.analysis.slides[6].blocks.find((b) => b.role === 'tabella');
+  const drawn = after.analysis.slides[3].blocks.find((b) => b.role === 'tabella');
+  const list = after.list.map((x) => ({ ...x }));
+  list[6] = { ...list[6], cells: { [tbl.id]: { '1,1': ['Sviluppo e manutenzione evolutiva (rivista)'] } }, tableRows: { [tbl.id]: [{ after: 2, cells: ['EL', 'E-learning', '€ 10,00'] }] } };
+  list[3] = { ...list[3], texts: { ...(list[3].texts || {}), [drawn.ids[1][1]]: ['SPID'] } };
+  const p = await luca.patch(`/api/cippi/docs/${kid}`, { slides: list, updatedAt: after.updatedAt });
+  assert.equal(p.status, 200, JSON.stringify(p.data));
+  const dl = await luca.get(`/api/cippi/docs/${kid}/download`);
+  assert.equal(dl.status, 200);
+  const out = readPptx(dl.data);
+  const t2 = out.slides[6].shapes.find((s) => s.kind === 'table');
+  assert.equal(t2.rows.length, 5, 'riga aggiunta');
+  assert.equal(t2.rows[1][1], 'Sviluppo e manutenzione evolutiva (rivista)');
+  assert.deepEqual(t2.rows[3], ['EL', 'E-learning', '€ 10,00']);
+  assert.equal(t2.cells[4][0].gridSpan, 2, 'la riga del totale resta unita');
+  assert.ok(out.slides[3].shapes.some((s) => (s.paragraphs || []).some((x) => x.text === 'SPID')), 'cella della tabella disegnata cambiata');
+  assert.ok(out.slides[2].shapes.some((s) => s.ph && s.ph.type === 'ftr' && s.paragraphs[0].text === 'SAL 1 Progetto Prova'), 'piè di pagina sostituito nelle slide');
+  assert.ok(out.slides[2].background.some((s) => (s.paragraphs || []).some((x) => x.text === 'PUBBLICO')), 'scritta del layout sostituita nel file');
+  // esportazione pulita: tolta la slide del masterplan, la sua immagine SVG non resta nel pacchetto
+  const p2 = await luca.patch(`/api/cippi/docs/${kid}`, { slides: list.filter((x) => x.src !== 6), updatedAt: p.data.updatedAt });
+  assert.equal(p2.status, 200);
+  const names = [...readZip((await luca.get(`/api/cippi/docs/${kid}/download`)).data).keys()];
+  assert.ok(!names.some((n) => /image1\.svg$/.test(n)), 'niente media orfani');
+  assert.ok(names.some((n) => n === 'ppt/slides/slide1.xml'));
 });

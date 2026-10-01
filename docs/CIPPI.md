@@ -25,11 +25,17 @@ Per ogni slide Cippi riconosce:
 
 | Cosa | Come |
 |---|---|
-| **Tipo di slide** | copertina, titolo, indice, divisore di sezione, testo, legenda, flusso, mappa dei processi, scheda, tabella, schema, chiusura |
+| **Tipo di slide** | copertina, titolo, indice, divisore di sezione, testo, legenda, flusso, mappa dei processi, scheda, tabella, schema, masterplan, chiusura |
 | **Titolo** | il segnaposto del titolo, altrimenti il testo più grande in alto. Le etichette delle corsie non contano. |
 | **Blocchi in ordine di lettura** | a righe dall'alto, dentro la riga da sinistra a destra |
 | **Gerarchia** | livello 0 titolo; 1 sottotitolo o intestazione; 2 paragrafo, elenco, tabella; 3 note ed etichette. I punti elenco tengono il loro livello di rientro. |
-| **Sezioni** | dai divisori, abbinati alle voci dell'indice per somiglianza |
+| **Sezioni** | quelle native di PowerPoint (il riquadro "Sezioni"), se ci sono; altrimenti dai divisori, abbinati alle voci dell'indice per somiglianza |
+| **Indice a due livelli** | ogni voce, anche una sotto-voce, trova la sua slide se il titolo è uguale, la contiene ("Ambito - Gestione dei vivai") o le somiglia molto |
+| **Pillole** | una casella di testo trasparente sopra una forma colorata è un'intestazione con quel colore |
+| **Tabelle disegnate con le forme** | righe di caselle allineate in colonne (almeno 3×2 o 2×3) diventano una tabella, con ogni cella legata alla sua forma |
+| **Tabelle vere** | celle unite, riempimenti, grassetti, larghezze delle colonne, stile (prima riga, righe a bande) |
+| **Masterplan** | un Gantt incollato come immagine SVG: anni, mesi, componenti (in maiuscolo), attività e barre diventano un piano con i periodi da mese a mese |
+| **Piè di pagina, data, numero** | sono del layout: non contano come contenuto |
 
 Nei **flussi a corsie** riconosce:
 
@@ -54,6 +60,9 @@ Dall'insieme della presentazione ricava inoltre:
 - il **confronto To-Be / As-Is**: step in più, step in meno, attori diversi;
 - il **glossario**: le sigle, e il loro significato quando il testo lo dice ("CDR (Centro di Responsabilità)");
 - i **punti chiave**: le frasi in grassetto, le note dei flussi, il riepilogo di ogni processo, le novità del To-Be;
+- il **documento**: autore e co-autori, azienda, ultime modifiche per slide (dal registro delle revisioni di PowerPoint), caratteri dichiarati e usati davvero;
+- l'**impronta** (colori e caratteri del tema, layout principale, piè di pagina, sezioni, nomi di forme, azienda), confrontata con i modelli noti in `docs/MEMORIA/**/*.impronta.json` e con i modelli salvati: "Somiglia a: kick-off di progetto (78%)", con i motivi;
+- il **glossario della pubblica amministrazione** preimpostato (SPID, CIE, PagoPA, AppIO, PDND, SEND, FESR, PSR, SAL, FTE...): propone il significato quando il documento non lo dice; il glossario del progetto ha la precedenza;
 - i **controlli**, cioè le cose da sistemare:
   - voci dell'indice senza slide;
   - parti mancanti (2/3 senza 3/3);
@@ -63,7 +72,10 @@ Dall'insieme della presentazione ricava inoltre:
   - corsie vuote;
   - rimandi a processi che non sono nella presentazione;
   - slide senza titolo o nascoste;
-  - flussi senza legenda.
+  - flussi senza legenda;
+  - tabelle con una riga "Totale" che non è la somma delle righe (e una conferma quando torna);
+  - caratteri di prova ("Trial", "Demo") e caratteri diversi da quelli del tema;
+  - testo ridotto da PowerPoint per entrare nella forma (forse c'è troppo testo).
 
 Il **punteggio** (%) riassume quanti controlli non passano rispetto al numero di slide.
 
@@ -76,6 +88,7 @@ Tre pannelli; sul telefono uno alla volta, con le schede in alto.
 - Cosa mostrare: ordine di lettura e gerarchia, step nuovi e modificati, note dello speaker.
 - La struttura per sezioni; in Modifica anche sposta, duplica e togli.
 - Percorso di lettura, controlli, glossario (il significato delle sigle si scrive qui e vale per tutto il progetto), appunti, confronto con un modello.
+- **Documento**: autore, co-autori, azienda, data e parole, ultime modifiche per slide, caratteri, e i modelli noti che somigliano alla presentazione.
 
 Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-rosso di PowerPoint, elementi compatti.
 
@@ -105,7 +118,9 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
 - **Importa PowerPoint**: dal PC, oppure scegliendo un `.pptx` già nella cartella del progetto.
 - **Crea da zero**: una presentazione base con la struttura tipica (titolo, indice, sezione, testo, legenda, flusso a corsie, chiusura), da riscrivere in Modifica.
 - **Nuovo da modello**: si scelgono le parti del modello e quante volte ripeterle. Con *Testi come segnaposto*, titoli e paragrafi diventano "Titolo della slide", "Testo del paragrafo"…; flussi e schemi restano come esempio.
-- **Scarica**: il `.pptx` con le modifiche. Master, layout, tema, immagini e forme restano quelli originali.
+- **Trova e sostituisci** (barra del documento): cerca in tutte le slide, testi e tabelle comprese; con *anche piè di pagina e layout* cambia pure le scritte fisse del modello ("Kick-off Progetto X" → "SAL 1 Progetto X"). Nelle slide diventa una modifica dei testi come quelle fatte a mano; nel layout è una regola applicata all'esportazione (e azzerata da "Salva versione", che la porta nel file).
+- **Tabelle in Modifica**: le celle si correggono una per una (tabelle vere e tabelle disegnate con le forme); **Aggiungi riga** clona una riga esistente con il suo stile. La riga nuova si vede nel file esportato e dopo "Salva versione".
+- **Scarica**: il `.pptx` con le modifiche. Master, layout, tema, immagini e forme restano quelli originali; le immagini non più usate vengono tolte e i contatori aggiornati.
 - **Salva versione**: scrive il `.pptx` nella cartella del progetto. La versione precedente resta tra le versioni del file in Esplora file. Il risultato diventa la nuova base del documento e Cippi lo rianalizza.
 - **Salva come modello**: conserva la "ricetta" della presentazione: le parti nell'ordine in cui si presentano, i blocchi di ogni slide e dove stanno, le sezioni, la legenda, colori e caratteri.
   - Un modello lo vedono le persone del progetto.
@@ -119,6 +134,8 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
 | Analisi (rifatta da sola se cambia il modo di leggere) | `data/cippi/analisi/` |
 | Copia, versioni salvate, appunti | cartella del progetto, `Cippi/<nome documento>/` (`Appunti/` per PDF, Word, immagini). I modelli in `Cippi/Modelli/`. |
 | Documenti, punti, glossario, contesto, caratteristiche | database: `cippi_docs` (con `background`), `cippi_points`, `cippi_glossary`, `cippi_items` (migrazioni 9 e 10) |
+| Documenti, punti, glossario | database: `cippi_docs`, `cippi_points`, `cippi_glossary` (migrazione 9); le regole di sostituzione nei layout in `cippi_docs.edits` (migrazione 10) |
+| Modelli noti (memoria dei file analizzati) | `docs/MEMORIA/<formato>/<template>.impronta.json`, letti dal repository accanto alla cartella `app` |
 
 **Permessi:** vede e modifica un documento chi vede il progetto. Lo elimina chi l'ha creato o un Manager del progetto. I file nella cartella del progetto restano.
 
@@ -129,7 +146,8 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
   - le immagini EMF/WMF compaiono come riquadri;
   - le frecce a gomito sono semplificate;
   - i caratteri sono quelli del PC.
-- In Modifica si cambiano i testi delle forme e l'ordine delle slide. Il testo modificato prende lo stile del paragrafo che sostituisce, ma i grassetti dentro una frase vanno rifatti in PowerPoint. Tabelle e flussi si cambiano in PowerPoint.
+- In Modifica si cambiano i testi delle forme, le celle delle tabelle e l'ordine delle slide. Il testo modificato prende lo stile del paragrafo che sostituisce, ma i grassetti dentro una frase vanno rifatti in PowerPoint. Le forme dei flussi si cambiano in PowerPoint.
+- Il masterplan si legge solo se è un'immagine SVG con i testi (come lo esportano PowerPoint ed Excel); un PNG resta un'immagine.
 - Gli appunti (PDF, Word) si archiviano e si aprono, ma Cippi non li legge.
 
 ## Proposte per le prossime versioni
@@ -162,14 +180,24 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
 | `PUT /api/cippi/docs/:id/appunti?name=` | appunti nella cartella del documento |
 | `PUT /api/cippi/glossario` | `{projectId, term, meaning}` |
 | `PUT /api/cippi/docs/:id/items` | `{key, data: {descrizione, tecnologia, input, output, responsabile, tempi, criticita, obiettivo, note}}`: caratteristiche di un elemento; la chiave è stabile tra le versioni (`nodo\|<codice processo>\|<variante>\|<testo dello step>`, `attore\|<nome>`, `processo\|<codice>\|<variante>`, `blocco\|<titolo slide>\|<testo>`). Dati vuoti = elimina |
+| `POST /api/cippi/docs/:id/sostituisci` | `{find, replace, matchCase, whole, layouts, anteprima}`: trova e sostituisci in tutte le slide (testi e celle) e, con `layouts`, nei layout e nei master. Risponde `{count, layoutCount, slides}`; con `anteprima` conta e basta |
+| `PATCH /api/cippi/docs/:id` (in più) | per slide `cells: {idTabella: {"riga,colonna": [righe]}}` e `tableRows: {idTabella: [{after, cells}]}`; a livello di documento `edits: {replace: [...]}` |
+| `GET /api/cippi/docs/:id` (in più) | `impronta` (modelli noti che somigliano), `edits`, `analysis.meta` esteso (azienda, co-autori, ultime modifiche), `analysis.fontsUsed` |
+| `GET /api/cippi/docs/:id/slide/:n` (in più) | `background`: le forme fisse del layout e del master |
 
 **Codice:**
 
 | File | Cosa fa |
 |---|---|
 | `app/src/cippi/pptx-read.js` | lettura del `.pptx` |
+| `app/src/cippi/pptx-extra.js` | sezioni native, metadati estesi, tabelle con celle unite, forme personalizzate, testo ridotto |
+| `app/src/cippi/gantt-svg.js` | il masterplan dall'immagine SVG |
 | `app/src/cippi/analyze.js` | struttura, flussi, controlli, modello |
+| `app/src/cippi/struttura.js` | pillole, tabelle disegnate, sezioni native, indice, numeri e totali, caratteri |
+| `app/src/cippi/glossario-pa.js` | glossario preimpostato della pubblica amministrazione |
+| `app/src/cippi/impronta.js` | impronta della presentazione e riconoscimento dei modelli noti |
 | `app/src/cippi/pptx-write.js` | esportazione |
+| `app/src/cippi/pptx-edit.js` | celle e righe delle tabelle, trova e sostituisci, pulizia del pacchetto |
 | `app/src/cippi/pptx-new.js` | presentazione base e presentazioni di prova |
 | `app/src/routes/cippi.js` | API |
 | `app/public/cippi/` | interfaccia |
@@ -179,4 +207,4 @@ Lo stile è un "PowerPoint futuristico": pannelli di vetro, accento arancio-ross
 - `app/test/cippi.test.js`;
 - `app/test/browser/cippi.ui.js`.
 
-Usano una presentazione inventata (`app/test/pptx-prova.js`): nessun file di un cliente sta nel repository.
+Usano presentazioni inventate (`app/test/pptx-prova.js`, flusso To-Be/As-Is; `app/test/pptx-kickoff-prova.js`, kick-off con sezioni native, pillole, tabelle, Gantt): nessun file di un cliente sta nel repository.
