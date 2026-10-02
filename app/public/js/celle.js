@@ -67,7 +67,7 @@ function importWizard(mapId, onDone) {
   input.click();
 }
 function report(x) {
-  toast(`Importati ${x.macros} macro, ${x.processes} processi, ${x.micros} micro processi.`);
+  toast(`Importati ${x.macros} macro, ${x.processes} processi, ${x.micros} micro processi.${x.template ? ' Il file resta come origine: l\'Excel scaricato avrà il suo stesso aspetto.' : ''}`);
   if (x.warnings && x.warnings.length) modal('Da controllare dopo l\'importazione', h('ul', { class: 'small' }, x.warnings.map((w) => h('li', {}, w))));
 }
 // Foglio qualsiasi: si sceglie quali colonne sono macro, processo e micro.
@@ -119,10 +119,14 @@ async function viewMap(el, mapId) {
   const reload = async (sel) => { await load(); if (sel !== undefined) state.selected = sel; render(); };
 
   // --- intestazione e azioni
+  // Con un file di origine l'Excel esportato e' quel file con i dati aggiornati: stessi colori, colonne, fogli e formule.
+  const excelHint = () => (d.template
+    ? `Il file ha lo stesso aspetto di «${d.template.name}», il file da cui è nata la mappa: stessi colori, colonne, fogli e formule.`
+    : 'File Excel nel formato BPB di GestioneCelle (tre fogli: Istruzioni, BPB, Anagrafica). Da Impostazioni della mappa puoi scegliere un file Excel come origine.');
   const actions = () => h('div', { class: 'row' },
     !d.macros.length ? h('button', { class: 'btn', type: 'button', onclick: () => importWizard(mapId, () => reload()) }, icon('upload'), 'Importa Excel') : null,
-    h('a', { class: 'btn', href: `/api/celle/maps/${mapId}/export` }, icon('download'), 'Scarica Excel'),
-    h('button', { class: 'btn', type: 'button', title: 'Salva il file Excel nella cartella del progetto (GestioneCelle/), con le versioni', onclick: async () => {
+    h('a', { class: 'btn', href: `/api/celle/maps/${mapId}/export`, title: excelHint() }, icon('download'), 'Scarica Excel'),
+    h('button', { class: 'btn', type: 'button', title: `Salva il file Excel nella cartella del progetto (GestioneCelle/), con le versioni. ${excelHint()}`, onclick: async () => {
       try { const r = await post(`/api/celle/maps/${mapId}/export`); toast('Salvato nel progetto.'); window.open(`/#/esplora?spazio=${r.space}&percorso=GestioneCelle`, '_blank', 'noopener'); } catch (err) { toastError(err); }
     } }, icon('folder'), 'Salva nel progetto'),
     h('button', { class: 'icon-btn', type: 'button', title: 'Cestino', 'aria-label': 'Cestino', onclick: trashDialog }, icon('trash')),
@@ -293,16 +297,41 @@ async function viewMap(el, mapId) {
     modal('Storico della mappa', h('ul', { class: 'list' }, x.map((hh) => h('li', { style: 'display:block' }, h('div', { class: 'meta' }, `${fmtDate(hh.at)} · ${hh.by || 'sistema'} · ${hh.action}`),
       hh.detail ? h('div', { class: 'small' }, describe(hh)) : null))), { wide: true });
   }
+  // Il file di origine della mappa: l'Excel esportato lo riproduce (colori, colonne, fogli). Si scarica, si sostituisce, si toglie.
+  function templateBox(m) {
+    const pick = () => {
+      const input = h('input', { type: 'file', accept: '.xlsx', onchange: async () => {
+        const file = input.files[0];
+        if (!file) return;
+        try { await upload(`/api/celle/maps/${mapId}/template?name=${enc(file.name)}`, file); toast('File di origine salvato: l\'Excel scaricato avrà il suo aspetto.'); m.close(); await reload(); } catch (err) { toastError(err); }
+      } });
+      input.click();
+    };
+    const t = d.template;
+    return field('File di origine (aspetto dell\'Excel)', h('div', {},
+      h('p', { class: 'small muted', style: 'margin:0 0 8px' }, t
+        ? `«${t.name}», importato ${fmtDate(t.importedAt)}${t.by ? ` da ${t.by}` : ''}. Scarica Excel e Salva nel progetto riproducono questo file con i dati aggiornati: stessi colori, intestazioni, colonne e fogli. Le colonne che il file non ha (per esempio Responsabile, Scadenza, Stato) restano solo in GestioneCelle.`
+        : 'Nessun file di origine: l\'Excel usa il formato BPB di GestioneCelle. Scegli un file BPB (anche uno già esportato) perché l\'Excel scaricato abbia il suo stesso aspetto.'),
+      h('div', { class: 'row' },
+        t ? h('a', { class: 'btn sm', href: `/api/celle/maps/${mapId}/template` }, icon('download'), 'Scarica l\'originale') : null,
+        h('button', { class: 'btn sm', type: 'button', onclick: pick }, icon('upload'), t ? 'Sostituisci…' : 'Scegli un file…'),
+        t ? h('button', { class: 'btn sm', type: 'button', onclick: () => confirmDialog('Togliere il file di origine?', 'L\'Excel tornerà al formato BPB di GestioneCelle (colori e colonne standard). I dati della mappa non cambiano.', 'Togli', async () => {
+          try { await del(`/api/celle/maps/${mapId}/template`); m.close(); await reload(); } catch (err) { toastError(err); }
+        }) }, 'Togli') : null)));
+  }
   function mapSettings() {
+    const box = h('div', {});
     const m = modal('Mappa', form([
       field('Nome', h('input', { type: 'text', name: 'name', value: d.map.name, maxlength: '120' })),
       field('Descrizione', h('input', { type: 'text', name: 'description', value: d.map.description, maxlength: '500' })),
+      box,
       h('div', { class: 'modal-actions' },
         h('button', { class: 'btn danger left', type: 'button', onclick: () => confirmDialog('Eliminare la mappa?', `"${d.map.name}" sparisce dall'elenco. Resta nel database e l'Hacker può recuperarla.`, 'Elimina mappa', async () => {
           try { await del(`/api/celle/maps/${mapId}`); m.close(); setHash(''); await viewCelle(el); } catch (err) { toastError(err); }
         }) }, 'Elimina mappa'),
         h('button', { class: 'btn primary', type: 'submit' }, 'Salva')),
     ], async (v) => { await patch(`/api/celle/maps/${mapId}`, v); m.close(); await reload(); }));
+    box.replaceWith(templateBox(m));
   }
 
   // --- tabella (come il foglio BPB) con filtri
@@ -468,7 +497,7 @@ async function viewMap(el, mapId) {
     }
     el.replaceChildren(h('div', { class: 'cg' },
       h('div', { style: 'margin-bottom:10px' }, h('button', { class: 'btn sm', type: 'button', onclick: () => { setHash(''); viewCelle(el).catch(toastError); } }, icon('back'), 'Tutte le mappe')),
-      pageHead(d.map.name, `${d.map.project}${d.map.description ? ` · ${d.map.description}` : ''}`, actions()),
+      pageHead(d.map.name, `${d.map.project}${d.map.description ? ` · ${d.map.description}` : ''}${d.template ? ` · Excel come il file di origine «${d.template.name}»` : ''}`, actions()),
       h('datalist', { id: 'tr-ambiti' }, d.ambiti.map((a) => h('option', { value: a }))),
       tabs(), body));
     const active = el.querySelector('.tr-row.active');

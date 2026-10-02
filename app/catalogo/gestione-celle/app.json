@@ -1,16 +1,25 @@
 {
   "id": "gestione-celle",
   "name": "GestioneCelle",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "released": "2026-10-02",
   "summary": "Mappe dei processi (macro, processi, micro) con codici automatici, scadenze, note e il file Excel di sempre.",
-  "description": "Albero e tabella delle voci con codici 1, 1.2, 1.2.3 che si aggiornano da soli, controlli dei duplicati come nel file BPB, responsabili e scadenze, eliminazione con conferme e richieste, import ed export Excel con le stesse formule.",
+  "description": "Albero e tabella delle voci con codici 1, 1.2, 1.2.3 che si aggiornano da soli, controlli dei duplicati come nel file BPB, responsabili e scadenze, eliminazione con conferme e richieste, import ed export Excel: il file scaricato è il file importato con i dati aggiornati (stessi colori, colonne e fogli).",
   "web": "/celle/",
   "color": "#2f8f7a",
   "icon": "icon.svg",
   "minPortal": "0.7.0",
   "engine": null,
   "novita": [
+    {
+      "version": "0.9.3",
+      "date": "2026-10-02",
+      "items": [
+        "L'Excel scaricato ha lo stesso aspetto del file importato: il file di origine resta con la mappa e l'esportazione riscrive solo le righe delle tre tabelle. Colori, intestazioni, colonne (anche quelle del team), larghezze, fogli, formule, menu a tendina e colori condizionali restano quelli del file. Nessuna colonna nuova.",
+        "Impostazioni della mappa → File di origine: si scarica l'originale, si sceglie un altro file BPB come modello, si toglie per tornare al formato BPB interno di GestioneCelle.",
+        "Il sottotitolo della mappa e il bottone Scarica Excel dicono da quale file prende l'aspetto."
+      ]
+    },
     {
       "version": "0.9.2",
       "date": "2026-10-02",

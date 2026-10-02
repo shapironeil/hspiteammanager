@@ -335,6 +335,18 @@ const MIGRATIONS = [
   `
   ALTER TABLE cippi_docs ADD COLUMN edits TEXT NOT NULL DEFAULT '{}';
   `,
+  // 12 - GestioneCelle: il file Excel di origine di ogni mappa (il "modello"): l'esportazione riscrive i dati dentro
+  //      quel file, cosi' colori, intestazioni, colonne e fogli restano quelli che il team conosce.
+  `
+  CREATE TABLE celle_map_templates (
+    map_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    data BLOB NOT NULL,
+    imported_by INTEGER,
+    imported_at TEXT NOT NULL
+  );
+  `,
 ];
 
 function migrate() {

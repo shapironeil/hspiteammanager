@@ -9,11 +9,27 @@ const ex = require('../explorer');
 const M = require('../celle/model');
 const IMP = require('../celle/import');
 const { buildBpbWorkbook } = require('../celle/xlsx-write');
+const { buildFromTemplate, isBpbTemplate } = require('../celle/xlsx-template');
 const { route, HttpError } = require('../http');
 const projects = require('./projects');
 
 const people = () => new Map(db.all('SELECT id, name FROM users WHERE deleted_at IS NULL').map((u) => [u.id, u.name]));
 const peopleByName = () => new Map(db.all('SELECT id, name FROM users WHERE deleted_at IS NULL').map((u) => [M.key(u.name), u.id]));
+
+// ---- Il file di origine (modello) --------------------------------------------------------------------
+// Il file Excel da cui e' nata la mappa resta con la mappa: l'esportazione riscrive i dati dentro quel file, cosi'
+// colori, intestazioni, colonne e fogli sono quelli che il team conosce. Senza modello si usa il formato BPB interno.
+const templateInfo = (mapId, ppl) => {
+  const t = db.get('SELECT name, size, imported_by, imported_at FROM celle_map_templates WHERE map_id = ?', mapId);
+  return t ? { name: t.name, size: t.size, importedAt: t.imported_at, by: (ppl || people()).get(t.imported_by) || null } : null;
+};
+function saveTemplate(mapId, buf, name, userId, { replace = false } = {}) {
+  if (!replace && db.get('SELECT 1 AS x FROM celle_map_templates WHERE map_id = ?', mapId)) return false;
+  db.run('INSERT INTO celle_map_templates(map_id, name, size, data, imported_by, imported_at) VALUES(?,?,?,?,?,?) ON CONFLICT(map_id) DO UPDATE SET name = excluded.name, size = excluded.size, data = excluded.data, imported_by = excluded.imported_by, imported_at = excluded.imported_at',
+    mapId, name, buf.length, buf, userId, db.now());
+  M.history(mapId, null, userId, 'file di origine conservato', { file: name });
+  return true;
+}
 
 function openMap(user, id, { manage = false } = {}) {
   const map = db.get('SELECT * FROM celle_maps WHERE id = ? AND deleted_at IS NULL', Number(id));
@@ -95,6 +111,7 @@ route('GET', '/api/celle/maps/:id', {}, (ctx) => {
     WHERE m.project_id = ? AND (m.expires_at IS NULL OR m.expires_at > ?) AND u.deleted_at IS NULL ORDER BY u.name`, project.id, db.now());
   ctx.json(200, {
     map: { id: map.id, name: map.name, description: map.description, projectId: project.id, project: project.name, updatedAt: map.updated_at },
+    template: templateInfo(map.id, ppl),
     canManage, canApprove, macros, statuses: M.STATUSES,
     ambiti: [...new Set([...M.AMBITI, ...flat.map((n) => n.ambito).filter(Boolean)])],
     people: members,
@@ -216,7 +233,7 @@ route('PUT', '/api/celle/import', {}, async (ctx) => {
   let a;
   try { a = IMP.analyze(buf); } catch (err) { throw new HttpError(400, err.message || 'File non leggibile.'); }
   const token = crypto.randomBytes(12).toString('hex');
-  pending.set(token, { at: Date.now(), userId: ctx.user.id, analysis: a, name: String(ctx.query.get('name') || 'file.xlsx') });
+  pending.set(token, { at: Date.now(), userId: ctx.user.id, analysis: a, buf, name: String(ctx.query.get('name') || 'file.xlsx').slice(0, 200) });
   if (a.format === 'bpb') return ctx.json(200, { token, format: 'bpb', summary: a.summary });
   ctx.json(200, { token, format: 'generico', fields: IMP.FIELD_LABELS, sheets: a.sheets.map((s) => ({ name: s.name, headers: s.headers, rows: s.rows.length, sample: s.rows.slice(0, 8), guess: s.guess })) });
 });
@@ -236,14 +253,51 @@ route('POST', '/api/celle/maps/:id/import', {}, async (ctx) => {
     }
   } catch (err) { throw err instanceof HttpError ? err : new HttpError(400, err.message); }
   pending.delete(String(b.token));
+  // il file BPB importato diventa il modello della mappa (se non ne ha gia' uno): l'Excel esportato avra' il suo stesso aspetto
+  const template = p.analysis.format === 'bpb' ? saveTemplate(map.id, p.buf, p.name, ctx.user.id) : false;
   db.log(ctx, 'celle.importazione', `${map.name}: ${r.macros} macro, ${r.processes} processi, ${r.micros} micro da ${p.name}`);
-  ctx.json(200, r);
+  ctx.json(200, { ...r, template });
+});
+
+// Il file di origine: si scarica com'era, si sostituisce con un altro file BPB (solo lo stile: i dati restano quelli della mappa),
+// si toglie per tornare al formato BPB interno di GestioneCelle.
+route('GET', '/api/celle/maps/:id/template', {}, (ctx) => {
+  const { map } = openMap(ctx.user, ctx.params.id);
+  const t = db.get('SELECT name, data FROM celle_map_templates WHERE map_id = ?', map.id);
+  if (!t) throw new HttpError(404, 'Questa mappa non ha un file di origine.');
+  const buf = Buffer.from(t.data);
+  const name = t.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, ' ').trim() || 'origine.xlsx';
+  ctx.res.writeHead(200, {
+    'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Content-Length': buf.length, 'Cache-Control': 'no-store',
+    'Content-Disposition': `attachment; filename="${name.replace(/[^\x20-\x7e]/g, '_').replace(/"/g, '_')}"; filename*=UTF-8''${encodeURIComponent(name)}`,
+  });
+  ctx.res.end(buf);
+});
+route('PUT', '/api/celle/maps/:id/template', {}, async (ctx) => {
+  const { map } = openMap(ctx.user, ctx.params.id, { manage: true });
+  const buf = await readBody(ctx.req);
+  if (!isBpbTemplate(buf)) throw new HttpError(400, 'Il file non è nel formato BPB (tabelle tblMacro, tblProcessi e tblBPB): non può fare da modello.');
+  const name = String(ctx.query.get('name') || 'modello.xlsx').slice(0, 200);
+  saveTemplate(map.id, buf, name, ctx.user.id, { replace: true });
+  db.log(ctx, 'celle.modello', `${map.name}: file di origine ${name}`);
+  ctx.json(200, { template: templateInfo(map.id) });
+});
+route('DELETE', '/api/celle/maps/:id/template', {}, (ctx) => {
+  const { map } = openMap(ctx.user, ctx.params.id, { manage: true });
+  const t = db.get('SELECT name FROM celle_map_templates WHERE map_id = ?', map.id);
+  if (t) {
+    db.run('DELETE FROM celle_map_templates WHERE map_id = ?', map.id);
+    M.history(map.id, null, ctx.user.id, 'file di origine tolto', { file: t.name });
+    db.log(ctx, 'celle.modello', `${map.name}: tolto il file di origine ${t.name}`);
+  }
+  ctx.json(200, { ok: true });
 });
 
 // ---- Esportazione Excel ------------------------------------------------------------------
+// Con un file di origine: i dati della mappa vengono riscritti dentro quel file (stesso aspetto). Altrimenti: formato BPB interno.
 function workbookFor(map) {
   const macros = M.tree(map.id, people());
-  return buildBpbWorkbook({
+  const data = {
     name: map.name,
     macros: macros.map((m) => ({
       code: m.macroCode, name: m.name, check: m.checks.join('; ') || 'OK',
@@ -252,7 +306,17 @@ function workbookFor(map) {
         micros: p.children.map((u) => ({ code: u.code, name: u.name, ambito: u.ambito, dipartimenti: u.dipartimenti, note: u.note, responsabile: u.responsible, scadenza: u.dueDate, stato: u.status, check: u.checks.join('; ') || 'OK' })),
       })),
     })),
-  });
+  };
+  const t = db.get('SELECT name, data FROM celle_map_templates WHERE map_id = ?', map.id);
+  if (t) {
+    try {
+      const buf = buildFromTemplate(Buffer.from(t.data), data);
+      if (buf) return buf;
+    } catch (err) {
+      db.issue('server', `GestioneCelle: esportazione nel file di origine "${t.name}" non riuscita (mappa ${map.id}); usato il formato BPB interno`, err.stack);
+    }
+  }
+  return buildBpbWorkbook(data);
 }
 const fileName = (map) => `${map.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, ' ').replace(/\s+/g, ' ').trim() || 'GestioneCelle'}.xlsx`;
 

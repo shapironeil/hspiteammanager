@@ -2,6 +2,12 @@
 
 La versione del portale sta in `version.json` (unica fonte) e compare nella pagina di accesso ("v0.10.0 beta") e in Sistema. Ogni app del catalogo ha la sua versione in `app/catalogo/<id>/app.json` e le sue novità in **App e programmi → Novità**.
 
+## 0.11.2 — 2 ottobre 2026
+- **GestioneCelle 0.9.3**: **l'Excel scaricato ha lo stesso aspetto del file importato.** Il file Excel da cui nasce una mappa (il *file di origine*) resta con la mappa; *Scarica Excel* e *Salva nel progetto* riscrivono soltanto le righe delle tre tabelle (`tblMacro`, `tblProcessi`, `tblBPB`) dentro quel file. Colori, intestazioni, colonne (anche quelle aggiunte dal team), larghezze, fogli (anche quelli che GestioneCelle non usa), formule, menu a tendina e colori condizionali restano quelli del file: nessuna colonna nuova, nessun colore nuovo. Prima l'esportazione ricostruiva il file da zero con i colori di GestioneCelle, e chi lavorava sul file si ritrovava colonne e colori diversi.
+  - Le colonne Responsabile, Scadenza e Stato finiscono nel file solo se il file le ha già; senza file di origine resta il formato BPB interno (che le ha).
+  - *Impostazioni della mappa → File di origine*: scarica l'originale, scegli un altro file BPB come modello (anche per una mappa nata da zero), toglilo per tornare al formato interno.
+  - Nuova tabella `celle_map_templates` (migrazione 12), rotte `GET/PUT/DELETE /api/celle/maps/:id/template`, modulo `app/src/celle/xlsx-template.js`, due prove automatiche con un file "come lo salva Excel" (stringhe condivise, catena di calcolo, formule condivise, filtri attivi).
+
 ## 0.11.1 — 2 ottobre 2026
 - **GestioneCelle 0.9.2**: il file Excel esportato non risulta più danneggiato. Nei fogli BPB e Anagrafica l'elenco delle tabelle era scritto prima dei margini di pagina, contro l'ordine richiesto da Excel. Aggiunta una prova automatica.
 

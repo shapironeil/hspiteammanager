@@ -120,4 +120,4 @@ function sheetGrid(book, sheet, limit = 5000) {
   return { headers, rows };
 }
 
-module.exports = { readXlsx, tableRows, sheetGrid, cellRef, rangeRef };
+module.exports = { readXlsx, tableRows, sheetGrid, cellRef, rangeRef, attr, decode };
