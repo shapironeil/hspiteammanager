@@ -76,13 +76,17 @@ function fcell(ref, formula, cached, style, array = false) {
 const excelDate = (iso) => { const t = Date.parse(`${iso}T00:00:00Z`); return Number.isFinite(t) ? Math.round(t / 86400000) + 25569 : null; };
 
 function sheetXml({ cols, rows, freeze, extra = '', views = '' }) {
+  // Excel vuole gli elementi del foglio in un ordine fisso: ... conditionalFormatting, dataValidations, pageMargins, ..., tableParts.
+  // Se tableParts arriva prima di pageMargins il file risulta "danneggiato" e Excel propone di ripararlo.
+  const tableParts = (extra.match(/<tableParts[\s\S]*?<\/tableParts>/) || [''])[0];
+  const before = extra.replace(tableParts, '').replace(/\s+$/, '');
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <sheetViews><sheetView workbookViewId="0" showGridLines="0"${views}>${freeze ? `<pane ySplit="${freeze}" topLeftCell="A${freeze + 1}" activePane="bottomLeft" state="frozen"/>` : ''}</sheetView></sheetViews>
 <sheetFormatPr defaultRowHeight="15"/>
 <cols>${cols.map((c, i) => `<col min="${i + 1}" max="${i + 1}" width="${c.width}"${c.hidden ? ' hidden="1"' : ''} customWidth="1"/>`).join('')}</cols>
-<sheetData>${rows.join('')}</sheetData>${extra}
-<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>${/<tablePart/.test(extra) ? '' : ''}
+<sheetData>${rows.join('')}</sheetData>${before}
+<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>${tableParts ? `\n${tableParts}` : ''}
 </worksheet>`;
 }
 

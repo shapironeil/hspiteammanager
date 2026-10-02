@@ -160,3 +160,15 @@ test('scadenze personali per la Home', async () => {
   assert.equal(mine[0].dueDate, soon);
   assert.equal(mine[0].code, node.code);
 });
+
+test('esportazione Excel: ordine degli elementi nei fogli come vuole Excel (altrimenti il file risulta danneggiato)', () => {
+  const { readZip } = require('../src/celle/zip');
+  const parts = readZip(BPB);
+  for (const name of ['xl/worksheets/sheet2.xml', 'xl/worksheets/sheet3.xml']) {
+    const xml = parts.get(name)().toString('utf8');
+    const order = ['<sheetViews', '<cols', '<sheetData', '<conditionalFormatting', '<pageMargins', '<tableParts', '</worksheet>'];
+    const pos = order.map((tag) => xml.indexOf(tag));
+    assert.ok(pos.every((p) => p >= 0), `${name}: manca un elemento`);
+    assert.deepEqual([...pos].sort((a, b) => a - b), pos, `${name}: elementi fuori ordine`);
+  }
+});
