@@ -308,7 +308,8 @@ async function viewMap(el, mapId) {
       input.click();
     };
     const t = d.template;
-    return field('File di origine (aspetto dell\'Excel)', h('div', {},
+    // un div, non field(): dentro una <label> il clic sul testo attiverebbe il primo bottone (la scelta del file)
+    return h('div', { class: 'field' }, h('span', { class: 'field-label' }, 'File di origine (aspetto dell\'Excel)'), h('div', {},
       h('p', { class: 'small muted', style: 'margin:0 0 8px' }, t
         ? `«${t.name}», importato ${fmtDate(t.importedAt)}${t.by ? ` da ${t.by}` : ''}. Scarica Excel e Salva nel progetto riproducono questo file con i dati aggiornati: stessi colori, intestazioni, colonne e fogli. Le colonne che il file non ha (per esempio Responsabile, Scadenza, Stato) restano solo in GestioneCelle.`
         : 'Nessun file di origine: l\'Excel usa il formato BPB di GestioneCelle. Scegli un file BPB (anche uno già esportato) perché l\'Excel scaricato abbia il suo stesso aspetto.'),

@@ -1,6 +1,6 @@
 # GestioneCelle 0.9.3 — l'Excel esportato ha lo stesso aspetto del file importato
 
-Nota di fine lavoro (regole in `docs/REGOLE-AGENTI.md`, §4). Ramo `claude/focused-pasteur-o83vl4`, 2 ottobre 2026. Partito da `origin/main` (0.11.1, commit `601bdc2`).
+Nota di fine lavoro (regole in `docs/REGOLE-AGENTI.md`, §4). Ramo `claude/focused-pasteur-o83vl4`, 2 ottobre 2026. Partito da `origin/main` (0.11.1, commit `601bdc2`). Commit: `d81f5aa` (il lavoro) più una correzione all'interfaccia (il riquadro *File di origine* non sta in una `<label>`).
 
 ## Il problema
 
